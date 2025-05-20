@@ -15,17 +15,13 @@ import {
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
-  FilterList as FilterListIcon,
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
-import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
 
 // Import the summaryService
 import { 
   getSavedSummaries,
-  deleteSummary,
-  getSummaryById,
   Summary,
 } from '@/services/summaryService';
 import Layout from '@/components/Layout';
@@ -37,7 +33,6 @@ export default function SavedForecasts() {
   const [error, setError] = useState('');
   const [savedForecasts, setSavedForecasts] = useState<Summary[]>([]);
   const { showToast } = useToast();
-  const { isCollaboratorViewer } = useAuth();
 
   useEffect(() => {
     loadSavedForecasts();
@@ -62,25 +57,6 @@ export default function SavedForecasts() {
     }
   };
 
-  const handleDeleteForecast = async (id: string) => {
-    try {
-      setLoading(true);
-      const response = await deleteSummary(id);
-      if (response.success) {
-        // Update the list after deletion
-        setSavedForecasts(savedForecasts.filter(forecast => forecast._id !== id));
-        showToast('Forecast deleted successfully', 'success');
-      } else {
-        showToast('Failed to delete forecast', 'error');
-      }
-    } catch (error) {
-      console.error('Error deleting forecast:', error);
-      setError('Failed to delete forecast. Please try again.');
-      showToast('Failed to delete forecast', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleViewSavedForecast = (id: string) => {
     setViewingReport(true);
@@ -183,7 +159,7 @@ export default function SavedForecasts() {
               No Saved Forecasts
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              You haven't saved any forecasts yet. Create a custom forecast or save a weekly forecast to see it here.
+              You haven&apos;t saved any forecasts yet. Create a custom forecast or save a weekly forecast to see it here.
             </Typography>
             <Button 
               variant="contained" 

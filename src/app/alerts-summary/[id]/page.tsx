@@ -6,15 +6,10 @@ import {
   Box,
   Typography,
   Button,
-  Paper,
   Divider,
   CircularProgress,
   Alert,
   IconButton,
-  Chip,
-  Card,
-  CardContent,
-  Stack,
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,

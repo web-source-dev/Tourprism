@@ -93,7 +93,7 @@ function ToastContainer({ toasts, hideToast }: { toasts: Toast[]; hideToast: (id
 }
 
 // Individual Toast Item component
-function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
+function ToastItem({ toast }: { toast: Toast; onClose: () => void }) {
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {

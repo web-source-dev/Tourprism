@@ -8,28 +8,20 @@ import {
   CircularProgress,
   IconButton,
   TextField,
-  List,
-  ListItem,
-  ListItemText,
-  Chip,
   FormControl,
   Select,
   MenuItem,
   SelectChangeEvent,
-  Tooltip,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
-  Paper,
-  Divider,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import {
   getFlaggedAlertById,
   markAlertStatus,
-  flagAlert,
   followAlert,
   addGuests,
   notifyGuests,
@@ -39,20 +31,9 @@ import {
 import { ActionHubItem, ActionLog } from '@/types';
 import {
   ArrowBack,
-  Flag,
-  FlagOutlined,
-  Email,
-  Sms,
-  Message,
-  NotificationsActive,
-  NotificationsNone,
   Send,
-  Done,
-  Warning,
-  Refresh
 } from '@mui/icons-material';
 import { format } from 'date-fns';
-import { getTimeAgo } from '@/utils/getTimeAgo';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
 
@@ -156,27 +137,6 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
 
   const handleBack = () => {
     router.back();
-  };
-
-  const handleFlagToggle = async () => {
-    if (!alertData) return;
-
-    try {
-      const result = await flagAlert(alertData._id);
-      setAlertData(prev => prev ? {
-        ...prev,
-        isFlagged: result.isFlagged,
-        flaggedBy: Array(result.flagCount).fill('')
-      } : null);
-
-      showToast(
-        result.isFlagged ? 'Alert flagged successfully' : 'Alert unflagged successfully',
-        'success'
-      );
-    } catch (err) {
-      console.error('Error toggling flag:', err);
-      showToast('Error updating flag status', 'error');
-    }
   };
 
   const handleFollowToggle = async () => {

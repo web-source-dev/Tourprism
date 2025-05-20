@@ -9,13 +9,11 @@ import {
   Card,
   CardContent,
   Container,
-  IconButton,
 } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useRouter } from 'next/navigation';
 import { getFollowedAlerts } from '@/services/action-hub';
 import { Alert } from '@/types';
-import { useAuth } from '@/context/AuthContext';
 import { format } from 'date-fns';
 import FilterModal, { FilterOptions } from './FilterModal';
 
@@ -37,11 +35,7 @@ const ActionHubList: React.FC = () => {
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   
   const router = useRouter();
-  const { isCollaboratorViewer } = useAuth();
 
-  const isViewOnly = () => {
-    return isCollaboratorViewer;
-  };
 
   useEffect(() => {
     const fetchAlerts = async () => {

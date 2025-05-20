@@ -5,13 +5,10 @@ import {
   Box,
   Container,
   useMediaQuery,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 import NotificationDrawer from './NotificationDrawer';
-import Banner from './Banner';
 import { getNotifications } from '../services/api';
 import { Notification } from '../types';
 import Sidebar from './layout/Sidebar';

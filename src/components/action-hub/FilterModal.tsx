@@ -9,14 +9,11 @@ import {
   DialogContent, 
   DialogTitle, 
   IconButton,
-  TextField,
-  InputAdornment,
   List,
   ListItem,
   ListItemIcon,
   ListItemText,
   Collapse,
-  Chip,
 } from '@mui/material';
 import { 
   LocalizationProvider, 
@@ -26,7 +23,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import ClearIcon from '@mui/icons-material/Clear';
 
 export interface FilterOptions {

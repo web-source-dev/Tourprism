@@ -12,7 +12,6 @@ import {
   MenuItem,
   FormControl,
   IconButton,
-  Divider,
   SelectChangeEvent,
 } from '@mui/material';
 import { useToast } from '@/ui/toast';
@@ -28,7 +27,6 @@ interface ShareForecastModalProps {
 const ShareForecastModal: React.FC<ShareForecastModalProps> = ({
   open,
   onClose,
-  forecastTitle = 'Forecast'
 }) => {
   const [forwardTo, setForwardTo] = useState<string>('Guests');
   const [notes, setNotes] = useState<string>('');

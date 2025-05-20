@@ -7,7 +7,6 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material';
-import { useRouter } from 'next/navigation';
 
 interface MenuItem {
   text: string;

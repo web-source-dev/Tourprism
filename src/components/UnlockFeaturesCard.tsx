@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Typography, Button, LinearProgress } from '@mui/material';
+import { Box, Typography, Button } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
 interface UnlockFeaturesCardProps {
