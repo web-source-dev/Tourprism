@@ -108,7 +108,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
     } else {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, showToast]);
 
   const handleClick = () => {
     if (onClick) {

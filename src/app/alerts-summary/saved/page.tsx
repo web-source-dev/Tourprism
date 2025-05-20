@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Box,
@@ -73,10 +73,30 @@ export default function SavedForecasts() {
       value !== '' && value !== undefined
     );
   }, [filters]);
-
+  
+  const loadSavedForecasts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await getSavedSummaries();
+      if (response.success) {
+        setAllForecasts(response.summaries);
+        setSavedForecasts(response.summaries);
+      } else {
+        setError('Failed to load saved forecasts');
+        showToast('Failed to load saved forecasts', 'error');
+      }
+    } catch (error) {
+      console.error('Error loading saved forecasts:', error);
+      setError('Failed to load saved forecasts. Please try again.');
+      showToast('Failed to load saved forecasts', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+  
   useEffect(() => {
     loadSavedForecasts();
-  }, []);
+  }, [loadSavedForecasts]);
 
   // Apply filters whenever they change
   useEffect(() => {
@@ -100,25 +120,7 @@ export default function SavedForecasts() {
     }
   }, [isSubscribed, filters.dateCreated, showToast]);
 
-  const loadSavedForecasts = async () => {
-    try {
-      setLoading(true);
-      const response = await getSavedSummaries();
-      if (response.success) {
-        setAllForecasts(response.summaries);
-        setSavedForecasts(response.summaries);
-      } else {
-        setError('Failed to load saved forecasts');
-        showToast('Failed to load saved forecasts', 'error');
-      }
-    } catch (error) {
-      console.error('Error loading saved forecasts:', error);
-      setError('Failed to load saved forecasts. Please try again.');
-      showToast('Failed to load saved forecasts', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+
 
   // Open filter modal and initialize temp filters
   const handleOpenFilterModal = () => {

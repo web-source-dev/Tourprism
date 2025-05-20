@@ -183,7 +183,7 @@ function ArchiveContent() {
     } finally {
       setLoading(false);
     }
-  }, [city, coords, filters]); // Removed 'loading' from dependencies
+  }, [city, coords, filters, loading]);
 
   // Handle using current location
   const handleUseMyLocation = async () => {
@@ -363,8 +363,8 @@ function ArchiveContent() {
     };
     
     initialLoad();
-    // Empty dependency array to run only on mount
-  }, []);
+    // Added loadArchivedAlerts to the dependency array
+  }, [loadArchivedAlerts]);
 
   // Handle highlighted alert (if any)
   useEffect(() => {

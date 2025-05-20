@@ -246,7 +246,7 @@ export default function AlertsManagement() {
     }, 0);
     
     return () => clearTimeout(handler);
-  }, []);
+  }, [fetchAlerts]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);

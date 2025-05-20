@@ -336,7 +336,7 @@ export default function Feed() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, sortAlertsByFilter]);
+  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, showToast]);
 
   // Socket.io connection setup
   useEffect(() => {
@@ -520,7 +520,7 @@ export default function Feed() {
         socketRef.current = null;
       }
     };
-  }, [city, coords, fetchLocationAlerts, isAuthenticated, userProfile, operatingRegionAlerts, fetchOperatingRegionAlerts]);
+  }, [city, coords, fetchLocationAlerts, isAuthenticated, userProfile, operatingRegionAlerts, fetchOperatingRegionAlerts, showToast]);
 
   // Load card visibility from localStorage
   useEffect(() => {
@@ -664,7 +664,7 @@ export default function Feed() {
         )
       );
 
-      showToast(response.following ? 'You’re now following this alert. It’s been added to action hub' : 'You’ve unfollowed this alert. It’s been removed from action hub', 'success');
+      showToast(response.following ? "You're now following this alert. It's been added to action hub" : "You've unfollowed this alert. It's been removed from action hub", 'success');
     } catch (error) {
       console.error('Error following alert:', error);
       showToast('Failed to follow the alert', 'error');

@@ -58,9 +58,12 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   // Clean up all timeouts when component unmounts
   useEffect(() => {
+    // Return cleanup function
     return () => {
-      // Clear all timeouts on unmount
-      Object.values(toastTimeoutsRef.current).forEach(clearTimeout);
+      // Store the current timeouts object in a local variable to avoid the ref warning
+      const timeouts = { ...toastTimeoutsRef.current };
+      // Clear all timeouts on unmount using the local variable
+      Object.values(timeouts).forEach(clearTimeout);
     };
   }, []);
 
@@ -121,9 +124,3 @@ function ToastItem({ toast }: { toast: Toast; onClose: () => void }) {
     </div>
   );
 }
-
-// Example usage:
-// In your component:
-// const { showToast } = useToast();
-// showToast("Operation completed successfully", "success");
-// showToast("Please subscribe to unlock this filter", "error");

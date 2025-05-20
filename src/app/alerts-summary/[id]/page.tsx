@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
   Box,
@@ -66,42 +66,7 @@ export default function ForecastDetail() {
   // Extract the ID from params and query params
   const id = params?.id as string;
   
-  useEffect(() => {
-    const loadForecastData = async () => {
-      // Parse query parameters
-      const urlParams = new URLSearchParams(window.location.search);
-      const queriedPdfUrl = urlParams.get('pdf');
-      
-      if (id && id !== 'weekly-forecast' && id !== 'custom-forecast') {
-        // It's a saved forecast with an ID - load it from the server
-        await loadForecastDetails(id);
-      } else if (id === 'weekly-forecast') {
-        // Handle weekly forecast view
-        if (queriedPdfUrl) {
-          setPdfUrl(queriedPdfUrl);
-          loadWeeklyForecast(queriedPdfUrl);
-        } else {
-          // No PDF URL provided - load standard weekly forecast
-          loadWeeklyForecast();
-        }
-      } else if (id === 'custom-forecast') {
-        // Handle custom forecast - we need the PDF URL in query params
-        if (queriedPdfUrl) {
-          setPdfUrl(queriedPdfUrl);
-          loadCustomForecast(queriedPdfUrl);
-        } else {
-          // Without a PDF URL, we can't display a custom forecast
-          setError('Custom forecast data is missing. Please try generating a new forecast.');
-          showToast('Custom forecast data is missing', 'error');
-          setLoading(false);
-        }
-      }
-    };
-    
-    loadForecastData();
-  }, [id]);
-
-  const loadForecastDetails = async (forecastId: string) => {
+  const loadForecastDetails = useCallback(async (forecastId: string) => {
     try {
       setLoading(true);
       const response = await getSummaryById(forecastId);
@@ -121,9 +86,9 @@ export default function ForecastDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  const loadWeeklyForecast = async (existingPdfUrl?: string) => {
+  const loadWeeklyForecast = useCallback(async (existingPdfUrl?: string) => {
     setLoading(true);
     
     try {
@@ -170,10 +135,10 @@ export default function ForecastDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   // New function to handle custom forecasts
-  const loadCustomForecast = async (existingPdfUrl: string) => {
+  const loadCustomForecast = useCallback(async (existingPdfUrl: string) => {
     setLoading(true);
     
     try {
@@ -227,7 +192,42 @@ export default function ForecastDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+  
+  useEffect(() => {
+    const loadForecastData = async () => {
+      // Parse query parameters
+      const urlParams = new URLSearchParams(window.location.search);
+      const queriedPdfUrl = urlParams.get('pdf');
+      
+      if (id && id !== 'weekly-forecast' && id !== 'custom-forecast') {
+        // It's a saved forecast with an ID - load it from the server
+        await loadForecastDetails(id);
+      } else if (id === 'weekly-forecast') {
+        // Handle weekly forecast view
+        if (queriedPdfUrl) {
+          setPdfUrl(queriedPdfUrl);
+          loadWeeklyForecast(queriedPdfUrl);
+        } else {
+          // No PDF URL provided - load standard weekly forecast
+          loadWeeklyForecast();
+        }
+      } else if (id === 'custom-forecast') {
+        // Handle custom forecast - we need the PDF URL in query params
+        if (queriedPdfUrl) {
+          setPdfUrl(queriedPdfUrl);
+          loadCustomForecast(queriedPdfUrl);
+        } else {
+          // Without a PDF URL, we can't display a custom forecast
+          setError('Custom forecast data is missing. Please try generating a new forecast.');
+          showToast('Custom forecast data is missing', 'error');
+          setLoading(false);
+        }
+      }
+    };
+    
+    loadForecastData();
+  }, [id, loadForecastDetails, loadWeeklyForecast, loadCustomForecast, showToast]);
 
   const handleSave = async () => {
     // Only proceed if not already saved
