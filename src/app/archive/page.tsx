@@ -2,11 +2,11 @@
 
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { Alert } from '@/types';
+import { Alert, FilterOptions } from '@/types';
 import { fetchArchivedAlerts } from '@/services/api';
 import Link from 'next/link';
 import { 
-  Box, Container, Typography, Button, Snackbar, Alert as MuiAlert, CircularProgress,
+  Box, Container, Typography, Button, Snackbar, CircularProgress,
   Card, CardContent, Chip, Divider
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
@@ -17,13 +17,23 @@ import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import Layout from '@/components/Layout';
 import FilterDrawer from '@/components/FilterDrawer';
 import { Socket, io } from 'socket.io-client';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/ui/toast';
 
-// Define interface for filter options
-interface FilterOptions {
-  sortBy: string;
-  incidentTypes: string[];
-  timeRange: number;
-  distance: number;
+// Define a specific interface for the API parameters
+interface ArchiveAlertParams {
+  page: number;
+  limit: number;
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  distance?: number;
+  alertCategory?: string[];
+  startDate?: string;
+  endDate?: string;
+  impactLevel?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 // Create a client component that uses the useSearchParams hook
@@ -35,14 +45,20 @@ function ArchiveContent() {
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const [snackbarMessage, setSnackbarMessage] = useState<string>('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState<'success' | 'error' | 'info' | 'warning'>('info');
+  const { isSubscribed } = useAuth();
+  const { showToast } = useToast();
+  
+  // Updated FilterOptions to match the type from types/index.ts
   const [filters, setFilters] = useState<FilterOptions>({
     sortBy: 'newest',
-    incidentTypes: [],
+    alertCategory: [], // Changed from incidentTypes to alertCategory
     timeRange: 0,
-    distance: 50
+    distance: 50,
+    impactLevel: '',
+    customDateFrom: new Date(),
+    customDateTo: new Date(),
   });
+  
   const [isFilterDrawerOpen, setIsFilterDrawerOpen] = useState<boolean>(false);
   const [locationLoading, setLocationLoading] = useState<boolean>(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
@@ -60,60 +76,197 @@ function ArchiveContent() {
   const searchParams = useSearchParams();
   const highlightedAlertId = searchParams.get('highlight');
 
-  const loadArchivedAlerts = useCallback(async (pageNum = 1, resetAlerts = false) => {
-    setLoading(true);
-    setError(null);
+  // Format time for display
+  const formatTime = (timestamp: string) => {
+    if (!timestamp) return '';
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
     
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} ${diffInMinutes === 1 ? 'minute' : 'minutes'} ago`;
+    } else if (diffInMinutes < 24 * 60) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+    } else {
+      return formatDateForDisplay(timestamp);
+    }
+  };
+
+  // Load archived alerts function with updated filter params
+  const loadArchivedAlerts = useCallback(async (pageNum: number, reset: boolean) => {
+    if (loading && !reset) return;
+    
+    setLoading(true);
     try {
-      const params: {
-        page: number;
-        limit: number;
-        sortBy: string;
-        latitude?: number;
-        longitude?: number;
-        distance?: number;
-        city?: string;
-        incidentTypes?: string[];
-      } = {
+      // Prepare filter parameters
+      const params: ArchiveAlertParams = {
         page: pageNum,
-        limit: 10,
-        sortBy: filters.sortBy,
+        limit: 10
       };
       
       // Add location parameters if available
-      if (coords && coords.latitude && coords.longitude) {
-        params.latitude = coords.latitude;
-        params.longitude = coords.longitude;
-        if (filters.distance > 0) {
-          params.distance = filters.distance;
-        }
-      } else if (city && city !== 'Edinburgh') {
+      if (city && city !== 'Edinburgh') {
         params.city = city;
       }
       
-      // Add incident type filters if selected
-      if (filters.incidentTypes.length > 0) {
-        params.incidentTypes = filters.incidentTypes;
+      if (coords) {
+        params.latitude = coords.latitude;
+        params.longitude = coords.longitude;
+        params.distance = filters.distance;
       }
       
-      const response = await fetchArchivedAlerts(params);
+      // Add alert category filter if selected
+      if (filters.alertCategory && filters.alertCategory.length > 0) {
+        params.alertCategory = filters.alertCategory;
+      }
       
-      if (resetAlerts) {
-        setArchivedAlerts(response.alerts);
+      // Add date range filter if selected
+      if (filters.timeRange > 0 && filters.timeRange !== -1) {
+        const today = new Date();
+        const endDate = new Date();
+        endDate.setDate(today.getDate() + filters.timeRange);
+        
+        params.startDate = today.toISOString();
+        params.endDate = endDate.toISOString();
+      } else if (filters.timeRange === -1) {
+        // Custom date range
+        if (filters.customDateFrom && filters.customDateTo) {
+          params.startDate = filters.customDateFrom.toISOString();
+          params.endDate = filters.customDateTo.toISOString();
+        } else {
+          // Fallback to last 30 days if custom dates are missing
+          const today = new Date();
+          const thirtyDaysAgo = new Date();
+          thirtyDaysAgo.setDate(today.getDate() - 30);
+          
+          params.startDate = thirtyDaysAgo.toISOString();
+          params.endDate = today.toISOString();
+        }
+      }
+      
+      // Add impact level filter if selected
+      if (filters.impactLevel) {
+        params.impactLevel = filters.impactLevel;
+      }
+      
+      // Add sort parameters
+      if (filters.sortBy) {
+        if (filters.sortBy === 'newest') {
+          params.sortBy = 'createdAt';
+          params.sortOrder = 'desc';
+        } else if (filters.sortBy === 'oldest') {
+          params.sortBy = 'createdAt';
+          params.sortOrder = 'asc';
+        } else if (filters.sortBy === 'reported') {
+          params.sortBy = 'numberOfReports';
+          params.sortOrder = 'desc';
+        }
+      }
+      
+      const result = await fetchArchivedAlerts(params);
+      
+      if (reset) {
+        setArchivedAlerts(result.alerts);
       } else {
-        setArchivedAlerts(prev => [...prev, ...response.alerts]);
+        setArchivedAlerts(prev => [...prev, ...result.alerts]);
       }
       
-      setTotalAlerts(response.totalCount);
+      setTotalAlerts(result.totalCount);
+      setHasMore(result.alerts.length === 10);
       setPage(pageNum);
-      setHasMore(pageNum * 10 < response.totalCount);
-    } catch (err) {
-      setError('Failed to load archived alerts. Please try again later.');
-      console.error('Error loading archived alerts:', err);
+      setError(null);
+    } catch (error) {
+      console.error('Error loading archived alerts:', error);
+      setError('Failed to load alerts. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [filters, coords, city]);
+  }, [city, coords, filters, loading]);
+
+  // Handle using current location
+  const handleUseMyLocation = async () => {
+    if (!isSubscribed) {
+      showToast("Please subscribe to use location features", "error");
+      return;
+    }
+    
+    setLocationLoading(true);
+    
+    try {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            setLocationAccuracy(Math.round(accuracy));
+            setCoords({ latitude, longitude });
+            
+            // Get city name from coordinates
+            try {
+              const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
+              );
+              const data = await response.json();
+              
+              const locationName = data.address?.city || 
+                data.address?.town || 
+                data.address?.village || 
+                data.address?.county || 
+                'Current Location';
+                
+              setCity(locationName);
+              setLocationLoading(false);
+              
+              // Show success toast
+              showToast(`Using location: ${locationName}`, "success");
+              
+              // Load alerts with the new location
+              await loadArchivedAlerts(1, true);
+            } catch (error) {
+              console.error('Error getting location name:', error);
+              setCity('Current Location');
+              setLocationLoading(false);
+              
+              // Show error toast
+              showToast("Using location with unknown name", "error");
+              
+              // Still load alerts with the coordinates
+              await loadArchivedAlerts(1, true);
+            }
+          },
+          (error) => {
+            console.error('Error getting location:', error);
+            setLocationLoading(false);
+            
+            let errorMessage = 'Unable to get your location';
+            
+            if (error.code === 1) {
+              errorMessage = 'Location access denied. Please enable location in your browser settings.';
+            } else if (error.code === 2) {
+              errorMessage = 'Location unavailable. Please try again later.';
+            } else if (error.code === 3) {
+              errorMessage = 'Location request timed out. Please try again.';
+            }
+            
+            showToast(errorMessage, "error");
+          },
+          { 
+            enableHighAccuracy: true, 
+            timeout: 10000, 
+            maximumAge: 0 
+          }
+        );
+      } else {
+        setLocationLoading(false);
+        showToast("Geolocation is not supported by your browser", "error");
+      }
+    } catch (error) {
+      console.error('Error in geolocation:', error);
+      setLocationLoading(false);
+      showToast("Error getting your location", "error");
+    }
+  };
+
   // Initialize socket connection
   useEffect(() => {
     const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tourprism-backend-w5c1.onrender.com';
@@ -173,100 +326,6 @@ function ArchiveContent() {
     });
   };
 
-  // Format time ago
-  const formatTime = (createdAt: string) => {
-    const now = new Date();
-    const created = new Date(createdAt);
-    const diff = now.getTime() - created.getTime();
-    
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-    const months = Math.floor(days / 30);
-    
-    if (months > 0) {
-      return `${months} month${months > 1 ? 's' : ''} ago`;
-    } else if (days > 0) {
-      return `${days} day${days > 1 ? 's' : ''} ago`;
-    } else if (hours > 0) {
-      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
-    } else if (minutes > 0) {
-      return `${minutes} minute${minutes > 1 ? 's' : ''} ago`;
-    } else {
-      return 'Just now';
-    }
-  };
-
-  // Get current location
-  const handleUseMyLocation = async () => {
-    setLocationLoading(true);
-    
-    if (!navigator.geolocation) {
-      setSnackbarMessage('Geolocation is not supported by your browser');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      setLocationLoading(false);
-      return;
-    }
-    
-    try {
-      navigator.geolocation.getCurrentPosition(
-        async (position) => {
-          const { latitude, longitude, accuracy } = position.coords;
-          setLocationAccuracy(accuracy);
-          
-          // Get city name from coordinates
-          try {
-            const cityName = await getCityFromCoordinates(latitude, longitude);
-            setCity(cityName);
-          } catch (error) {
-            console.error('Error getting city name:', error);
-            setCity('Unknown location');
-          }
-          
-          setCoords({ latitude, longitude });
-          setLocationLoading(false);
-          
-          // Load alerts with new location
-          loadArchivedAlerts(1, true);
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          setSnackbarMessage('Unable to get your location. Please try again or select a location manually.');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          setLocationLoading(false);
-        },
-        { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
-      );
-    } catch (error) {
-      console.error('Error in geolocation request:', error);
-      setSnackbarMessage('An error occurred while trying to get your location.');
-      setSnackbarSeverity('error');
-      setSnackbarOpen(true);
-      setLocationLoading(false);
-    }
-  };
-
-  // Get city name from coordinates
-  const getCityFromCoordinates = async (latitude: number, longitude: number) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`
-      );
-      const data = await response.json();
-
-      if (data.address) {
-        return data.address.city || data.address.town || data.address.village || 'Unknown location';
-      }
-      return 'Unknown location';
-    } catch (error) {
-      console.error('Error getting location name:', error);
-      return 'Unknown location';
-    }
-  };
-
   // Reset location to Edinburgh
   const handleResetLocation = useCallback(() => {
     setCity('Edinburgh');
@@ -308,6 +367,7 @@ function ArchiveContent() {
     }
   };
 
+  // Updated handleFilterChange to use the correct FilterOptions type
   const handleFilterChange = (newFilters: FilterOptions) => {
     setFilters(newFilters);
   };
@@ -320,9 +380,12 @@ function ArchiveContent() {
   const handleClearFilters = () => {
     setFilters({
       sortBy: 'newest',
-      incidentTypes: [],
+      alertCategory: [], // Changed from incidentTypes to alertCategory
       timeRange: 0,
-      distance: 50
+      distance: 50,
+      impactLevel: '',
+      customDateFrom: new Date(),
+      customDateTo: new Date(),
     });
   };
 
@@ -488,27 +551,19 @@ function ArchiveContent() {
           onClose={handleCloseSnackbar}
           anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          <MuiAlert 
-            elevation={6} 
-            variant="filled" 
-            severity={snackbarSeverity}
-            onClose={handleCloseSnackbar}
-          >
-            {snackbarMessage}
-          </MuiAlert>
         </Snackbar>
       </Container>
     </Layout>
   );
 }
 
-// Main Archive component with Suspense boundary
+// Archive page component with proper suspense handling
 export default function Archive() {
   return (
     <Suspense fallback={
-      <Container sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
-      </Container>
+      </Box>
     }>
       <ArchiveContent />
     </Suspense>
