@@ -384,11 +384,7 @@ interface FetchAlertsParams {
   distance?: number;
   startDate?: string;
   endDate?: string;
-<<<<<<< HEAD
-  incidentTypes?: string[];
-=======
   alertCategory?: string[];
->>>>>>> 2945eb6 (Initial commit)
   limit?: number;
   page?: number;
   sortBy?: string;
@@ -433,18 +429,10 @@ export const fetchAlerts = async (params: FetchAlertsParams = {}): Promise<{ ale
     if (params.endDate) {
       queryParams.append('endDate', params.endDate);
     }
-
-<<<<<<< HEAD
-    // Incident type filters - handle as array properly
-    if (params.incidentTypes && Array.isArray(params.incidentTypes) && params.incidentTypes.length > 0) {
-      params.incidentTypes.forEach(type => {
-        queryParams.append('incidentTypes[]', type);
-=======
     // Update incident type filters to use alertCategory
     if (params.alertCategory && Array.isArray(params.alertCategory) && params.alertCategory.length > 0) {
       params.alertCategory.forEach(category => {
         queryParams.append('alertCategory[]', category);
->>>>>>> 2945eb6 (Initial commit)
       });
     }
 
@@ -507,16 +495,9 @@ export const fetchArchivedAlerts = async (params: FetchAlertsParams = {}): Promi
       }
     }
 
-    // Incident type filters - handle as array properly
-<<<<<<< HEAD
-    if (params.incidentTypes && Array.isArray(params.incidentTypes) && params.incidentTypes.length > 0) {
-      params.incidentTypes.forEach(type => {
-        queryParams.append('incidentTypes[]', type);
-=======
     if (params.alertCategory && Array.isArray(params.alertCategory) && params.alertCategory.length > 0) {
       params.alertCategory.forEach(category => {
         queryParams.append('alertCategory[]', category);
->>>>>>> 2945eb6 (Initial commit)
       });
     }
 

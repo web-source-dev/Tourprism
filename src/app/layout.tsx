@@ -3,10 +3,7 @@ import { inter, poppins } from "./fonts";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { ThemeRegistry } from "@/components/ThemeRegistry";
-<<<<<<< HEAD
-=======
 import { ToastProvider } from "@/ui/toast";
->>>>>>> 2945eb6 (Initial commit)
 
 // Import Remixicon
 import 'remixicon/fonts/remixicon.css';
@@ -28,13 +25,9 @@ export default function RootLayout({
       >
         <ThemeRegistry>
           <AuthProvider>
-<<<<<<< HEAD
-            {children}
-=======
             <ToastProvider>
               {children}
             </ToastProvider>
->>>>>>> 2945eb6 (Initial commit)
           </AuthProvider>
         </ThemeRegistry>
       </body>

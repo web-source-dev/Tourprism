@@ -4,10 +4,7 @@ import { createContext, useContext, useState, useEffect, ReactNode, useCallback 
 import { User } from '../types';
 import { useRouter, usePathname } from 'next/navigation';
 import Cookies from 'js-cookie';
-<<<<<<< HEAD
-=======
 import {api} from '../services/api';
->>>>>>> 2945eb6 (Initial commit)
 
 // Public routes that don't require authentication
 // Keep this in sync with the list in ProtectedRoute.tsx
@@ -21,10 +18,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   logout: () => void;
   isAuthenticated: boolean;
-<<<<<<< HEAD
-=======
   isSubscribed: boolean;
->>>>>>> 2945eb6 (Initial commit)
   isCollaborator: boolean;
   collaboratorRole: string | null;
   collaboratorEmail: string | null;
@@ -46,10 +40,7 @@ const defaultContext: AuthContextType = {
   setUser: () => {},
   logout: () => {},
   isAuthenticated: false,
-<<<<<<< HEAD
-=======
   isSubscribed: false,
->>>>>>> 2945eb6 (Initial commit)
   isCollaborator: false,
   collaboratorRole: null,
   collaboratorEmail: null,
@@ -75,10 +66,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isCollaborator, setIsCollaborator] = useState<boolean>(false);
   const [collaboratorRole, setCollaboratorRole] = useState<string | null>(null);
   const [collaboratorEmail, setCollaboratorEmail] = useState<string | null>(null);
-<<<<<<< HEAD
-=======
   const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
->>>>>>> 2945eb6 (Initial commit)
   
   // Role-based state values
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -91,9 +79,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   
   const router = useRouter();
   const pathname = usePathname();
-
-<<<<<<< HEAD
-=======
   const fetchUser = async () => {
     try {
       const response = await api.get('/auth/user/profile');
@@ -116,7 +101,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     fetchUser();
   }, []);
 
->>>>>>> 2945eb6 (Initial commit)
   // Utility function to check roles
   const hasRole = useCallback((role: string | string[]): boolean => {
     if (!user) return false;
@@ -150,12 +134,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setIsEditor(true);
       }
       
-<<<<<<< HEAD
-=======
       // Update subscription status
       setIsSubscribed(!!user.isSubscribed);
       
->>>>>>> 2945eb6 (Initial commit)
       // Update the admin dashboard access flag
       const hasAdminAccess = userRole === 'admin' || 
         userRole === 'manager' || 
@@ -167,10 +148,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Store the admin access flag in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('accessAdminDashboard', hasAdminAccess.toString());
-<<<<<<< HEAD
-=======
         localStorage.setItem('isSubscribed', (!!user.isSubscribed).toString());
->>>>>>> 2945eb6 (Initial commit)
       }
     } else {
       setIsAdmin(false);
@@ -178,18 +156,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsViewer(false);
       setIsEditor(false);
       setAccessAdminDashboard(false);
-<<<<<<< HEAD
-=======
+
       setIsSubscribed(false);
->>>>>>> 2945eb6 (Initial commit)
       
       // Clear the admin access flag from localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessAdminDashboard');
-<<<<<<< HEAD
-=======
         localStorage.removeItem('isSubscribed');
->>>>>>> 2945eb6 (Initial commit)
       }
     }
     
@@ -232,15 +205,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             if (storedAccessAdminDashboard === 'true') {
               setAccessAdminDashboard(true);
             }
-<<<<<<< HEAD
-=======
             
             // Set subscription status if present
             const storedIsSubscribed = localStorage.getItem('isSubscribed');
             if (storedIsSubscribed === 'true') {
               setIsSubscribed(true);
             }
->>>>>>> 2945eb6 (Initial commit)
           } else {
             // Clear any existing cookies if no token in localStorage
             Cookies.remove('token', { path: '/' });
@@ -272,10 +242,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('collaboratorRole');
       localStorage.removeItem('collaboratorEmail');
       localStorage.removeItem('accessAdminDashboard');
-<<<<<<< HEAD
-=======
       localStorage.removeItem('isSubscribed');
->>>>>>> 2945eb6 (Initial commit)
       
       // Also remove cookies
       Cookies.remove('token', { path: '/' });
@@ -292,10 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsCollaboratorViewer(false);
       setIsCollaboratorManager(false);
       setAccessAdminDashboard(false);
-<<<<<<< HEAD
-=======
       setIsSubscribed(false);
->>>>>>> 2945eb6 (Initial commit)
       
       router.push('/');
     }
@@ -307,10 +271,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser,
     logout: handleLogout,
     isAuthenticated: !!user,
-<<<<<<< HEAD
-=======
     isSubscribed,
->>>>>>> 2945eb6 (Initial commit)
     isCollaborator,
     collaboratorRole,
     collaboratorEmail,
@@ -325,8 +286,5 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-<<<<<<< HEAD
-}; 
-=======
+
 };
->>>>>>> 2945eb6 (Initial commit)

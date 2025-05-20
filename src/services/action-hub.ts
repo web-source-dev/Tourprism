@@ -164,24 +164,17 @@ export const getActionLogs = async (id: string): Promise<unknown[]> => {
 /**
  * Send notifications to team members (collaborators)
  */
-<<<<<<< HEAD
-export const notifyTeam = async (id: string, message: string): Promise<{ 
-=======
+
 export const notifyTeam = async (id: string, message: string, managersOnly: boolean = false): Promise<{ 
->>>>>>> 2945eb6 (Initial commit)
   message: string; 
   notifiedTeamMembers: number;
   emailResults?: { email: string; success: boolean; }[];
 }> => {
   try {
-<<<<<<< HEAD
-    const response = await api.post(`/api/action-hub/${id}/notify-team`, { message });
-=======
     const response = await api.post(`/api/action-hub/${id}/notify-team`, { 
       message,
       managersOnly 
     });
->>>>>>> 2945eb6 (Initial commit)
     return response.data as { 
       message: string; 
       notifiedTeamMembers: number;

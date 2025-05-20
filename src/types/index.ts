@@ -16,10 +16,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   isVerified: boolean;
-<<<<<<< HEAD
-=======
   isSubscribed?: boolean;
->>>>>>> 2945eb6 (Initial commit)
   role?: string;
   status?: 'active' | 'restricted' | 'pending' | 'deleted';
   createdAt: string;
@@ -105,10 +102,6 @@ export interface Alert {
   updated?: string;
   expectedStart?: string;
   expectedEnd?: string;
-<<<<<<< HEAD
-=======
-  
->>>>>>> 2945eb6 (Initial commit)
 }
 
 export interface Media {
@@ -132,18 +125,12 @@ export interface Notification {
 
 export interface FilterOptions {
   sortBy: string;
-<<<<<<< HEAD
-  incidentTypes: string[];
-  timeRange: number;
-  distance: number;
-=======
   alertCategory: string[];
   timeRange: number;
   distance: number;
   impactLevel?: string;
   customDateFrom?: Date | null;
   customDateTo?: Date | null;
->>>>>>> 2945eb6 (Initial commit)
 }
 
 export interface LoginFormData {
@@ -236,15 +223,12 @@ export interface ActionHubItem extends Alert {
   handledBy?: User | string;
   handledAt?: string;
   teamMembers?: TeamMember[];
-<<<<<<< HEAD
-=======
   
   // New properties matching the server model
   isFollowing: boolean;
   isFlagged: boolean;
   flagCount: number;
   numberOfFollows: number;
->>>>>>> 2945eb6 (Initial commit)
 }
 
 export interface TeamMember {
@@ -253,8 +237,4 @@ export interface TeamMember {
   email: string;
   role: 'viewer' | 'manager';
   status: 'active' | 'restricted' | 'deleted' | 'invited' | 'accepted';
-<<<<<<< HEAD
 } 
-=======
-}
->>>>>>> 2945eb6 (Initial commit)

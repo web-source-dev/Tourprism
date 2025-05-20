@@ -28,8 +28,6 @@ import { useAuth } from '@/context/AuthContext';
 import Image from 'next/image';
 import { io, Socket } from 'socket.io-client';
 import Countdown from 'react-countdown';
-<<<<<<< HEAD
-=======
 import { useToast } from '@/ui/toast';
 import GetAccessCard from '@/components/GetAccessCard';
 import UnlockFeaturesCard from '@/components/UnlockFeaturesCard';
@@ -39,7 +37,6 @@ interface ExtendedUser extends User {
   isProfileComplete?: boolean;
   profileCompletionPercentage?: number;
 }
->>>>>>> 2945eb6 (Initial commit)
 
 // Function to get the appropriate icon based on alert category
 const getCategoryIcon = (category: string) => {
@@ -151,22 +148,6 @@ export default function Feed() {
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const [lowAccuracyWarning, setLowAccuracyWarning] = useState(false);
   const [locationAccuracy, setLocationAccuracy] = useState<number | null>(null);
-<<<<<<< HEAD
-  const [userProfile, setUserProfile] = useState<User | null>(null);
-  const [profileLoaded, setProfileLoaded] = useState(false);
-  const [operatingRegionAlerts, setOperatingRegionAlerts] = useState<AlertType[]>([]);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: '',
-    severity: 'success' as 'success' | 'error' | 'info' | 'warning'
-  });
-  const [filters, setFilters] = useState<FilterOptions>({
-    sortBy: '',
-    incidentTypes: [],
-    timeRange: 0,
-    distance: 50
-  });
-=======
   const [userProfile, setUserProfile] = useState<ExtendedUser | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [operatingRegionAlerts, setOperatingRegionAlerts] = useState<AlertType[]>([]);
@@ -180,7 +161,6 @@ export default function Feed() {
     customDateTo: new Date(),
   });
   const { showToast } = useToast();
->>>>>>> 2945eb6 (Initial commit)
 
   const isViewOnly = () => {
     return isCollaboratorViewer;
@@ -237,12 +217,6 @@ export default function Feed() {
           
           params.startDate = now.toISOString();
           params.endDate = futureDate.toISOString();
-<<<<<<< HEAD
-        }
-        
-        if (filters.incidentTypes && filters.incidentTypes.length > 0) {
-          params.incidentTypes = filters.incidentTypes;
-=======
         } else if (filters.timeRange === -1 && filters.customDateFrom && filters.customDateTo) {
           // Handle custom date range
           params.startDate = new Date(filters.customDateFrom).toISOString();
@@ -255,7 +229,6 @@ export default function Feed() {
         
         if (filters.impactLevel) {
           params.impact = filters.impactLevel;
->>>>>>> 2945eb6 (Initial commit)
         }
         
         console.log(`Fetching alerts for operating region ${region.name} with params:`, params);
@@ -325,12 +298,6 @@ export default function Feed() {
 
           params.startDate = now.toISOString();
           params.endDate = futureDate.toISOString();
-<<<<<<< HEAD
-        }
-
-        if (filters.incidentTypes && filters.incidentTypes.length > 0) {
-          params.incidentTypes = filters.incidentTypes;
-=======
         } else if (filters.timeRange === -1 && filters.customDateFrom && filters.customDateTo) {
           // Handle custom date range
           params.startDate = new Date(filters.customDateFrom).toISOString();
@@ -343,7 +310,6 @@ export default function Feed() {
 
         if (filters.impactLevel) {
           params.impact = filters.impactLevel;
->>>>>>> 2945eb6 (Initial commit)
         }
 
         if (coordinates) {
@@ -428,15 +394,7 @@ export default function Feed() {
       setPage(1);
     } catch (error) {
       console.error('Error fetching alerts:', error);
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: 'Failed to fetch alerts',
-        severity: 'error'
-      });
-=======
       showToast('Failed to fetch alerts', 'error');
->>>>>>> 2945eb6 (Initial commit)
       setAlerts([]);
       setTotalCount(0);
       setHasMore(false);
@@ -479,15 +437,7 @@ export default function Feed() {
         fetchLocationAlerts(city, coords);
       }
       
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: 'A new alert has been added',
-        severity: 'info'
-      });
-=======
       showToast('A new alert has been added', 'success');
->>>>>>> 2945eb6 (Initial commit)
     });
 
     // Similar updates for other socket events that change alerts
@@ -520,15 +470,7 @@ export default function Feed() {
         );
       }
       
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: 'An alert has been updated',
-        severity: 'info'
-      });
-=======
       showToast('An alert has been updated', 'success');
->>>>>>> 2945eb6 (Initial commit)
     });
 
     socketRef.current.on('alerts:bulk-created', (data) => {
@@ -549,15 +491,7 @@ export default function Feed() {
         fetchLocationAlerts(city, coords);
       }
       
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: `${data.count} new alerts have been added`,
-        severity: 'info'
-      });
-=======
       showToast(`${data.count} new alerts have been added`, 'success');
->>>>>>> 2945eb6 (Initial commit)
     });
 
     // Add these event handlers back after the 'alert:updated' handler
@@ -578,15 +512,7 @@ export default function Feed() {
         setAlerts(prevAlerts => prevAlerts.filter(alert => alert._id !== data.alertId));
       }
       
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: 'An alert has been removed',
-        severity: 'info'
-      });
-=======
       showToast('An alert has been removed', 'success');
->>>>>>> 2945eb6 (Initial commit)
     });
 
     socketRef.current.on('alert:followed', (data) => {
@@ -760,12 +686,8 @@ export default function Feed() {
 
   const handleFollowUpdate = async (alertId: string) => {
     if (!isAuthenticated) {
-<<<<<<< HEAD
-      setLoginDialogOpen(true);
-=======
       // Show toast instead of opening login dialog
       showToast('Create free account to follow alerts', 'error');
->>>>>>> 2945eb6 (Initial commit)
       return;
     }
 
@@ -783,25 +705,10 @@ export default function Feed() {
         )
       );
 
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: response.following ? 'You are now following this alert' : 'You have unfollowed this alert',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error following alert:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to follow the alert',
-        severity: 'error'
-      });
-=======
       showToast(response.following ? 'You are now following this alert' : 'You have unfollowed this alert', 'success');
     } catch (error) {
       console.error('Error following alert:', error);
       showToast('Failed to follow the alert', 'error');
->>>>>>> 2945eb6 (Initial commit)
     }
   };
 
@@ -825,25 +732,10 @@ export default function Feed() {
         )
       );
 
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: response.flagged ? 'Alert has been flagged' : 'Flag has been removed from this alert',
-        severity: 'success'
-      });
-    } catch (error) {
-      console.error('Error flagging alert:', error);
-      setSnackbar({
-        open: true,
-        message: 'Failed to flag the alert',
-        severity: 'error'
-      });
-=======
       showToast(response.flagged ? 'Alert has been flagged' : 'Flag has been removed from this alert', 'success');
     } catch (error) {
       console.error('Error flagging alert:', error);
       showToast('Failed to flag the alert', 'error');
->>>>>>> 2945eb6 (Initial commit)
     }
   };
 
@@ -937,16 +829,6 @@ export default function Feed() {
     setLoginDialogOpen(false);
   };
 
-<<<<<<< HEAD
-  const handleCloseSnackbar = () => {
-    setSnackbar({
-      ...snackbar,
-      open: false
-    });
-  };
-
-=======
->>>>>>> 2945eb6 (Initial commit)
   const handleLoadMore = () => {
     if (isAuthenticated) {
       loadMoreAlerts();
@@ -991,12 +873,6 @@ export default function Feed() {
 
           params.startDate = now.toISOString();
           params.endDate = futureDate.toISOString();
-<<<<<<< HEAD
-        }
-        
-        if (filters.incidentTypes && filters.incidentTypes.length > 0) {
-          params.incidentTypes = filters.incidentTypes;
-=======
         } else if (filters.timeRange === -1 && filters.customDateFrom && filters.customDateTo) {
           // Handle custom date range
           params.startDate = new Date(filters.customDateFrom).toISOString();
@@ -1005,7 +881,6 @@ export default function Feed() {
         
         if (filters.alertCategory && filters.alertCategory.length > 0) {
           params.alertCategory = filters.alertCategory;
->>>>>>> 2945eb6 (Initial commit)
         }
         
         if (coords) {
@@ -1048,15 +923,7 @@ export default function Feed() {
       }
     } catch (error) {
       console.error('Error loading more alerts:', error);
-<<<<<<< HEAD
-      setSnackbar({
-        open: true,
-        message: 'Failed to load more alerts',
-        severity: 'error'
-      });
-=======
       showToast('Failed to load more alerts', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
@@ -1078,18 +945,12 @@ export default function Feed() {
   const handleClearFilters = () => {
     setFilters({
       sortBy: 'newest',
-<<<<<<< HEAD
-      incidentTypes: [],
-      timeRange: 0,
-      distance: 50
-=======
       alertCategory: [],
       timeRange: 0,
       distance: 50,
       impactLevel: '',
       customDateFrom: new Date(),
       customDateTo: new Date(),
->>>>>>> 2945eb6 (Initial commit)
     });
   };
 
@@ -1236,11 +1097,7 @@ export default function Feed() {
   }
 
   return (
-<<<<<<< HEAD
-    <Layout onFilterOpen={() => isAuthenticated ? setIsFilterDrawerOpen(true) : setLoginDialogOpen(true)}>
-=======
     <Layout onFilterOpen={() => setIsFilterDrawerOpen(true)}>
->>>>>>> 2945eb6 (Initial commit)
       <Container maxWidth="xl">
         {/* Low Accuracy Warning Dialog */}
         <Dialog
@@ -1355,206 +1212,6 @@ export default function Feed() {
           </Paper>
         ) : (
           <>
-<<<<<<< HEAD
-            {alerts.map((alert: AlertType, index: number) => (
-              <Paper 
-                key={`alert-${alert._id}-${index}`} 
-                sx={{ 
-                  py: 0.5, 
-                  bgcolor: '#f5f5f5', 
-                  borderRadius: 2, 
-                  boxShadow: 'none',
-                  position: 'relative',
-                  borderLeft: 'none',
-                  pl: 0
-                }}
-              >
-                
-                {/* Alert Header */}
-                <Typography variant="subtitle1" sx={{ fontWeight: 500, fontSize: { xs: '14px', md: '16px' } }}>
-                  {alert.title || ""}
-                </Typography>
-
-                {/* Alert Metadata */}
-                <Box sx={{ display: 'flex', gap: 1, color: 'text.secondary', fontSize: '0.75rem', mb: 0.5 }}>
-                  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {getCategoryIcon(alert.alertCategory || "")}
-                    {alert.alertCategory || ""}
-                  </Box>
-                  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path fillRule="evenodd" clipRule="evenodd" d="M11.167 4.66667C11.167 6.24543 10.0117 7.55436 8.50033 7.79408L8.50033 12C8.50033 12.2761 8.27647 12.5 8.00033 12.5C7.72418 12.5 7.50033 12.2761 7.50033 12L7.50033 7.79408C5.989 7.55436 4.83366 6.24543 4.83366 4.66667C4.83366 2.91777 6.25142 1.5 8.00033 1.5C9.74923 1.5 11.167 2.91777 11.167 4.66667ZM8.00033 2.5C6.80371 2.5 5.83366 3.47005 5.83366 4.66667C5.83366 5.86328 6.80371 6.83333 8.00033 6.83333C9.19694 6.83333 10.167 5.86328 10.167 4.66667C10.167 3.47005 9.19694 2.5 8.00033 2.5Z" fill="#757575" />
-                      <path d="M5.16699 12.6667C5.16699 12.3905 4.94313 12.1667 4.66699 12.1667C4.39085 12.1667 4.16699 12.3905 4.16699 12.6667C4.16699 13.0325 4.35443 13.3305 4.58539 13.5489C4.81529 13.7664 5.12114 13.9391 5.45761 14.0737C6.13332 14.344 7.03253 14.5 8.00033 14.5C8.96813 14.5 9.86733 14.344 10.543 14.0737C10.8795 13.9391 11.1854 13.7664 11.4153 13.5489C11.6462 13.3305 11.8337 13.0325 11.8337 12.6667C11.8337 12.3905 11.6098 12.1667 11.3337 12.1667C11.0575 12.1667 10.8337 12.3905 10.8337 12.6667C10.8337 12.6697 10.8338 12.7225 10.7282 12.8224C10.6207 12.924 10.4384 13.0385 10.1717 13.1452C9.64094 13.3575 8.87347 13.5 8.00033 13.5C7.12718 13.5 6.35971 13.3575 5.829 13.1452C5.56225 13.0385 5.37994 12.924 5.2725 12.8224C5.16686 12.7225 5.16699 12.6697 5.16699 12.6667Z" fill="#757575" />
-                    </svg>
-
-                    {alert.city || "EdinBurgh"}
-                  </Box>
-
-                  {/* Display expected end date with countdown if available, otherwise show createdAt */}
-                  <Box component="span" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M8.49967 5.33334C8.49967 5.05719 8.27582 4.83334 7.99967 4.83334C7.72353 4.83334 7.49967 5.05719 7.49967 5.33334V8C7.49967 8.13261 7.55235 8.25979 7.64612 8.35356L8.97945 9.68689C9.17472 9.88215 9.4913 9.88215 9.68656 9.68689C9.88182 9.49163 9.88182 9.17505 9.68656 8.97978L8.49967 7.7929V5.33334Z" fill="#757575" />
-                      <path fillRule="evenodd" clipRule="evenodd" d="M7.99967 0.833336C4.04163 0.833336 0.833008 4.04196 0.833008 8C0.833008 11.958 4.04163 15.1667 7.99967 15.1667C11.9577 15.1667 15.1663 11.958 15.1663 8C15.1663 4.04196 11.9577 0.833336 7.99967 0.833336ZM1.83301 8C1.83301 4.59425 4.59392 1.83334 7.99967 1.83334C11.4054 1.83334 14.1663 4.59425 14.1663 8C14.1663 11.4058 11.4054 14.1667 7.99967 14.1667C4.59392 14.1667 1.83301 11.4058 1.83301 8Z" fill="#757575" />
-                    </svg>
-
-                    {alert.expectedEnd ? (
-                      alert.expectedStart ? (
-                        // Display both expected start and end dates
-                        <span>{formatDateForDisplay(alert.expectedStart)} - {formatDateForDisplay(alert.expectedEnd)}</span>
-                      ) : (
-                        /* Live countdown timer for end date only */
-                        <Countdown
-                          date={new Date(alert.expectedEnd || '')}
-                          renderer={props => {
-                            // Check if date is in the past
-                            if (props.completed) {
-                              // For expired events, use the "Xd ago" format
-                              const now = new Date();
-                              const endDate = new Date(alert.expectedEnd || '');
-                              const diffMs = now.getTime() - endDate.getTime();
-                              
-                              // Convert ms difference to days, hours, minutes, seconds
-                              const diffSecs = Math.floor(diffMs / 1000);
-                              const days = -Math.floor(diffSecs / (24 * 60 * 60));
-                              const hours = -Math.floor((diffSecs % (24 * 60 * 60)) / (60 * 60));
-                              const minutes = -Math.floor((diffSecs % (60 * 60)) / 60);
-                              const seconds = -Math.floor(diffSecs % 60);
-                              
-                              return <span>{formatRemainingTime({ days, hours, minutes, seconds })}</span>;
-                            } else {
-                              return <span>{formatRemainingTime(props)}</span>;
-                            }
-                          }}
-                        />
-                      )
-                    ) : (
-                      <span>{alert.createdAt ? formatTime(alert.createdAt) : ""}</span>
-                    )}
-                  </Box>
-                </Box>
-                <Typography variant="body2" sx={{ mb: 1, fontSize: { xs: '14px', md: '14px' } }}>
-                  {alert.description || ""}
-                  {alert.recommendedAction && ` ${alert.recommendedAction}`}
-                </Typography>
-                {(alert.risk) && (
-                  <Chip
-                    label={alert.risk}
-                    sx={{
-                      mb: 1,
-                      backgroundColor:
-                        alert.risk === 'Low' ? '#e6f4ea' :
-                          alert.risk === 'Medium' ? '#fff4e5' :
-                            alert.risk === 'High' ? '#fdecea' :
-                              'transparent',
-                      color:
-                        alert.risk === 'Low' ? '#00855b' :
-                          alert.risk === 'Medium' ? '#c17e00' :
-                            alert.risk === 'High' ? '#d32f2f' :
-                              'inherit',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      borderRadius: 10,
-                      paddingX: '8px',
-                      paddingY: '2px',
-                    }}
-                  />
-                )}
-
-
-                {/* Update Time and Follow Text */}
-                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px' }}>
-                    Updated {alert.updated ? formatTime(alert.updated) : formatTime(alert.updatedAt)}
-                  </Typography>
-
-                  {/* Use text with bell icon instead of button */}
-                  <i className="ri-circle-fill" style={{ fontSize: '5px', color: '#777' }}></i>
-                  <Box
-                    onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      cursor: 'pointer',
-                      color: alert.isFollowing ? 'primary.main' : 'text.secondary',
-                      fontWeight: alert.isFollowing ? 500 : 400,
-                      '&:hover': { color: `isViewOnly() ? 'text.secondary' : 'primary.main'` },
-                      opacity: isViewOnly() ? 0.5 : 1
-                    }}
-                  >
-                    {alert.isFollowing ? (
-                      <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M6.99968 0.833374C4.02913 0.833374 1.61827 3.22772 1.61825 6.18468C1.61818 6.87247 1.57193 7.39159 1.25481 7.85817C1.21072 7.9221 1.15222 8.00217 1.0883 8.08966C0.977267 8.24164 0.849859 8.41603 0.753231 8.56704C0.582689 8.83357 0.416071 9.15498 0.358792 9.5295C0.171916 10.7514 1.03338 11.5425 1.89131 11.897C2.44899 12.1274 3.04588 12.3153 3.6675 12.4606C3.6634 12.5298 3.6701 12.6008 3.68887 12.6714C4.07359 14.1191 5.42024 15.1669 6.99984 15.1669C8.57944 15.1669 9.92609 14.1191 10.3108 12.6714C10.3296 12.6008 10.3363 12.5298 10.3322 12.4606C10.9537 12.3152 11.5505 12.1273 12.108 11.897C12.966 11.5425 13.8274 10.7514 13.6406 9.5295C13.5833 9.15499 13.4167 8.83357 13.2461 8.56704C13.1495 8.41604 13.0221 8.2417 12.9111 8.08972C12.8472 8.00224 12.7887 7.92215 12.7446 7.85822C12.4274 7.39162 12.3812 6.87256 12.3811 6.18473C12.3811 3.22774 9.97023 0.833374 6.99968 0.833374ZM8.87123 12.7193C7.63997 12.8714 6.35974 12.8714 5.12847 12.7193C5.4664 13.3728 6.17059 13.8335 6.99984 13.8335C7.82911 13.8335 8.53331 13.3727 8.87123 12.7193Z" fill="black" />
-                      </svg>
-                    ) : (
-                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M8.00012 0.833328C4.95497 0.833328 2.48355 3.29418 2.48353 6.33329C2.48347 7.04018 2.43605 7.57372 2.11097 8.05325C2.06577 8.11897 2.00579 8.20127 1.94026 8.2912C1.82644 8.4474 1.69585 8.62661 1.59679 8.78182C1.42197 9.05575 1.25116 9.38609 1.19245 9.77101C1.00088 11.0268 1.88398 11.8399 2.76346 12.2042C3.4182 12.4755 4.12567 12.6894 4.86357 12.8459C5.24629 14.1929 6.51269 15.1666 7.99947 15.1666C9.48615 15.1666 10.7525 14.1931 11.1353 12.8462C11.8737 12.6896 12.5816 12.4756 13.2368 12.2042C14.1162 11.8399 14.9994 11.0268 14.8078 9.77101C14.7491 9.3861 14.5783 9.05576 14.4034 8.78182C14.3044 8.62662 14.1738 8.44741 14.06 8.29121C13.9945 8.20131 13.9345 8.11901 13.8893 8.05331C13.5642 7.57375 13.5168 7.04027 13.5167 6.33333C13.5167 3.2942 11.0453 0.833328 8.00012 0.833328ZM3.48353 6.33333C3.48353 3.84961 5.50411 1.83333 8.00012 1.83333C10.4961 1.83333 12.5167 3.84965 12.5167 6.33337C12.5168 7.05499 12.5524 7.86444 13.0627 8.61613L13.0643 8.61847C13.1482 8.74056 13.2219 8.84064 13.2913 8.93497C13.3838 9.06063 13.4688 9.17611 13.5605 9.3198C13.7026 9.54255 13.7908 9.73558 13.8192 9.92181C13.9112 10.5247 13.5266 11.0017 12.8541 11.2804C10.0014 12.4621 5.99882 12.4621 3.14618 11.2804C2.47358 11.0017 2.08904 10.5247 2.18101 9.92181C2.20942 9.73558 2.29759 9.54255 2.43975 9.3198C2.53145 9.17611 2.61643 9.06065 2.70891 8.935C2.77824 8.8408 2.85215 8.74036 2.93592 8.61848L2.93752 8.61613C3.44788 7.86444 3.48347 7.05495 3.48353 6.33333ZM9.9754 13.0422C8.67637 13.2082 7.32244 13.2081 6.02345 13.0421C6.40445 13.7079 7.14181 14.1666 7.99947 14.1666C8.85706 14.1666 9.59436 13.708 9.9754 13.0422Z" fill="#616161" />
-                      </svg>
-
-                    )}
-                    <Typography variant="body2" sx={{ fontSize: { xs: '12px', md: '14px' } }}>
-                      {alert.isFollowing ? 'Following' : 'Follow Updates'}
-                    </Typography>
-                  </Box>
-                  
-                  {/* Flag Button */}
-                  {location.pathname === '/feedfsaf' && (
-                    <>
-                      <i className="ri-circle-fill" style={{ fontSize: '5px', color: '#777' }}></i>
-                      <Box
-                        onClick={() => handleFlagAlert(alert._id)}
-                    sx={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 0.5,
-                      cursor: 'pointer',
-                      color: alert.flagged ? 'error.main' : 'text.secondary',
-                      fontWeight: alert.flagged ? 500 : 400,
-                      '&:hover': { color: 'error.main' }
-                    }}
-                  >
-                    {alert.flagged ? (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M1.75 1.75C1.75 1.33579 2.08579 1 2.5 1C2.91421 1 3.25 1.33579 3.25 1.75V12.25C3.25 12.6642 2.91421 13 2.5 13C2.08579 13 1.75 12.6642 1.75 12.25V1.75ZM3.25 2.5C3.25 2.08579 3.58579 1.75 4 1.75H11.2757C11.8627 1.75 12.1934 2.44905 11.8119 2.89107L8.6362 6.5L11.8119 10.1089C12.1934 10.551 11.8627 11.25 11.2757 11.25H4C3.58579 11.25 3.25 10.9142 3.25 10.5V2.5Z" fill="#d32f2f"/>
-                      </svg>
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path fillRule="evenodd" clipRule="evenodd" d="M1.75 1.75C1.75 1.33579 2.08579 1 2.5 1C2.91421 1 3.25 1.33579 3.25 1.75V12.25C3.25 12.6642 2.91421 13 2.5 13C2.08579 13 1.75 12.6642 1.75 12.25V1.75ZM3.25 2.5C3.25 2.08579 3.58579 1.75 4 1.75H11.2757C11.8627 1.75 12.1934 2.44905 11.8119 2.89107L8.6362 6.5L11.8119 10.1089C12.1934 10.551 11.8627 11.25 11.2757 11.25H4C3.58579 11.25 3.25 10.9142 3.25 10.5V2.5ZM4.75 3.25V9.75H9.72431L7.1381 6.83911C6.92356 6.59443 6.92356 6.40557 7.1381 6.16089L9.72431 3.25H4.75Z" fill="#616161"/>
-                      </svg>
-                    )}
-                    <Typography variant="body2" sx={{ fontSize: { xs: '12px', md: '14px' } }}>
-                      {alert.flagged ? 'Flagged' : 'Flag'}
-                    </Typography>
-                  </Box>
-                  </>
-                  )}
-                </Box>
-                <Divider sx={{ my: 1 }} />
-              </Paper>
-            ))}
-
-            {/* Login to view more alerts - for non-logged in users */}
-            {!isAuthenticated && alerts.length > 0 && (
-              <Box
-                sx={{
-                  textAlign: 'center',
-                  p: 1,
-                  mt: 2, // Added margin top for better spacing
-                  bgcolor: 'rgb(238, 238, 238)',
-                  borderRadius: 5,
-                  cursor: 'pointer',
-                  '&:hover': {
-                    bgcolor: 'rgb(220, 220, 220)'
-                  }
-                }}
-                onClick={handleLogin}
-              >
-                <Typography variant="body2" color="text.primary" sx={{ fontWeight: 600, borderRadius: 4 }}>
-                  Login to view updates of the alerts!
-                </Typography>
-              </Box>
-            )}
-=======
             {/* Restructured grid layout for cards and alerts */}
             <Box sx={{ 
               display: 'grid',
@@ -1851,7 +1508,6 @@ export default function Feed() {
               })}
             </Box>
 
->>>>>>> 2945eb6 (Initial commit)
             {hasMore && isAuthenticated && (
               <Box sx={{ textAlign: 'center', mt: 4 }}>
                 <Button
@@ -1860,13 +1516,6 @@ export default function Feed() {
                   disabled={loading}
                   startIcon={loading && <CircularProgress size={20} />}
                   sx={{
-<<<<<<< HEAD
-                    borderColor: 'black',
-                    color: 'black',
-                    borderRadius: 50,
-                    px: 10,
-                    py: 1
-=======
                     borderColor: '#e0e0e0',
                     color: '#333',
                     borderRadius: 50,
@@ -1876,7 +1525,6 @@ export default function Feed() {
                       borderColor: '#bdbdbd',
                       backgroundColor: 'rgba(0,0,0,0.02)'
                     }
->>>>>>> 2945eb6 (Initial commit)
                   }}
                 >
                   {loading ? 'Loading...' : 'Load More'}
@@ -1886,11 +1534,8 @@ export default function Feed() {
           </>
         )}
       </Container>
-<<<<<<< HEAD
-=======
 
       {/* Remaining components (FilterDrawer, Dialog, etc.) */}
->>>>>>> 2945eb6 (Initial commit)
       <FilterDrawer
         open={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
@@ -1906,10 +1551,7 @@ export default function Feed() {
         locationLoading={locationLoading}
         locationAccuracy={locationAccuracy}
       />
-<<<<<<< HEAD
-=======
       
->>>>>>> 2945eb6 (Initial commit)
       <Dialog
         open={loginDialogOpen}
         onClose={handleCloseLoginDialog}
@@ -1971,26 +1613,6 @@ export default function Feed() {
           </Box>
         </DialogContent>
       </Dialog>
-<<<<<<< HEAD
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <MuiAlert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: '100%' }}
-        >
-          {snackbar.message}
-        </MuiAlert>
-      </Snackbar>
-    </Layout>
-  );
-} 
-=======
     </Layout>
   );
 }
->>>>>>> 2945eb6 (Initial commit)

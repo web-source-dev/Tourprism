@@ -21,18 +21,11 @@ import {
   Download as DownloadIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
-<<<<<<< HEAD
-  ArrowForward as ArrowForwardIcon,
-} from '@mui/icons-material';
-import { format, parseISO } from 'date-fns';
-import { useAuth } from '@/context/AuthContext';
-=======
     ArrowForward as ArrowForwardIcon,
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
->>>>>>> 2945eb6 (Initial commit)
 // Import the summaryService
 import { 
   getSummaryById,
@@ -43,11 +36,8 @@ import {
   generatePdfOnDemand
 } from '@/services/summaryService';
 import Layout from '@/components/Layout';
-<<<<<<< HEAD
-=======
 import ShareForecastModal from '@/components/ShareForecastModal';
 
->>>>>>> 2945eb6 (Initial commit)
 interface AlertItem {
   _id: string;
   title: string;
@@ -69,15 +59,10 @@ export default function ForecastDetail() {
   const [forecast, setForecast] = useState<Summary | null>(null);
   const [saved, setSaved] = useState(false);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
-<<<<<<< HEAD
-  
-  const { isCollaboratorViewer } = useAuth();
-=======
   const { showToast } = useToast();
   
   const { isCollaboratorViewer } = useAuth();
   const [shareModalOpen, setShareModalOpen] = useState(false);
->>>>>>> 2945eb6 (Initial commit)
 
   const isViewOnly = () => {
     return isCollaboratorViewer;
@@ -112,10 +97,7 @@ export default function ForecastDetail() {
         } else {
           // Without a PDF URL, we can't display a custom forecast
           setError('Custom forecast data is missing. Please try generating a new forecast.');
-<<<<<<< HEAD
-=======
           showToast('Custom forecast data is missing', 'error');
->>>>>>> 2945eb6 (Initial commit)
           setLoading(false);
         }
       }
@@ -135,18 +117,12 @@ export default function ForecastDetail() {
         setSaved(true); // It's already saved if we're viewing it by ID
       } else {
         setError('Failed to load forecast details.');
-<<<<<<< HEAD
-=======
         showToast('Failed to load forecast details', 'error');
->>>>>>> 2945eb6 (Initial commit)
       }
     } catch (error) {
       console.error('Error loading forecast details:', error);
       setError('An error occurred while loading the forecast. Please try again.');
-<<<<<<< HEAD
-=======
       showToast('Failed to load forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
@@ -157,18 +133,12 @@ export default function ForecastDetail() {
     
     try {
       // Get real data from the API
-<<<<<<< HEAD
-=======
       showToast('Loading weekly forecast...', 'success');
->>>>>>> 2945eb6 (Initial commit)
       const response = await getUpcomingForecasts(7);
       
       if (!response.success || !response.forecast) {
         setError('Failed to load the weekly forecast. Please try again.');
-<<<<<<< HEAD
-=======
         showToast('Failed to load weekly forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
         setLoading(false);
         return;
       }
@@ -201,10 +171,7 @@ export default function ForecastDetail() {
     } catch (error) {
       console.error('Error creating weekly forecast:', error);
       setError('Failed to generate weekly forecast.');
-<<<<<<< HEAD
-=======
       showToast('Failed to generate weekly forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
@@ -261,10 +228,7 @@ export default function ForecastDetail() {
     } catch (error) {
       console.error('Error creating custom forecast:', error);
       setError('Failed to load custom forecast.');
-<<<<<<< HEAD
-=======
       showToast('Failed to load custom forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
@@ -276,10 +240,7 @@ export default function ForecastDetail() {
     
     try {
       setLoading(true);
-<<<<<<< HEAD
-=======
       showToast('Saving forecast...', 'success');
->>>>>>> 2945eb6 (Initial commit)
       
       // Prepare the alert types array
       const alertTypes = forecast.parameters.alertCategory 
@@ -310,10 +271,7 @@ export default function ForecastDetail() {
       if (response.success) {
         // Set saved state to true
         setSaved(true);
-<<<<<<< HEAD
-=======
         showToast('Forecast saved successfully', 'success');
->>>>>>> 2945eb6 (Initial commit)
         
         // If we have a savedSummaryId, update our current URL to reflect that
         if (response.summary.savedSummaryId) {
@@ -329,18 +287,12 @@ export default function ForecastDetail() {
         }
       } else {
         setError('Failed to save the forecast.');
-<<<<<<< HEAD
-=======
         showToast('Failed to save the forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
       }
     } catch (error) {
       console.error('Error saving forecast:', error);
       setError('Failed to save the forecast.');
-<<<<<<< HEAD
-=======
       showToast('Failed to save the forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
@@ -351,20 +303,11 @@ export default function ForecastDetail() {
     
     try {
       setLoading(true);
-<<<<<<< HEAD
-=======
       showToast('Preparing download...', 'success');
->>>>>>> 2945eb6 (Initial commit)
       
       // Use the PDF URL if available (either from forecast or from state)
       if (forecast.pdfUrl || pdfUrl) {
         // Use the downloadPdf utility function
-<<<<<<< HEAD
-        await downloadPdf(
-          forecast.pdfUrl || pdfUrl || '', 
-          `${forecast.title.replace(/\s+/g, '_')}.pdf`
-        );
-=======
         const success = await downloadPdf(
           forecast.pdfUrl || pdfUrl || '', 
           `${forecast.title.replace(/\s+/g, '_')}.pdf`
@@ -376,7 +319,6 @@ export default function ForecastDetail() {
           showToast('Failed to download PDF', 'error');
         }
         
->>>>>>> 2945eb6 (Initial commit)
         setLoading(false);
         return;
       }
@@ -384,10 +326,7 @@ export default function ForecastDetail() {
       // No PDF available - handle based on whether this is a saved forecast or not
       if (forecast._id && forecast._id !== 'weekly-forecast') {
         // It's a saved forecast without a PDF, so generate one without saving again
-<<<<<<< HEAD
-=======
         showToast('Generating PDF...', 'success');
->>>>>>> 2945eb6 (Initial commit)
         const pdfUrl = await generatePdfOnDemand(forecast._id);
         
         if (pdfUrl) {
@@ -395,14 +334,6 @@ export default function ForecastDetail() {
           setPdfUrl(pdfUrl);
           
           // Download the newly generated PDF
-<<<<<<< HEAD
-          await downloadPdf(
-            pdfUrl,
-            `${forecast.title.replace(/\s+/g, '_')}.pdf`
-          );
-        } else {
-          setError('Failed to generate PDF. Please try again.');
-=======
           const success = await downloadPdf(
             pdfUrl,
             `${forecast.title.replace(/\s+/g, '_')}.pdf`
@@ -416,15 +347,11 @@ export default function ForecastDetail() {
         } else {
           setError('Failed to generate PDF. Please try again.');
           showToast('Failed to generate PDF', 'error');
->>>>>>> 2945eb6 (Initial commit)
         }
       } else {
         // It's not a saved forecast - generate a PDF without saving
         // Use the current forecast data to generate a new summary with PDF but don't save
-<<<<<<< HEAD
-=======
         showToast('Generating PDF...', 'success');
->>>>>>> 2945eb6 (Initial commit)
         const data = {
           title: forecast.title,
           description: forecast.description,
@@ -444,14 +371,6 @@ export default function ForecastDetail() {
           setPdfUrl(response.summary.pdfUrl);
           
           // Download the PDF
-<<<<<<< HEAD
-          await downloadPdf(
-            response.summary.pdfUrl,
-            `${forecast.title.replace(/\s+/g, '_')}.pdf`
-          );
-        } else {
-          setError('Failed to generate PDF. Please try again.');
-=======
           const success = await downloadPdf(
             response.summary.pdfUrl,
             `${forecast.title.replace(/\s+/g, '_')}.pdf`
@@ -465,80 +384,26 @@ export default function ForecastDetail() {
         } else {
           setError('Failed to generate PDF. Please try again.');
           showToast('Failed to generate PDF', 'error');
->>>>>>> 2945eb6 (Initial commit)
         }
       }
     } catch (error) {
       console.error('Error downloading forecast:', error);
       setError('Failed to download the forecast. Please try again.');
-<<<<<<< HEAD
-=======
       showToast('Failed to download the forecast', 'error');
->>>>>>> 2945eb6 (Initial commit)
     } finally {
       setLoading(false);
     }
   };
 
   const handleShare = async () => {
-<<<<<<< HEAD
-    if (saved || !forecast) return;
-    
-    try {
-      setLoading(true);
-      
-      window.navigator.share({
-        title: forecast.title,
-        text: forecast.description,
-        url: window.location.href
-      });
-    } catch (error) {
-      console.error('Error sharing forecast:', error);
-      setError('Failed to share the forecast. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-=======
     // Show the share modal instead of using the Web Share API
     setShareModalOpen(true);
->>>>>>> 2945eb6 (Initial commit)
   };
 
   const handleBackToList = () => {
     router.push('/alerts-summary');
   };
 
-<<<<<<< HEAD
-  const handleViewDashboard = () => {
-    router.push('/dashboard');
-  };
-
-  const getCategoryLabel = (alertType: string, alertCategory?: string): string => {
-    // If there's a specific category, use it as the primary label
-    if (alertCategory) {
-      return alertCategory;
-    }
-    
-    // Otherwise, try to determine the category from the alert type
-    const categoryMap = {
-      "Industrial Action": ["Strike", "Work-to-Rule", "Labor Dispute"],
-      "Extreme Weather": ["Storm", "Flooding", "Heatwave", "Wildfire", "Snow"],
-      "Infrastructure Failures": ["Power Outage", "IT & System Failure", "Transport Service Suspension", "Road, Rail & Tram Closure", "Repairs or Delays"],
-      "Public Safety Incidents": ["Protest", "Crime", "Terror Threats", "Travel Advisory"],
-      "Festivals and Events": ["Citywide Festival", "Sporting Event", "Concerts and Stadium Events", "Parades and Ceremonies"]
-    };
-    
-    for (const [category, types] of Object.entries(categoryMap)) {
-      if (types.includes(alertType)) {
-        return `${category} - ${alertType}`;
-      }
-    }
-    
-    return alertType || 'Not specified';
-  };
-
-=======
->>>>>>> 2945eb6 (Initial commit)
   // Find the main alert to display - avoid displaying duplicates
   const findPrimaryAlert = () => {
     if (!Array.isArray(forecast?.includedAlerts) || forecast?.includedAlerts.length === 0) {
@@ -627,74 +492,6 @@ export default function ForecastDetail() {
 
   // Get the primary alert to display, using our improved function
   const primaryAlert = findPrimaryAlert();
-<<<<<<< HEAD
-
-  return (
-    <Layout isFooter={false}>
-    <Box sx={{ px: 3, py: 2, maxWidth: '1200px', mx: 'auto' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-        <IconButton onClick={handleBackToList} sx={{ mr: 1 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" component="h1" fontWeight="bold">
-          Your Disruption Forecast
-        </Typography>
-      </Box>
-
-      <Paper elevation={1} sx={{ p: 0, borderRadius: 4, overflow: 'hidden', mb: 4, border: '1px solid #f0f0f0' }}>
-        <Box sx={{ p: 3 }}>
-        {/* Summary Header */}
-        <Stack spacing={2} sx={{ mb: 2 }}>
-          <Stack direction="row" spacing={2}>
-            <Box sx={{ width: '33%' }}>
-              <Typography variant="body2" color="text.secondary">
-                Date:
-              </Typography>
-            </Box>
-            <Box sx={{ width: '67%' }}>
-              <Typography variant="body1" fontWeight="medium">
-                {forecast.timeRange.startDate && forecast.timeRange.endDate ? (
-                  `${format(parseISO(forecast.timeRange.startDate), 'd MMM')} – ${format(parseISO(forecast.timeRange.endDate), 'd MMM yyyy')}`
-                ) : 'Date range not specified'}
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack direction="row" spacing={2}>
-            <Box sx={{ width: '33%' }}>
-              <Typography variant="body2" color="text.secondary">
-                Location:
-              </Typography>
-            </Box>
-            <Box sx={{ width: '67%' }}>
-              <Typography variant="body1" fontWeight="medium">
-                {forecast.locations && forecast.locations.length > 0
-                  ? forecast.locations[0].city
-                  : primaryAlert?.originCity || primaryAlert?.city || 'Edinburgh'}
-              </Typography>
-            </Box>
-          </Stack>
-
-          <Stack direction="row" spacing={2}>
-            <Box sx={{ width: '33%' }}>
-              <Typography variant="body2" color="text.secondary">
-                Impact:
-              </Typography>
-            </Box>
-            <Box sx={{ width: '67%' }}>
-              <Typography variant="body1" fontWeight="medium">
-                {primaryAlert?.impact || 'Variable'}
-              </Typography>
-            </Box>
-          </Stack>
-        </Stack>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Primary Alert */}
-        {primaryAlert && (
-          <Box sx={{ mb: 4 }}>
-=======
   const location = forecast.locations && forecast.locations.length > 0 
     ? forecast.locations[0].city 
     : primaryAlert?.originCity || primaryAlert?.city || 'Edinburgh';
@@ -776,69 +573,10 @@ export default function ForecastDetail() {
         {/* Alert Content */}
         {primaryAlert ? (
           <Box sx={{ mb: 'auto' }}>
->>>>>>> 2945eb6 (Initial commit)
             <Typography variant="h6" fontWeight="bold" gutterBottom>
               {primaryAlert.title}
             </Typography>
             
-<<<<<<< HEAD
-            {primaryAlert.originCity && (
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                {primaryAlert.originCity}
-              </Typography>
-            )}
-            
-            <Typography variant="body2" sx={{ mb: 2 }}>
-              {primaryAlert.description}
-            </Typography>
-
-            <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-              <Box sx={{ width: '50%' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Start Time
-                </Typography>
-                <Typography variant="body2" fontWeight="medium">
-                  {primaryAlert.expectedStart
-                    ? format(parseISO(primaryAlert.expectedStart), 'dd MMM h:mma')
-                    : 'Not specified'}
-                </Typography>
-              </Box>
-              <Box sx={{ width: '50%' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  End Time
-                </Typography>
-                <Typography variant="body2" fontWeight="medium">
-                  {primaryAlert.expectedEnd
-                    ? format(parseISO(primaryAlert.expectedEnd), 'dd MMM h:mma')
-                    : 'Not specified'}
-                </Typography>
-              </Box>
-            </Stack>
-
-            <Stack direction="row" spacing={2}>
-              <Box sx={{ width: '50%' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Type:
-                </Typography>
-                <Typography variant="body2" fontWeight="medium">
-                  {getCategoryLabel(primaryAlert.alertType, primaryAlert.alertCategory)}
-                </Typography>
-              </Box>
-              <Box sx={{ width: '50%' }}>
-                <Typography variant="caption" color="text.secondary" display="block">
-                  Impact:
-                </Typography>
-                <Typography variant="body2" fontWeight="medium">
-                  {primaryAlert.impact || 'Not specified'}
-                </Typography>
-              </Box>
-            </Stack>
-          </Box>
-        )}
-
-        {!primaryAlert && (
-          <Box sx={{ mb: 4 }}>
-=======
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               {primaryAlert.originCity || primaryAlert.city}, {primaryAlert.originCity ? primaryAlert.originCity.split(',').pop()?.trim() : 'EH1'}
             </Typography>
@@ -869,7 +607,6 @@ export default function ForecastDetail() {
           </Box>
         ) : (
           <Box sx={{ mb: 'auto', mt: 2 }}>
->>>>>>> 2945eb6 (Initial commit)
             <Alert severity="info" sx={{ mb: 2 }}>
               No alerts found for this forecast period.
             </Alert>
@@ -878,114 +615,6 @@ export default function ForecastDetail() {
             </Typography>
           </Box>
         )}
-<<<<<<< HEAD
-
-        </Box>
-        
-        <Box sx={{ 
-          display: 'flex', 
-          borderTop: '1px solid #f0f0f0',
-          '& > *': {
-            flex: 1,
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            py: 1.5,
-            color: '#666'
-          }
-        }}>
-          <Box onClick={handleDownload} sx={{ display: 'flex',cursor:'pointer', alignItems: 'center', justifyContent: 'center' }}>
-            <DownloadIcon fontSize="small" sx={{ mr: 1 }} />
-            <Typography variant="body2">Download</Typography>
-          </Box>
-          <Box onClick={handleShare} sx={{ borderLeft: '1px solid #f0f0f0',cursor:'pointer', borderRight: '1px solid #f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <ArrowForwardIcon fontSize="small" sx={{ mr: 1 }} />
-            <Typography variant="body2">Share</Typography>
-          </Box>
-          <Box sx={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            opacity: isViewOnly() ? 0.5 : 1,
-            cursor: isViewOnly() ? 'not-allowed' : 'pointer'
-          }} onClick={handleSave}
-          >
-            {saved ? <BookmarkIcon fontSize="small" sx={{ mr: 1 }} /> : <BookmarkBorderIcon fontSize="small" sx={{ mr: 1 }} />}
-            <Typography variant="body2">Save</Typography>
-          </Box>
-        </Box>
-      </Paper>
-
-      {/* Additional Alerts Section */}
-      {Array.isArray(forecast.includedAlerts) && forecast.includedAlerts.length > 1 && (
-        <>
-          <Typography variant="h6" fontWeight="bold" gutterBottom sx={{ ml: 1 }}>
-            Additional Alerts in This Forecast
-          </Typography>
-
-          <Box sx={{ mb: 3 }}>
-            {forecast.includedAlerts.slice(1).map((alert, index) => {
-              const alertItem = alert as unknown as AlertItem;
-              return (
-                <Card key={alertItem._id || index} variant="outlined" sx={{ mb: 2 }}>
-                  <CardContent>
-                    <Typography variant="subtitle1" fontWeight="medium" gutterBottom>
-                      {alertItem.title}
-                    </Typography>
-                    
-                    <Stack direction="row" spacing={1} sx={{ mb: 1 }}>
-                      <Chip 
-                        label={getCategoryLabel(alertItem.alertType, alertItem.alertCategory)}
-                        size="small" 
-                        color="primary" 
-                        variant="outlined"
-                      />
-                      <Chip 
-                        label={alertItem.impact || 'Unknown'} 
-                        size="small" 
-                        color={
-                          alertItem.impact === 'Severe' ? 'error' : 
-                          alertItem.impact === 'Moderate' ? 'warning' : 'success'
-                        }
-                        variant="outlined"
-                      />
-                    </Stack>
-                    
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {alertItem.description?.substring(0, 120)}
-                      {(alertItem.description?.length || 0) > 120 ? '...' : ''}
-                    </Typography>
-                    <Typography variant='body2'>
-                      {alertItem.city}
-                    </Typography>
-                    
-                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
-                      {alertItem.expectedStart && alertItem.expectedEnd ? (
-                        `${format(parseISO(alertItem.expectedStart), 'dd MMM')} - ${format(parseISO(alertItem.expectedEnd), 'dd MMM yyyy')}`
-                      ) : 'Dates not specified'}
-                    </Typography>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </Box>
-        </>
-      )}
-
-      <Box sx={{ textAlign: 'center', mt: 4 }}>
-        <Typography variant="body2" color="text.secondary" gutterBottom>
-          To view more alerts or take action, visit tourprism dashboard
-        </Typography>
-        <Button 
-          variant="text" 
-          endIcon={<ArrowForwardIcon />}
-          onClick={handleViewDashboard}
-        >
-          View Dashboard
-        </Button>
-      </Box>
-    </Box>
-=======
         
         {/* Footer with action buttons */}
         <Box sx={{ 
@@ -1034,7 +663,6 @@ export default function ForecastDetail() {
           forecastTitle={forecast?.title}
         />
       </Box>
->>>>>>> 2945eb6 (Initial commit)
     </Layout>
   );
 }
