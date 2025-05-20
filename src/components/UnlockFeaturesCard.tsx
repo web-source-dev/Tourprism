@@ -9,12 +9,12 @@ import { useToast } from '../ui/toast';
 
 // Define response interfaces
 interface SummaryResponse {
-  summaries: Array<any>;
+  summaries: Array<unknown>;
   success?: boolean;
 }
 
 interface CollaboratorResponse {
-  collaborators: Array<any>;
+  collaborators: Array<unknown>;
 }
 
 interface UnlockFeaturesCardProps {

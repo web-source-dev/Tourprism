@@ -19,12 +19,13 @@ import {
   Radio,
   RadioGroup,
 } from '@mui/material';
-import LockIcon from '@mui/icons-material/Lock';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { FilterOptions } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '@/ui/toast';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 const INCIDENT_TYPES = [
   "Industrial Action",
   "Transport",
@@ -180,8 +181,14 @@ const FilterDrawer = ({
 
     showToast("Please subscribe to unlock this filter", "error");
   }
+
+ const isMobile = () =>{
+  const theme = useTheme();
+  return useMediaQuery(theme.breakpoints.down('sm'));
+  } 
   return (
 
+    
     <Drawer
       anchor="right"
       open={open}
@@ -190,6 +197,7 @@ const FilterDrawer = ({
         sx: { width: { xs: '100%', sm: 360 }, backgroundColor: 'white', color: 'black' },
       }}
     >
+      
       <Box sx={{ p: isAuthenticated ? 2 : 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" fontWeight="bold">Filters</Typography>

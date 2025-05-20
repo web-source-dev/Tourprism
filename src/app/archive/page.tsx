@@ -95,6 +95,7 @@ function ArchiveContent() {
 
   // Load archived alerts function with updated filter params
   const loadArchivedAlerts = useCallback(async (pageNum: number, reset: boolean) => {
+    // Only return if already loading and this is not a reset operation
     if (loading && !reset) return;
     
     setLoading(true);
@@ -182,7 +183,7 @@ function ArchiveContent() {
     } finally {
       setLoading(false);
     }
-  }, [city, coords, filters, loading]);
+  }, [city, coords, filters]); // Removed 'loading' from dependencies
 
   // Handle using current location
   const handleUseMyLocation = async () => {
@@ -199,7 +200,6 @@ function ArchiveContent() {
           async (position) => {
             const { latitude, longitude, accuracy } = position.coords;
             setLocationAccuracy(Math.round(accuracy));
-            setCoords({ latitude, longitude });
             
             // Get city name from coordinates
             try {
@@ -213,25 +213,25 @@ function ArchiveContent() {
                 data.address?.village || 
                 data.address?.county || 
                 'Current Location';
-                
+              
+              // Update state in a single batch to minimize renders
+              // This will trigger a reload due to dependency changes in loadArchivedAlerts
               setCity(locationName);
+              setCoords({ latitude, longitude });
               setLocationLoading(false);
               
               // Show success toast
               showToast(`Using location: ${locationName}`, "success");
-              
-              // Load alerts with the new location
-              await loadArchivedAlerts(1, true);
             } catch (error) {
               console.error('Error getting location name:', error);
+              
+              // Still update location even if we can't get the name
               setCity('Current Location');
+              setCoords({ latitude, longitude });
               setLocationLoading(false);
               
               // Show error toast
               showToast("Using location with unknown name", "error");
-              
-              // Still load alerts with the coordinates
-              await loadArchivedAlerts(1, true);
             }
           },
           (error) => {
@@ -271,6 +271,9 @@ function ArchiveContent() {
   useEffect(() => {
     const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL || 'https://tourprism-backend-w5c1.onrender.com';
     socketRef.current = io(SOCKET_URL);
+    
+    // Reference to track if we have a refresh pending
+    let refreshTimeout: NodeJS.Timeout | null = null;
 
     socketRef.current.on('connect', () => {
       console.log('Connected to Socket.io server from Archive page');
@@ -283,17 +286,33 @@ function ArchiveContent() {
     // Listen for alert events that might require archive refresh
     socketRef.current.on('alert:updated', (data) => {
       console.log('Alert updated in archive context:', data);
-      // If an alert's end date moves to the past, it should appear in archive
-      loadArchivedAlerts(1, true);
+      
+      // If we already have a pending refresh, clear it
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
+      
+      // Set a new timeout to debounce multiple updates in quick succession
+      refreshTimeout = setTimeout(() => {
+        if (!loading) {
+          loadArchivedAlerts(1, true);
+        }
+        refreshTimeout = null;
+      }, 500);
     });
 
     return () => {
+      // Clear any pending timeouts when unmounting
+      if (refreshTimeout) {
+        clearTimeout(refreshTimeout);
+      }
+      
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
-  }, [loadArchivedAlerts]);
+  }, [loadArchivedAlerts, loading]);
 
   // Category icons mapping function
   const getCategoryIcon = (category: string) => {
@@ -336,10 +355,16 @@ function ArchiveContent() {
     loadArchivedAlerts(1, true);
   }, [loadArchivedAlerts]);
 
-  // Load archived alerts
+  // Load archived alerts on initial component mount only
   useEffect(() => {
-    loadArchivedAlerts(1, true);
-  }, [loadArchivedAlerts]);
+    // Use a flag to ensure this only runs once on mount
+    const initialLoad = async () => {
+      await loadArchivedAlerts(1, true);
+    };
+    
+    initialLoad();
+    // Empty dependency array to run only on mount
+  }, []);
 
   // Handle highlighted alert (if any)
   useEffect(() => {
@@ -449,62 +474,66 @@ function ArchiveContent() {
           </Box>
         ) : (
           <>
-            {/* Alerts list */}
+            {/* Alerts grid - Modified to display three cards per row */}
             <Box sx={{ mb: 2 }}>
-              {archivedAlerts.map((alert) => (
-                <Card
-                  key={alert._id}
-                  id={`alert-${alert._id}`}
-                  sx={{
-                    mb: 1,
-                    borderRadius: 2,
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-                    border: '1px solid rgba(0,0,0,0.12)',
-                    transition: 'transform 0.2s, box-shadow 0.3s',
-                    backgroundColor: highlightedAlertId === alert._id ? 'rgba(74, 144, 226, 0.05)' : 'white',
-                    '&:hover': {
-                      transform: 'translateY(-2px)',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                    }
-                  }}
-                >
-                  <CardContent sx={{ pt: 1.5, pb: 1, px: 2 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, alignItems: 'center' }}>
-                      <Chip 
-                        label={alert.alertType || 'General'} 
-                        size="small" 
-                        icon={<Box component="span">{getCategoryIcon(alert.alertCategory || '')}</Box>}
-                        sx={{ borderRadius: 1, bgcolor: 'rgba(0,0,0,0.06)' }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        <HistoryIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
-                        Ended {formatDateForDisplay(alert.expectedEnd || '')}
+              <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, gap: 2 }}>
+                {archivedAlerts.map((alert) => (
+                  <Card
+                    key={alert._id}
+                    id={`alert-${alert._id}`}
+                    sx={{
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderRadius: 2,
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
+                      border: '1px solid rgba(0,0,0,0.12)',
+                      transition: 'transform 0.2s, box-shadow 0.3s',
+                      backgroundColor: highlightedAlertId === alert._id ? 'rgba(74, 144, 226, 0.05)' : 'white',
+                      '&:hover': {
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ pt: 1.5, pb: '16px !important', px: 2, flex: 1, display: 'flex', flexDirection: 'column' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5, alignItems: 'center' }}>
+                        <Chip 
+                          label={alert.alertType || 'General'} 
+                          size="small" 
+                          icon={<Box component="span">{getCategoryIcon(alert.alertCategory || '')}</Box>}
+                          sx={{ borderRadius: 1, bgcolor: 'rgba(0,0,0,0.06)' }}
+                        />
+                        <Typography variant="caption" color="text.secondary">
+                          <HistoryIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} />
+                          Ended {formatDateForDisplay(alert.expectedEnd || '')}
+                        </Typography>
+                      </Box>
+                      
+                      <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.1rem' }}>
+                        {alert.title || 'Archived Alert'}
                       </Typography>
-                    </Box>
-                    
-                    <Typography variant="h6" component="div" sx={{ fontWeight: 600, mb: 0.5, fontSize: '1.1rem' }}>
-                      {alert.title || 'Archived Alert'}
-                    </Typography>
-                    
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                      <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
-                      {alert.city || 'Unknown location'}
-                    </Typography>
-                    
-                    <Typography variant="body2" sx={{ mb: 1, color: 'text.primary' }}>
-                      {alert.description}
-                    </Typography>
-                    
-                    <Divider sx={{ mb: 1 }} />
-                    
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="caption" color="text.secondary">
-                        Posted {formatTime(alert.createdAt)}
+                      
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        <LocationOnIcon sx={{ fontSize: 16, verticalAlign: 'middle', mr: 0.5 }} />
+                        {alert.city || 'Unknown location'}
                       </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              ))}
+                      
+                      <Typography variant="body2" sx={{ mb: 'auto', color: 'text.primary' }}>
+                        {alert.description}
+                      </Typography>
+                      
+                      <Divider sx={{ mt: 1, mb: 1 }} />
+                      
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Posted {formatTime(alert.createdAt)}
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ))}
+              </Box>
             </Box>
             
             {/* Load more button */}

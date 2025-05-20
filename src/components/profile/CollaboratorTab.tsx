@@ -219,7 +219,7 @@ const CollaboratorTab = () => {
   return (
     <Box>
       <Typography variant="h5" gutterBottom>
-        Collaborator Management
+        Team Members Management
       </Typography>
       
       <Typography variant="body1" sx={{ mb: 3 }}>
@@ -240,7 +240,7 @@ const CollaboratorTab = () => {
       
       <Paper elevation={1} sx={{ p: 2, mb: 4 }}>
         <Typography variant="h6" gutterBottom>
-          Invite New Collaborator
+          Invite New Team Member
         </Typography>
         
         <Box component="form" onSubmit={handleInvite} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -251,7 +251,7 @@ const CollaboratorTab = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               fullWidth
-              placeholder="Enter collaborator's name"
+              placeholder="Enter team member's name"
             />
             
             <TextField
@@ -261,7 +261,7 @@ const CollaboratorTab = () => {
               onChange={(e) => setEmail(e.target.value)}
               fullWidth
               required
-              placeholder="Enter collaborator's email"
+              placeholder="Enter team member's email"
             />
           </Box>
           
@@ -293,7 +293,7 @@ const CollaboratorTab = () => {
       </Paper>
       
       <Typography variant="h6" gutterBottom>
-        Manage Collaborators
+        Manage Team Members
       </Typography>
 
       {loading && collaborators.length === 0 ? (
@@ -303,7 +303,7 @@ const CollaboratorTab = () => {
       ) : collaborators.length === 0 ? (
         <Paper elevation={1} sx={{ p: 3, textAlign: 'center' }}>
           <Typography variant="body1" color="textSecondary">
-            No collaborators yet. Invite team members to get started.
+            No team members yet. Invite team members to get started.
           </Typography>
         </Paper>
       ) : (
@@ -362,7 +362,7 @@ const CollaboratorTab = () => {
                           disabled={loading}
                           size="small"
                           color="success"
-                          title="Activate Collaborator"
+                          title="Activate Team Member"
                         >
                           <CheckCircleIcon />
                         </IconButton>
@@ -385,7 +385,7 @@ const CollaboratorTab = () => {
                         disabled={loading}
                         size="small"
                         color="error"
-                        title="Remove Collaborator"
+                        title="Remove Team Member"
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -403,10 +403,10 @@ const CollaboratorTab = () => {
         open={deleteDialogOpen}
         onClose={handleCloseDeleteDialog}
       >
-        <DialogTitle>Remove Collaborator</DialogTitle>
+        <DialogTitle>Remove Team Member</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Are you sure you want to remove {selectedCollaborator?.name || selectedCollaborator?.email} as a collaborator? This action cannot be undone.
+            Are you sure you want to remove {selectedCollaborator?.name || selectedCollaborator?.email} as a team member? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
