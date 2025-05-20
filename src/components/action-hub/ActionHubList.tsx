@@ -45,11 +45,12 @@ const ActionHubList: React.FC = () => {
     isManager, 
     isEditor, 
     isCollaboratorManager,
+    isCollaboratorViewer,
   } = useAuth();
 
   // Permission check functions
   const canManageAlerts = () => {
-    return isAdmin || isManager || isEditor || isCollaboratorManager;
+    return isAdmin || isManager || isEditor || isCollaboratorManager || !isCollaboratorViewer || isAuthenticated;
   };
 
   const canUseFilters = () => {
@@ -86,19 +87,40 @@ const ActionHubList: React.FC = () => {
     router.push(`/action-hub/alert/${alertId}`);
   };
 
-  // Get relative time (e.g., "3h")
+  // Get relative time (e.g., "3m", "17m", "3h", "4d", "2mo")
   const getTimeAgo = (timestamp: string) => {
     if (!timestamp) return '';
-
+    
     const now = new Date();
     const alertTime = new Date(timestamp);
-    const diffInHours = Math.floor((now.getTime() - alertTime.getTime()) / (1000 * 60 * 60));
-
-    if (diffInHours < 24) {
-      return `${diffInHours}h`;
+    const diffInMs = now.getTime() - alertTime.getTime();
+    
+    // Convert to minutes
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      // Less than an hour, show minutes
+      return `${diffInMinutes}m`;
     } else {
-      const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}d`;
+      // Convert to hours
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      
+      if (diffInHours < 24) {
+        // Less than a day, show hours
+        return `${diffInHours}h`;
+      } else {
+        // Convert to days
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays < 30) {
+          // Less than a month, show days
+          return `${diffInDays}d`;
+        } else {
+          // Convert to months (approximately)
+          const diffInMonths = Math.floor(diffInDays / 30);
+          return `${diffInMonths}mo`;
+        }
+      }
     }
   };
 
@@ -445,8 +467,10 @@ const ActionHubList: React.FC = () => {
                     }}>
                       {getStatusBadge(alert.status)}
                     </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      {getTimeAgo(alert.createdAt)}
+                    <Typography variant="body2" color="text.secondary" title="Time since alert was added to Action Hub">
+                      {alert.actionHubCreatedAt 
+                        ? `${getTimeAgo(alert.actionHubCreatedAt)}` 
+                        : `${getTimeAgo(alert.createdAt)}`}
                     </Typography>
                   </Box>
 

@@ -102,6 +102,11 @@ export interface Alert {
   updated?: string;
   expectedStart?: string;
   expectedEnd?: string;
+  
+  // ActionHub properties that may be included in list views
+  actionHubCreatedAt?: string;
+  actionHubUpdatedAt?: string;
+  actionHubId?: string;
 }
 
 export interface Media {
@@ -229,6 +234,10 @@ export interface ActionHubItem extends Alert {
   isFlagged: boolean;
   flagCount: number;
   numberOfFollows: number;
+  
+  // ActionHub timestamps
+  actionHubCreatedAt?: string;
+  actionHubUpdatedAt?: string;
 }
 
 export interface TeamMember {

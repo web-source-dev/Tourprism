@@ -78,16 +78,16 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
   const { showToast } = useToast();
 
   const canSendNotifications = () => {
-    return isAdmin || isManager || isEditor || isCollaboratorManager;
+    return isAdmin || isManager || isEditor || isCollaboratorManager || !isCollaboratorViewer || isAuthenticated;
   };
 
   const canChangeStatus = () => {
-    return isAdmin || isManager;
+    return isAdmin || isManager || isEditor || isCollaboratorManager || !isCollaboratorViewer || isAuthenticated;
   };
 
   const canFollowAlerts = () => {
     // Anyone authenticated can follow alerts
-    return isAuthenticated && !isCollaboratorViewer;
+    return isAuthenticated && !isCollaboratorViewer ;
   };
 
   const router = useRouter();
@@ -380,6 +380,42 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
     }
   };
 
+  const getTimeAgo = (timestamp: string) => {
+    if (!timestamp) return '';
+    
+    const now = new Date();
+    const alertTime = new Date(timestamp);
+    const diffInMs = now.getTime() - alertTime.getTime();
+    
+    // Convert to minutes
+    const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      // Less than an hour, show minutes
+      return `${diffInMinutes}m`;
+    } else {
+      // Convert to hours
+      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+      
+      if (diffInHours < 24) {
+        // Less than a day, show hours
+        return `${diffInHours}h`;
+      } else {
+        // Convert to days
+        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
+        
+        if (diffInDays < 30) {
+          // Less than a month, show days
+          return `${diffInDays}d`;
+        } else {
+          // Convert to months (approximately)
+          const diffInMonths = Math.floor(diffInDays / 30);
+          return `${diffInMonths}mo`;
+        }
+      }
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" height="50vh">
@@ -439,8 +475,12 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
         }}>
           {/* Alert Metadata */}
           <Box sx={{ mb: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              {alertData.createdAt ? format(new Date(alertData.createdAt), 'H') + 'h' : '3h'}
+            <Typography variant="body2" color="text.secondary" sx={{ display: 'flex', alignItems: 'center' }}>
+              {alertData.actionHubCreatedAt 
+                ? `${getTimeAgo(alertData.actionHubCreatedAt)} ago` 
+                : alertData.createdAt 
+                  ? `${getTimeAgo(alertData.createdAt)} ago` 
+                  : 'Recently'}
             </Typography>
 
             <Typography variant="h6" fontWeight="bold" sx={{ mt: 1, mb: 1 }}>
