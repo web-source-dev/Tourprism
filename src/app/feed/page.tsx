@@ -14,6 +14,7 @@ import {
   Alert as MuiAlert,
   DialogActions,
   Container,
+  IconButton,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
@@ -90,6 +91,10 @@ export default function Feed() {
     customDateFrom: new Date(),
     customDateTo: new Date(),
   });
+  // Add state variables for tracking card visibility
+  const [showUnlockFeaturesCard, setShowUnlockFeaturesCard] = useState(true);
+  const [showGetAccessCard, setShowGetAccessCard] = useState(true);
+  
   const { showToast } = useToast();
 
   const isViewOnly = () => {
@@ -517,6 +522,30 @@ export default function Feed() {
     };
   }, [city, coords, fetchLocationAlerts, isAuthenticated, userProfile, operatingRegionAlerts, fetchOperatingRegionAlerts]);
 
+  // Load card visibility from localStorage
+  useEffect(() => {
+    const hideUnlockCard = localStorage.getItem('hideUnlockFeaturesCard') === 'true';
+    const hideAccessCard = localStorage.getItem('hideGetAccessCard') === 'true';
+    
+    if (hideUnlockCard) {
+      setShowUnlockFeaturesCard(false);
+    }
+    
+    if (hideAccessCard) {
+      setShowGetAccessCard(false);
+    }
+  }, []);
+
+  // Function to handle dismissing cards
+  const handleDismissCard = (cardType: 'unlock' | 'access') => {
+    if (cardType === 'unlock') {
+      setShowUnlockFeaturesCard(false);
+      localStorage.setItem('hideUnlockFeaturesCard', 'true');
+    } else {
+      setShowGetAccessCard(false);
+      localStorage.setItem('hideGetAccessCard', 'true');
+    }
+  };
 
   const handleLocationSuccess = useCallback(async (position: GeolocationPosition, highAccuracy = true) => {
     const { latitude, longitude } = position.coords;
@@ -1070,19 +1099,56 @@ export default function Feed() {
               mt: 2 
             }}>
               {/* First position: Feature Card based on auth state */}
-              {isAuthenticated && userProfile && (!userProfile.isProfileComplete) ? (
-                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' } }}>
+              {isAuthenticated && userProfile && (!userProfile.isProfileComplete) && showUnlockFeaturesCard ? (
+                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
+                  <IconButton 
+                    onClick={() => handleDismissCard('unlock')}
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 1,
+                      bgcolor: 'rgba(255, 255, 255, 0.8)',
+                      width: 24,
+                      height: 24,
+                      '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
+                    }}
+                    aria-label="dismiss card"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </IconButton>
                   <UnlockFeaturesCard 
                     progress={userProfile?.profileCompletionPercentage || 75} 
                     onClick={() => router.push('/profile')} 
                   />
                 </Box>
-              ) : !isAuthenticated ? (
-                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' } }}>
+              ) : !isAuthenticated && showGetAccessCard ? (
+                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
+                  <IconButton 
+                    onClick={() => handleDismissCard('access')}
+                    sx={{ 
+                      position: 'absolute', 
+                      top: 8, 
+                      right: 8, 
+                      zIndex: 1,
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      width: 24,
+                      height: 24,
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.5)' },
+                      color: 'white'
+                    }}
+                    aria-label="dismiss card"
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  </IconButton>
                   <GetAccessCard onClick={handleLogin} />
                 </Box>
               ) : (
-                // If user is authenticated and profile is complete, show the first alert
+                // If user is authenticated and profile is complete, or card is dismissed, show the first alert
                 alerts.length > 0 && (
                   <Paper 
                     key={`alert-${alerts[0]._id}-0`} 
@@ -1218,7 +1284,7 @@ export default function Feed() {
               {alerts.map((alert: AlertType, index: number) => {
                 // Skip rendering if this alert would have been in the first position
                 // and we're already showing a card or if we've already rendered it
-                const startIndex = (isAuthenticated && userProfile && !userProfile.isProfileComplete) || !isAuthenticated ? 0 : 1;
+                const startIndex = ((isAuthenticated && userProfile && !userProfile.isProfileComplete && showUnlockFeaturesCard) || (!isAuthenticated && showGetAccessCard)) ? 0 : 1;
                 
                 if (index < startIndex) return null;
                 

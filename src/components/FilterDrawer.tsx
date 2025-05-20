@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import {
-  Drawer,
   Box,
   Typography,
   FormControlLabel,
@@ -18,6 +17,7 @@ import {
   ListItemText,
   Radio,
   RadioGroup,
+  Dialog,
 } from '@mui/material';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
@@ -182,22 +182,28 @@ const FilterDrawer = ({
     showToast("Please subscribe to unlock this filter", "error");
   }
 
- const isMobile = () =>{
+ const useIsMobile = () =>{
   const theme = useTheme();
   return useMediaQuery(theme.breakpoints.down('sm'));
   } 
   return (
 
-    
-    <Drawer
-      anchor="right"
-      open={open}
-      onClose={onClose}
-      PaperProps={{
-        sx: { width: { xs: '100%', sm: 360 }, backgroundColor: 'white', color: 'black' },
-      }}
-    >
-      
+    <Dialog
+    open={open}
+    onClose={onClose}
+    fullScreen={useIsMobile() } // use full screen mode on mobile
+    PaperProps={{
+      sx: {
+        width: useIsMobile() ? '100%' : 560,
+        height: useIsMobile() ? '100%' : 'auto',
+        m: 0, // remove margins
+        borderRadius: useIsMobile() ? 0 : 2,
+        p: 2,
+        backgroundColor: 'white',
+        color: 'black',
+      },
+    }}
+  >
       <Box sx={{ p: isAuthenticated ? 2 : 1 }}>
         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
           <Typography variant="h6" fontWeight="bold">Filters</Typography>
@@ -594,7 +600,7 @@ const FilterDrawer = ({
           </Button>
         </Box>
       </Box>
-    </Drawer>
+    </Dialog>
   );
 };
 

@@ -63,20 +63,33 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
   const [notificationFailCount, setNotificationFailCount] = useState<number>(0);
 
   // Get auth context to check user roles
-
   console.log(totalGuestsCount, notifiedGuestsCount, notifiedTeamCount, notificationSuccessCount, notificationFailCount);
 
   const {
-    isCollaboratorViewer,
+    isAdmin,
+    isManager,
+    isEditor,
+    isCollaboratorManager,
+    isAuthenticated,
+    isCollaboratorViewer
   } = useAuth();
 
   // Access the toast API
   const { showToast } = useToast();
 
-  // Helper function to check if user is view-only
-  const isViewOnly = () => {
-    return isCollaboratorViewer;
+  const canSendNotifications = () => {
+    return isAdmin || isManager || isEditor || isCollaboratorManager;
   };
+
+  const canChangeStatus = () => {
+    return isAdmin || isManager;
+  };
+
+  const canFollowAlerts = () => {
+    // Anyone authenticated can follow alerts
+    return isAuthenticated && !isCollaboratorViewer;
+  };
+
   const router = useRouter();
 
   useEffect(() => {
@@ -502,7 +515,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
             onChange={(e) => setInstructions(e.target.value)}
             variant="outlined"
             sx={{ mb: 2, bgcolor: 'white' }}
-            disabled={isViewOnly()}
+            disabled={!canSendNotifications()}
           />
 
           {/* Send Via */}
@@ -516,6 +529,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
               onChange={handleSendMethodChange}
               displayEmpty
               sx={{ bgcolor: 'white' }}
+              disabled={!canSendNotifications()}
             >
               <MenuItem value="email">Email</MenuItem>
               <MenuItem value="sms">SMS</MenuItem>
@@ -531,7 +545,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
               color="primary"
               startIcon={sendingNotification ? undefined : <Send />}
               onClick={openConfirmationDialog}
-              disabled={sendingNotification || isViewOnly()}
+              disabled={sendingNotification || !canSendNotifications()}
               sx={{
                 mb: 2,
                 py: 1.5,
@@ -611,7 +625,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
                 variant="outlined"
                 fullWidth
                 onClick={() => handleStatusChange('handled')}
-                disabled={isViewOnly()}
+                disabled={!canChangeStatus()}
                 sx={{
                   mb: 2,
                   py: 1.5,
@@ -632,7 +646,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
                 variant="outlined"
                 fullWidth
                 onClick={handleFollowToggle}
-                disabled={isViewOnly()}
+                disabled={!canFollowAlerts()}
                 sx={{
                   py: 1.5,
                   borderColor: '#dedede',
@@ -644,7 +658,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
                   fontWeight: 'bold'
                 }}
               >
-                Unfollow Alert
+                {alertData.isFollowing ? 'Unfollow Alert' : 'Follow Alert'}
               </Button>
             </Box>
             </Box>
@@ -697,6 +711,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
             onClick={handleSendAlert}
             fullWidth
             variant="contained"
+            disabled={!canSendNotifications()}
             sx={{
               mb: 1,
               py: 1.5,

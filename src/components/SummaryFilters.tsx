@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import {
     Check as CheckIcon,
-    LockOutlined as LockIcon,
     CalendarToday as CalendarIcon
 } from '@mui/icons-material';
 import { useAuth } from '@/context/AuthContext';

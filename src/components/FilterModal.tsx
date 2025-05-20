@@ -8,7 +8,9 @@ import {
   Typography,
   Box,
   Button,
-  Divider
+  Divider,
+  useMediaQuery,
+  useTheme
 } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import SummaryFilters from './SummaryFilters';
@@ -43,7 +45,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const handleClearFilters = () => {
     onClearFilters();
   };
-
+  const useIsMobile = () =>{
+    const theme = useTheme();
+    return useMediaQuery(theme.breakpoints.down('sm'));
+    } 
   return (
     <Dialog 
       open={open} 
@@ -52,9 +57,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
       maxWidth="sm"
       PaperProps={{
         sx: {
-          borderRadius: 3,
-          maxHeight: '80vh'
-        }
+          width: useIsMobile() ? '100%' : 560,
+          height: useIsMobile() ? '100%' : 'auto',
+          m: 0, // remove margins
+          borderRadius: useIsMobile() ? 0 : 2,
+          p: 2,
+          backgroundColor: 'white',
+          color: 'black',
+        },
       }}
     >
       <DialogTitle sx={{ p: 0, mb: 0 }}>
