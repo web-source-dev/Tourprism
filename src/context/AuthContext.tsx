@@ -82,9 +82,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUser = async () => {
     try {
       const response = await api.get('/auth/user/profile');
-      console.log(response.data);
       if(response.data){
         // Type assertion to specify the expected shape of response.data
+        setUser(response.data as User);
         const userData = response.data as { isSubscribed?: boolean };
         setIsSubscribed(!!userData.isSubscribed);
         if (typeof window !== 'undefined') {
