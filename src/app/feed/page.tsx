@@ -635,7 +635,7 @@ export default function Feed() {
         )
       );
 
-      showToast(response.following ? 'You are now following this alert' : 'You have unfollowed this alert', 'success');
+      showToast(response.following ? 'You’re now following this alert. It’s been added to action hub' : 'You’ve unfollowed this alert. It’s been removed from action hub', 'success');
     } catch (error) {
       console.error('Error following alert:', error);
       showToast('Failed to follow the alert', 'error');
