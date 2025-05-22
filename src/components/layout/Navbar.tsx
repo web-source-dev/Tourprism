@@ -70,9 +70,9 @@ const Navbar: React.FC<NavbarProps> = ({
       <Toolbar
         disableGutters
         sx={{
-          display: 'flex',
           justifyContent: 'space-between',
-          minHeight: { xs: '40px', sm: '50px' }
+          minHeight: { xs: '40px', sm: '50px' },
+          display: isAuthenticated || isFeedPage ? 'none' : 'flex',
         }}
       >
         {/* Left side of header */}
@@ -127,8 +127,8 @@ const Navbar: React.FC<NavbarProps> = ({
             </Box>
           )}
 
-          {isAuthenticated && !isMobile && (
-            <IconButton>
+          {isAuthenticated && !isMobile && isFeedPage === false && (
+            <IconButton sx={{display:'none'}}>
               {currentPageIcon}
             </IconButton>
           )}
@@ -137,10 +137,10 @@ const Navbar: React.FC<NavbarProps> = ({
             sx={{
               alignItems: 'center',
               ml: 0.1,
+              display:'none',
               fontWeight: 'medium',
               fontSize: '16px',
               color: 'black',
-              display: { xs: isFeedPage ? 'none' : 'block', md: 'block' }
             }}
           >
             {currentPageName}

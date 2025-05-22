@@ -27,6 +27,7 @@ interface LocationSearchInputProps {
   label?: string;
   placeholder?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 const LocationSearchInput: React.FC<LocationSearchInputProps> = ({ 
@@ -34,7 +35,8 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   value, 
   label = "Location",
   placeholder = "Search for a city...",
-  required = false
+  required = false,
+  disabled = false
 }) => {
   const {
     ready,
@@ -110,7 +112,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           value={inputValue}
           onChange={handleInputChange}
           onClick={() => inputValue && setIsOpen(true)}
-          disabled={!ready}
+          disabled={!ready || disabled}
           fullWidth
           placeholder={placeholder}
           required={required}

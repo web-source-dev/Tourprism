@@ -80,7 +80,7 @@ export default function DisruptionForecast() {
   const { isCollaboratorViewer, isSubscribed } = useAuth();
 
   const isViewOnly = () => {
-    return isCollaboratorViewer;
+    return isCollaboratorViewer || !isSubscribed;
   };
 
   // const weeklyStartDate = new Date()
@@ -624,6 +624,7 @@ export default function DisruptionForecast() {
                     setValue={setLocation}
                     value={location}
                     label="Location"
+                    disabled={isViewOnly()}
                   />
                 ) : (
                   <TextField
@@ -778,7 +779,7 @@ export default function DisruptionForecast() {
               </Box>
             )}
 
-            {/* Generate Button */}
+            {/* Generate Button - Make it clearer that subscription is required */}
             <Box sx={{ mt: 3 }}>
               <Button
                 variant="contained"
@@ -796,7 +797,7 @@ export default function DisruptionForecast() {
                   }
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Generate'}
+                {loading ? <CircularProgress size={24} color="inherit" /> : (!isSubscribed ? 'Subscribe to Generate' : 'Generate')}
               </Button>
             </Box>
           </Box>
