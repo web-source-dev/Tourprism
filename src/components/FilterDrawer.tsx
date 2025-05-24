@@ -27,6 +27,7 @@ import { useToast } from '@/ui/toast';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 const INCIDENT_TYPES = [
+  "All",
   "Industrial Action",
   "Transport",
   "Civil Unrest",
@@ -36,7 +37,7 @@ const INCIDENT_TYPES = [
 ];
 
 const SORT_OPTIONS = [
-  { value: 'latest', label: 'Latest First' },
+  { value: 'latest', label: 'Latest First', default: true },
   { value: 'impact', label: 'Highest Impact' }
 ];
 
@@ -92,11 +93,7 @@ const FilterDrawer = ({
     setExpanded(isExpanded ? panel : false);
   };
   const DATE_RANGES = [
-    { value: 0, label: 'All Time' },
-    { value: 1, label: 'Today' },
-    { value: 7, label: 'Next 7 days' },
-    { value: 14, label: 'Next 14 days' },
-    { value: 30, label: 'Next 30 days' },
+    { value: 7, label: 'This Week' },
     { value: -1, label: isSubscribed ? 'Custom' : 'Custom (Premium)' },
   ];
   const handleTimeRangeChange = (value: number) => {
@@ -125,17 +122,30 @@ const FilterDrawer = ({
   };
 
   const handleImpactLevelChange = (impactLevel: string) => {
+    // Toggle the selected impact level
+    const updatedImpact = filters.impactLevel === impactLevel ? '' : impactLevel;
     onFilterChange({
       ...filters,
-      impactLevel: impactLevel === filters.impactLevel ? '' : impactLevel
+      impactLevel: updatedImpact
     });
   };
 
   const handleIncidentTypeChange = (type: string) => {
-    // If user selects an incident type, set it as the only selected type
+    if (type === "All") {
+      onFilterChange({
+        ...filters,
+        alertCategory: []
+      });
+      return;
+    }
+    // Toggle the selected type in the array
+    const updatedTypes = filters.alertCategory.includes(type)
+      ? filters.alertCategory.filter(t => t !== type)
+      : [...filters.alertCategory, type];
+    
     onFilterChange({
       ...filters,
-      alertCategory: [type]
+      alertCategory: updatedTypes
     });
   };
 
@@ -151,7 +161,7 @@ const FilterDrawer = ({
   // Helper function to get selected incident type label
   const getSelectedIncidentType = () => {
     if (filters.alertCategory.length === 0) return 'All Types';
-    return filters.alertCategory[0];
+    return filters.alertCategory.join(', ');
   };
 
   // Helper function to get selected date range label
@@ -330,7 +340,7 @@ const FilterDrawer = ({
                       sx={{ py: 0.5, px: 0 }}
                       component="div"
                     >
-                      <Radio checked={filters.alertCategory.includes(type)} size="small" />
+                      <Radio checked={type === "All" ? filters.alertCategory.length === 0 : filters.alertCategory.includes(type)} size="small" />
                       <ListItemText primary={type} />
                     </ListItem>
                   ))}
@@ -447,13 +457,15 @@ const FilterDrawer = ({
                     color="grey.800"
                     sx={{ fontSize: '14px', mt: '2px', fontWeight: '600' }}
                   >
-                    EdinBurgh
+                    Edinburgh
                   </Typography>
                 </Box>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M9.99967 11.4582C10.3449 11.4582 10.6247 11.738 10.6247 12.0832V13.7498C10.6247 14.095 10.3449 14.3748 9.99967 14.3748C9.6545 14.3748 9.37467 14.095 9.37467 13.7498V12.0832C9.37467 11.738 9.6545 11.4582 9.99967 11.4582Z" fill="#E7B119" />
-                  <path fill-rule="evenodd" clip-rule="evenodd" d="M5.62467 7.04908V5.4165C5.62467 3.00026 7.58343 1.0415 9.99967 1.0415C12.4159 1.0415 14.3747 3.00026 14.3747 5.4165V7.04908C15.7837 7.38554 16.8655 8.58187 17.0626 10.0458C17.186 10.9628 17.2913 11.9264 17.2913 12.9165C17.2913 13.9066 17.186 14.8702 17.0626 15.7872C16.8363 17.468 15.4437 18.7961 13.7287 18.8749C12.5383 18.9297 11.3295 18.9582 9.99968 18.9582C8.66981 18.9582 7.46104 18.9297 6.27069 18.8749C4.55564 18.7961 3.16308 17.468 2.93677 15.7872C2.81331 14.8702 2.70801 13.9066 2.70801 12.9165C2.70801 11.9264 2.81331 10.9628 2.93677 10.0458C3.13388 8.58187 4.21567 7.38554 5.62467 7.04908ZM6.87467 5.4165C6.87467 3.69061 8.27378 2.2915 9.99967 2.2915C11.7256 2.2915 13.1247 3.69061 13.1247 5.4165V6.93265C12.1274 6.89455 11.1054 6.87484 9.99968 6.87484C8.89397 6.87484 7.87198 6.89455 6.87467 6.93265V5.4165ZM9.99968 8.12484C8.68838 8.12484 7.49876 8.15294 6.32809 8.20676C5.23726 8.2569 4.32409 9.10973 4.17559 10.2126C4.05445 11.1124 3.95801 12.0106 3.95801 12.9165C3.95801 13.8224 4.05445 14.7206 4.17559 15.6204C4.32409 16.7233 5.23726 17.5761 6.32809 17.6263C7.49876 17.6801 8.68838 17.7082 9.99968 17.7082C11.311 17.7082 12.5006 17.6801 13.6713 17.6263C14.7621 17.5761 15.6753 16.7233 15.8238 15.6204C15.9449 14.7206 16.0413 13.8224 16.0413 12.9165C16.0413 12.0106 15.9449 11.1124 15.8238 10.2126C15.6753 9.10973 14.7621 8.2569 13.6713 8.20676C12.5006 8.15294 11.311 8.12484 9.99968 8.12484Z" fill="#E7B119" />
-                </svg>
+                <Box sx={{ ml: 'auto' }}>
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.99967 11.4582C10.3449 11.4582 10.6247 11.738 10.6247 12.0832V13.7498C10.6247 14.095 10.3449 14.3748 9.99967 14.3748C9.6545 14.3748 9.37467 14.095 9.37467 13.7498V12.0832C9.37467 11.738 9.6545 11.4582 9.99967 11.4582Z" fill="#E7B119" />
+                    <path fill-rule="evenodd" clip-rule="evenodd" d="M5.62467 7.04908V5.4165C5.62467 3.00026 7.58343 1.0415 9.99967 1.0415C12.4159 1.0415 14.3747 3.00026 14.3747 5.4165V7.04908C15.7837 7.38554 16.8655 8.58187 17.0626 10.0458C17.186 10.9628 17.2913 11.9264 17.2913 12.9165C17.2913 13.9066 17.186 14.8702 17.0626 15.7872C16.8363 17.468 15.4437 18.7961 13.7287 18.8749C12.5383 18.9297 11.3295 18.9582 9.99968 18.9582C8.66981 18.9582 7.46104 18.9297 6.27069 18.8749C4.55564 18.7961 3.16308 17.468 2.93677 15.7872C2.81331 14.8702 2.70801 13.9066 2.70801 12.9165C2.70801 11.9264 2.81331 10.9628 2.93677 10.0458C3.13388 8.58187 4.21567 7.38554 5.62467 7.04908ZM6.87467 5.4165C6.87467 3.69061 8.27378 2.2915 9.99967 2.2915C11.7256 2.2915 13.1247 3.69061 13.1247 5.4165V6.93265C12.1274 6.89455 11.1054 6.87484 9.99968 6.87484C8.89397 6.87484 7.87198 6.89455 6.87467 6.93265V5.4165ZM9.99968 8.12484C8.68838 8.12484 7.49876 8.15294 6.32809 8.20676C5.23726 8.2569 4.32409 9.10973 4.17559 10.2126C4.05445 11.1124 3.95801 12.0106 3.95801 12.9165C3.95801 13.8224 4.05445 14.7206 4.17559 15.6204C4.32409 16.7233 5.23726 17.5761 6.32809 17.6263C7.49876 17.6801 8.68838 17.7082 9.99968 17.7082C11.311 17.7082 12.5006 17.6801 13.6713 17.6263C14.7621 17.5761 15.6753 16.7233 15.8238 15.6204C15.9449 14.7206 16.0413 13.8224 16.0413 12.9165C16.0413 12.0106 15.9449 11.1124 15.8238 10.2126C15.6753 9.10973 14.7621 8.2569 13.6713 8.20676C12.5006 8.15294 11.311 8.12484 9.99968 8.12484Z" fill="#E7B119" />
+                  </svg>
+                </Box>
               </Box>
             )}
 
@@ -479,6 +491,7 @@ const FilterDrawer = ({
               </AccordionSummary>
               <AccordionDetails sx={{ px: 0, pt: 0 }}>
                 <RadioGroup
+                sx={{width: '100%'}}
                   value={filters.timeRange}
                   onChange={(e) => handleTimeRangeChange(Number(e.target.value))}
                 >
@@ -486,16 +499,24 @@ const FilterDrawer = ({
                     <FormControlLabel
                       key={option.value}
                       value={option.value}
-                      control={<Radio size="small" />}
+                      control={<Radio />}
+                      sx={{
+                        width: '100%',
+                        '& .MuiFormControlLabel-label': {
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          width: '100%'
+                        }
+                      }}
                       label={
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {option.label}
+                        <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+                          <span>{option.label}</span>
                           {option.value === -1 && !isSubscribed && (
                             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path d="M9.99967 11.4582C10.3449 11.4582 10.6247 11.738 10.6247 12.0832V13.7498C10.6247 14.095 10.3449 14.3748 9.99967 14.3748C9.6545 14.3748 9.37467 14.095 9.37467 13.7498V12.0832C9.37467 11.738 9.6545 11.4582 9.99967 11.4582Z" fill="#E7B119" />
                               <path fill-rule="evenodd" clip-rule="evenodd" d="M5.62467 7.04908V5.4165C5.62467 3.00026 7.58343 1.0415 9.99967 1.0415C12.4159 1.0415 14.3747 3.00026 14.3747 5.4165V7.04908C15.7837 7.38554 16.8655 8.58187 17.0626 10.0458C17.186 10.9628 17.2913 11.9264 17.2913 12.9165C17.2913 13.9066 17.186 14.8702 17.0626 15.7872C16.8363 17.468 15.4437 18.7961 13.7287 18.8749C12.5383 18.9297 11.3295 18.9582 9.99968 18.9582C8.66981 18.9582 7.46104 18.9297 6.27069 18.8749C4.55564 18.7961 3.16308 17.468 2.93677 15.7872C2.81331 14.8702 2.70801 13.9066 2.70801 12.9165C2.70801 11.9264 2.81331 10.9628 2.93677 10.0458C3.13388 8.58187 4.21567 7.38554 5.62467 7.04908ZM6.87467 5.4165C6.87467 3.69061 8.27378 2.2915 9.99967 2.2915C11.7256 2.2915 13.1247 3.69061 13.1247 5.4165V6.93265C12.1274 6.89455 11.1054 6.87484 9.99968 6.87484C8.89397 6.87484 7.87198 6.89455 6.87467 6.93265V5.4165ZM9.99968 8.12484C8.68838 8.12484 7.49876 8.15294 6.32809 8.20676C5.23726 8.2569 4.32409 9.10973 4.17559 10.2126C4.05445 11.1124 3.95801 12.0106 3.95801 12.9165C3.95801 13.8224 4.05445 14.7206 4.17559 15.6204C4.32409 16.7233 5.23726 17.5761 6.32809 17.6263C7.49876 17.6801 8.68838 17.7082 9.99968 17.7082C11.311 17.7082 12.5006 17.6801 13.6713 17.6263C14.7621 17.5761 15.6753 16.7233 15.8238 15.6204C15.9449 14.7206 16.0413 13.8224 16.0413 12.9165C16.0413 12.0106 15.9449 11.1124 15.8238 10.2126C15.6753 9.10973 14.7621 8.2569 13.6713 8.20676C12.5006 8.15294 11.311 8.12484 9.99968 8.12484Z" fill="#E7B119" />
                             </svg>
-
                           )}
                         </Box>
                       }
@@ -596,7 +617,7 @@ const FilterDrawer = ({
               </AccordionSummary>
               <AccordionDetails sx={{ px: 0, pt: 0 }}>
                 <RadioGroup
-                  value={filters.sortBy}
+                  value={filters.sortBy || 'latest'}
                   onChange={(e) => handleSortChange(e.target.value)}
                 >
                   {SORT_OPTIONS.map((option) => (
