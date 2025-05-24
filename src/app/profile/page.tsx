@@ -189,7 +189,7 @@ export default function ProfilePage() {
             {!isCollaborator && <Tab label="Account Settings" {...a11yProps(2)} />}
             <Tab label="Preferences" {...a11yProps(3)} />
             {/* Show Collaborator tab only for account owner */}
-            {!isCollaborator && <Tab label="Collaborator" {...a11yProps(4)} />}
+            {!isCollaborator && <Tab label="Team" {...a11yProps(4)} />}
           </Tabs>
         </Box>
 

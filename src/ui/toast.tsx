@@ -31,10 +31,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   // Function to show a toast
   const showToast = (message: string, type: ToastType) => {
+    // Clear all existing toasts and timeouts before showing a new one
+    Object.values(toastTimeoutsRef.current).forEach(clearTimeout);
+    toastTimeoutsRef.current = {};
+    setToasts([]);  // Clear all existing toasts
+    
     const id = Math.random().toString(36).substring(2, 9);
     
-    // Add toast to state
-    setToasts((prev) => [...prev, { message, type, id }]);
+    // Add new toast to state
+    setToasts([{ message, type, id }]);
     
     // Create a timeout to auto-hide toast after 4 seconds
     const timeout = setTimeout(() => {

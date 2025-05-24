@@ -1338,7 +1338,7 @@ export default function Feed() {
                               alerts[0].risk === 'High' ? '#d32f2f' : 'inherit',
                           fontWeight: 500,
                         }}>
-                          {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderated Impact' : `${alerts[0].risk} Impact`}
+                          {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderate Impact' : `${alerts[0].risk} Impact`}
                         </Typography>
                       </Box>
                     </Box>
@@ -1485,7 +1485,7 @@ export default function Feed() {
                               alert.risk === 'High' ? '#d32f2f' : 'inherit',
                           fontWeight: 500,
                         }}>
-                          {alert.risk === 'Medium' || !alert.risk ? 'Moderated Impact' : `${alert.risk} Impact`}
+                          {alert.risk === 'Medium' || !alert.risk ? 'Moderate Impact' : `${alert.risk} Impact`}
                         </Typography>
                       </Box>
                     </Box>

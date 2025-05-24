@@ -33,8 +33,6 @@ const Navbar: React.FC<NavbarProps> = ({
   setNotificationDrawerOpen,
   unreadCount,
   isClient,
-  currentPageName,
-  currentPageIcon,
 }) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
@@ -63,7 +61,7 @@ const Navbar: React.FC<NavbarProps> = ({
       py: 0,
       mx: { xs: 1, sm: 1, md: 3 },
       my: 1.5,
-      bgcolor: pathname === '/feed' ? '#EBEBEC' : '#fff',
+      bgcolor: pathname === '/feed' ? 'transparent' : '#fff',
       borderRadius: '8px',
       boxShadow: 'none',
     }}>
@@ -72,7 +70,7 @@ const Navbar: React.FC<NavbarProps> = ({
         sx={{
           justifyContent: 'space-between',
           minHeight: { xs: '40px', sm: '50px' },
-          display: isAuthenticated || isFeedPage ? 'none' : 'flex',
+          display: isMobile ? 'flex' : ((isAuthenticated || isFeedPage) ? 'none' : 'flex'),
         }}
       >
         {/* Left side of header */}
@@ -86,7 +84,6 @@ const Navbar: React.FC<NavbarProps> = ({
             sx={{ display: { sm: 'none' }, color: 'black', mx: 0.2 }}
           >
             <i className="ri-menu-2-line" style={{ fontSize: '18px' }}></i> 
-            <Typography variant="body1" sx={{ fontWeight: '500', color: 'black', ml: 1, display: { xs: isFeedPage ? 'block' : 'none', md: 'none' } }}>Feed</Typography>
           </IconButton>
 
           {/* Logo */}
@@ -107,44 +104,6 @@ const Navbar: React.FC<NavbarProps> = ({
               <Typography sx={{ fontSize: '18px', ml: 0.5, fontWeight: '550', color: 'black', display: { xs: 'none', md: 'block' } }}>tourprism</Typography>
             </Typography>
           )}
-
-          {/* Feed text - only on feed page */}
-          {!isAuthenticated && !isMobile && pathname !== '/' && (
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              {!isAuthenticated && (
-                <IconButton onClick={() => router.push('/')} sx={{
-                  display: { xs: 'none', md: 'flex' }, gap: 0.5,
-                  '&:hover': {
-                    bgcolor: 'transparent'
-                  }
-                }}>
-                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M10.2965 4.40253C10.1889 4.48379 9.86773 4.72639 9.68259 4.87088C9.31178 5.16026 8.81906 5.55566 8.32779 5.9822C7.83405 6.4109 7.35319 6.86124 6.99969 7.26131C6.82244 7.46192 6.68775 7.63814 6.60008 7.78356C6.51763 7.92033 6.50049 8.00112 6.50049 8.00112C6.50049 8.00112 6.51764 8.07954 6.60008 8.2163C6.68775 8.36172 6.82243 8.53794 6.99969 8.73855C7.35318 9.13863 7.83405 9.58897 8.3278 10.0177C8.81907 10.4442 9.3118 10.8396 9.68261 11.129C9.86776 11.2735 10.1885 11.5157 10.296 11.597C10.5184 11.7608 10.5664 12.0741 10.4026 12.2964C10.2388 12.5188 9.92584 12.5663 9.7035 12.4025L9.70194 12.4014C9.58923 12.3162 9.25637 12.0648 9.06739 11.9173C8.6882 11.6214 8.18093 11.2145 7.67219 10.7728C7.16594 10.3332 6.64681 9.84943 6.25031 9.40069C6.05256 9.17689 5.87475 8.95003 5.74366 8.73258C5.62085 8.52887 5.5 8.27094 5.5 7.99993C5.5 7.72892 5.62086 7.471 5.74367 7.26728C5.87475 7.04984 6.05256 6.82298 6.25031 6.59918C6.64681 6.15043 7.16594 5.66665 7.67218 5.2271C8.18091 4.7854 8.68818 4.37845 9.06736 4.08253C9.25641 3.93499 9.58914 3.68368 9.70172 3.59865L9.70314 3.59757C9.92549 3.43381 10.2388 3.48108 10.4026 3.70342C10.5663 3.92576 10.5188 4.23877 10.2965 4.40253Z" fill="#616161" />
-                  </svg>
-                  <Typography variant="body1" sx={{ fontWeight: 'bold', color: 'black', display: { xs: 'none', md: 'block' } }}>Feed</Typography>
-                </IconButton>
-              )}
-            </Box>
-          )}
-
-          {isAuthenticated && !isMobile && isFeedPage === false && (
-            <IconButton sx={{display:'none'}}>
-              {currentPageIcon}
-            </IconButton>
-          )}
-
-          <Typography
-            sx={{
-              alignItems: 'center',
-              ml: 0.1,
-              display:'none',
-              fontWeight: 'medium',
-              fontSize: '16px',
-              color: 'black',
-            }}
-          >
-            {currentPageName}
-          </Typography>
         </Box>
 
         {/* Desktop navigation - center of header */}
@@ -189,7 +148,7 @@ const Navbar: React.FC<NavbarProps> = ({
             </Button>
           )}
           {!isAuthenticated && isFeedPage && (
-            <Box>
+            <Box display="none">
               <IconButton onClick={handleFilterOpenForFeedPage}>
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" clipRule="evenodd" d="M10 1.04167C7.58375 1.04167 5.625 3.00042 5.625 5.41667C5.625 7.83291 7.58375 9.79167 10 9.79167C12.4162 9.79167 14.375 7.83291 14.375 5.41667C14.375 3.00042 12.4162 1.04167 10 1.04167ZM6.875 5.41667C6.875 3.69078 8.27411 2.29167 10 2.29167C11.7259 2.29167 13.125 3.69078 13.125 5.41667C13.125 7.14256 11.7259 8.54167 10 8.54167C8.27411 8.54167 6.875 7.14256 6.875 5.41667Z" fill="#616161" />
@@ -216,6 +175,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 onClick={() => setNotificationDrawerOpen(true)}
                 sx={{
                   color: 'black',
+                  display: 'none'
                 }}
               >
                 <Badge badgeContent={isClient ? unreadCount : 0} color="error">
@@ -229,6 +189,7 @@ const Navbar: React.FC<NavbarProps> = ({
                   onClick={handleFilterOpenForFeedPage}
                   sx={{
                     color: 'black',
+                    display: 'none'
                   }}
                 >
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

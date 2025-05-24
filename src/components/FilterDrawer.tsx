@@ -165,9 +165,9 @@ const FilterDrawer = ({
 
   // Helper function to get selected impact level label
   const getSelectedImpactLevel = () => {
-    if (!filters.impactLevel) return 'All Levels';
+    if (!filters.impactLevel) return 'All';
     const impactLevel = IMPACT_LEVELS.find(level => level.value === filters.impactLevel);
-    return impactLevel ? impactLevel.label : 'All Levels';
+    return impactLevel ? impactLevel.label : 'All';
   };
 
   // Helper function to get selected sort label
@@ -549,7 +549,7 @@ const FilterDrawer = ({
                 sx={{ px: 0 }}
               >
                 <Box sx={{ width: '100%' }}>
-                  <Typography variant="body2" color="text.secondary">Impacted Level</Typography>
+                  <Typography variant="body2" color="text.secondary">Impact Level</Typography>
                   <Typography variant="body1" fontWeight="medium">{getSelectedImpactLevel()}</Typography>
                 </Box>
               </AccordionSummary>
@@ -561,7 +561,7 @@ const FilterDrawer = ({
                   <FormControlLabel
                     value=""
                     control={<Radio size="small" />}
-                    label="All Levels"
+                    label="All"
                   />
                   {IMPACT_LEVELS.map((level) => (
                     <FormControlLabel
