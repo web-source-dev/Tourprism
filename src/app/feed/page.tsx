@@ -47,6 +47,31 @@ const formatDateForDisplay = (dateString: string) => {
   });
 };
 
+// Add this function after the formatDateForDisplay function
+const formatRelativeTime = (dateString: string) => {
+  if (!dateString) return "";
+  
+  const date = new Date(dateString);
+  const now = new Date();
+  
+  // Get time difference in seconds
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    // Less than a minute
+    return `${diffInSeconds}s`;
+  } else if (diffInSeconds < 3600) {
+    // Less than an hour
+    return `${Math.floor(diffInSeconds / 60)}m`;
+  } else if (diffInSeconds < 86400) {
+    // Less than a day
+    return `${Math.floor(diffInSeconds / 3600)}h`;
+  } else {
+    // More than a day
+    return `${Math.floor(diffInSeconds / 86400)}d`;
+  }
+};
+
 // Add this before the fetchOperatingRegionAlerts function as a shared helper function
 // Helper function to sort alerts by the selected sort criteria
 const sortAlertsByFilter = (alerts: AlertType[], sortBy: string) => {
@@ -94,7 +119,7 @@ export default function Feed() {
   // Add state variables for tracking card visibility
   const [showUnlockFeaturesCard, setShowUnlockFeaturesCard] = useState(true);
   const [showGetAccessCard, setShowGetAccessCard] = useState(true);
-  
+
   const { showToast } = useToast();
 
   const isViewOnly = () => {
@@ -129,10 +154,10 @@ export default function Feed() {
     // Use optional chaining with nullish coalescing to handle possibly undefined array
     const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
     if (operatingRegions.length === 0) return [];
-    
+
     setLoading(true);
     let combinedAlerts: AlertType[] = [];
-    
+
     try {
       // For each operating region, fetch alerts
       for (const region of operatingRegions) {
@@ -144,12 +169,12 @@ export default function Feed() {
           longitude: region.longitude,
           distance: filters.distance || 50
         };
-        
+
         if (filters.timeRange > 0) {
           const now = new Date();
           const futureDate = new Date();
           futureDate.setDate(futureDate.getDate() + filters.timeRange);
-          
+
           params.startDate = now.toISOString();
           params.endDate = futureDate.toISOString();
         } else if (filters.timeRange === -1 && filters.customDateFrom && filters.customDateTo) {
@@ -157,35 +182,35 @@ export default function Feed() {
           params.startDate = new Date(filters.customDateFrom).toISOString();
           params.endDate = new Date(filters.customDateTo).toISOString();
         }
-        
+
         if (filters.alertCategory && filters.alertCategory.length > 0) {
           params.alertCategory = filters.alertCategory;
         }
-        
+
         if (filters.impactLevel) {
           params.impact = filters.impactLevel;
         }
-        
+
         console.log(`Fetching alerts for operating region ${region.name} with params:`, params);
         const response = await fetchAlerts(params);
         combinedAlerts = [...combinedAlerts, ...response.alerts];
       }
-      
+
       // Remove duplicates
       combinedAlerts = Array.from(
         new Map(combinedAlerts.map(alert => [alert._id, alert])).values()
       );
-      
+
       // Sort alerts with priority for followed alerts and then by filter criteria
       combinedAlerts.sort((a, b) => {
         // First priority: followed alerts go to the top
         if (a.isFollowing && !b.isFollowing) return -1;
         if (!a.isFollowing && b.isFollowing) return 1;
-        
+
         // Second priority: maintain the sort order within each group using the shared sorting function
         return sortAlertsByFilter([a, b], filters.sortBy)[0] === a ? -1 : 1;
       });
-      
+
       setOperatingRegionAlerts(combinedAlerts);
       return combinedAlerts;
     } catch (error) {
@@ -203,21 +228,21 @@ export default function Feed() {
       // Check if we have operating regions
       const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
       const hasOperatingRegions = isAuthenticated && operatingRegions.length > 0;
-      
+
       // Skip default Edinburgh location if we have operating regions and the current location is Edinburgh
-      const isDefaultEdinburgh = 
-        cityName === "Edinburgh" && 
-        coordinates?.latitude === 55.9533 && 
+      const isDefaultEdinburgh =
+        cityName === "Edinburgh" &&
+        coordinates?.latitude === 55.9533 &&
         coordinates?.longitude === -3.1883;
-      
+
       const skipDefaultLocation = hasOperatingRegions && isDefaultEdinburgh;
-      
+
       // First check if we need to fetch operating region alerts
       let operatingRegionsResults: AlertType[] = [];
       if (hasOperatingRegions) {
         operatingRegionsResults = await fetchOperatingRegionAlerts();
       }
-      
+
       // Only fetch location-based alerts if we're not skipping the default location
       let locationBasedAlerts: AlertType[] = [];
       if (!skipDefaultLocation) {
@@ -268,29 +293,29 @@ export default function Feed() {
           console.warn(`Filtered out ${response.alerts.length - locationBasedAlerts.length} duplicate alert(s) in initial load`);
         }
       }
-      
+
       // STEP 1: Organize alerts into their respective categories
       // Get followed alerts from both sources
       const followedAlerts = [
         ...operatingRegionsResults.filter(alert => alert.isFollowing),
         ...locationBasedAlerts.filter(alert => alert.isFollowing)
       ];
-      
+
       // Get non-followed operating region alerts
       const nonFollowedOperatingRegionAlerts = operatingRegionsResults.filter(alert => !alert.isFollowing);
-      
+
       // Get normal location alerts (not followed, not from operating regions)
       const normalAlerts = locationBasedAlerts.filter(alert => !alert.isFollowing);
-      
+
       // STEP 2: Sort each category internally according to the filter criteria
       const sortedFollowedAlerts = sortAlertsByFilter(followedAlerts, filters.sortBy);
       const sortedOperatingRegionAlerts = sortAlertsByFilter(nonFollowedOperatingRegionAlerts, filters.sortBy);
       const sortedNormalAlerts = sortAlertsByFilter(normalAlerts, filters.sortBy);
-      
+
       // STEP 3: Combine all categories in the correct order while removing duplicates
       const sortedAllAlerts: AlertType[] = [];
       const addedIds = new Set<string>();
-      
+
       // Add followed alerts first (highest priority)
       sortedFollowedAlerts.forEach(alert => {
         if (!addedIds.has(alert._id)) {
@@ -298,7 +323,7 @@ export default function Feed() {
           addedIds.add(alert._id);
         }
       });
-      
+
       // Add operating region alerts second (medium priority)
       sortedOperatingRegionAlerts.forEach(alert => {
         if (!addedIds.has(alert._id)) {
@@ -306,7 +331,7 @@ export default function Feed() {
           addedIds.add(alert._id);
         }
       });
-      
+
       // Add normal alerts last (lowest priority)
       sortedNormalAlerts.forEach(alert => {
         if (!addedIds.has(alert._id)) {
@@ -314,7 +339,7 @@ export default function Feed() {
           addedIds.add(alert._id);
         }
       });
-      
+
       // Apply the limit for non-authenticated users
       if (!isAuthenticated) {
         setAlerts(sortedAllAlerts.slice(0, 15));
@@ -356,11 +381,11 @@ export default function Feed() {
     // Alert events
     socketRef.current.on('alert:created', (data) => {
       console.log('New alert created:', data);
-      
+
       // Check if we need to refresh operating region alerts
       const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
       const hasOperatingRegions = isAuthenticated && operatingRegions.length > 0;
-      
+
       if (hasOperatingRegions) {
         // Refresh operating region alerts
         fetchOperatingRegionAlerts().then(() => {
@@ -371,17 +396,17 @@ export default function Feed() {
       } else if (city && coords) {
         fetchLocationAlerts(city, coords);
       }
-      
+
       showToast('A new alert has been added', 'success');
     });
 
     // Similar updates for other socket events that change alerts
     socketRef.current.on('alert:updated', (data) => {
       console.log('Alert updated:', data);
-      
+
       // Check if this alert is in our operating region alerts
       const isInOperatingRegions = operatingRegionAlerts.some(alert => alert._id === data.alertId);
-      
+
       if (isInOperatingRegions) {
         // Refresh operating region alerts
         fetchOperatingRegionAlerts().then(() => {
@@ -404,17 +429,17 @@ export default function Feed() {
           )
         );
       }
-      
+
       showToast('An alert has been updated', 'success');
     });
 
     socketRef.current.on('alerts:bulk-created', (data) => {
       console.log('Bulk alerts created:', data);
-      
+
       // Check if we need to refresh operating region alerts
       const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
       const hasOperatingRegions = isAuthenticated && operatingRegions.length > 0;
-      
+
       if (hasOperatingRegions) {
         // Refresh operating region alerts
         fetchOperatingRegionAlerts().then(() => {
@@ -425,17 +450,17 @@ export default function Feed() {
       } else if (city && coords) {
         fetchLocationAlerts(city, coords);
       }
-      
+
       showToast(`${data.count} new alerts have been added`, 'success');
     });
 
     // Add these event handlers back after the 'alert:updated' handler
     socketRef.current.on('alert:deleted', (data) => {
       console.log('Alert deleted:', data);
-      
+
       // Check if this alert is in our operating region alerts
       const isInOperatingRegions = operatingRegionAlerts.some(alert => alert._id === data.alertId);
-      
+
       if (isInOperatingRegions) {
         // Refresh operating region alerts
         fetchOperatingRegionAlerts().then(() => {
@@ -446,7 +471,7 @@ export default function Feed() {
         // Just remove from main list
         setAlerts(prevAlerts => prevAlerts.filter(alert => alert._id !== data.alertId));
       }
-      
+
       showToast('An alert has been removed', 'success');
     });
 
@@ -463,7 +488,7 @@ export default function Feed() {
             alert
         )
       );
-      
+
       // Also update operating region alerts if this is in that list
       const isInOperatingRegions = operatingRegionAlerts.some(alert => alert._id === data.alertId);
       if (isInOperatingRegions) {
@@ -494,7 +519,7 @@ export default function Feed() {
             alert
         )
       );
-      
+
       // Also update operating region alerts if this is in that list
       const isInOperatingRegions = operatingRegionAlerts.some(alert => alert._id === data.alertId);
       if (isInOperatingRegions) {
@@ -526,11 +551,11 @@ export default function Feed() {
   useEffect(() => {
     const hideUnlockCard = localStorage.getItem('hideUnlockFeaturesCard') === 'true';
     const hideAccessCard = localStorage.getItem('hideGetAccessCard') === 'true';
-    
+
     if (hideUnlockCard) {
       setShowUnlockFeaturesCard(false);
     }
-    
+
     if (hideAccessCard) {
       setShowGetAccessCard(false);
     }
@@ -671,9 +696,9 @@ export default function Feed() {
     }
   };
 
- 
 
- 
+
+
 
   const getHighAccuracyLocation = (highAccuracy = true) => {
     return new Promise<GeolocationPosition>((resolve, reject) => {
@@ -756,13 +781,13 @@ export default function Feed() {
       // Check if we have operating regions
       const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
       const hasOperatingRegions = isAuthenticated && operatingRegions.length > 0;
-      
+
       // Skip default Edinburgh location if we have operating regions and the current location is Edinburgh
-      const isDefaultEdinburgh = 
-        city === "Edinburgh" && 
-        coords?.latitude === 55.9533 && 
+      const isDefaultEdinburgh =
+        city === "Edinburgh" &&
+        coords?.latitude === 55.9533 &&
         coords?.longitude === -3.1883;
-      
+
       const skipDefaultLocation = hasOperatingRegions && isDefaultEdinburgh;
 
       // When loading more, we should only fetch additional location-based alerts
@@ -773,7 +798,7 @@ export default function Feed() {
           limit: 10,
           sortBy: filters.sortBy,
         };
-        
+
         if (filters.timeRange > 0) {
           const now = new Date();
           const futureDate = new Date();
@@ -786,11 +811,11 @@ export default function Feed() {
           params.startDate = new Date(filters.customDateFrom).toISOString();
           params.endDate = new Date(filters.customDateTo).toISOString();
         }
-        
+
         if (filters.alertCategory && filters.alertCategory.length > 0) {
           params.alertCategory = filters.alertCategory;
         }
-        
+
         if (coords) {
           params.latitude = coords.latitude;
           params.longitude = coords.longitude;
@@ -804,25 +829,25 @@ export default function Feed() {
         // We've already loaded operating region alerts in the first page
         // Now just load regular location-based alerts for pagination
         const response = await fetchAlerts(params);
-        
+
         // Create a map of all alerts we already have
         const alertMap = new Map(alerts.map(alert => [alert._id, alert]));
-        
+
         // Filter out alerts we already have
         const newUniqueAlerts = response.alerts.filter(alert => !alertMap.has(alert._id));
-        
+
         if (newUniqueAlerts.length < response.alerts.length) {
           console.warn(`Filtered out ${response.alerts.length - newUniqueAlerts.length} duplicate alert(s)`);
         }
 
         // Add new alerts to our existing list
         setAlerts(prevAlerts => [...prevAlerts, ...newUniqueAlerts]);
-        
+
         // Calculate hasMore accounting for operating region alerts and already loaded alerts
         const operatingRegionCount = hasOperatingRegions ? operatingRegionAlerts.length : 0;
         const totalAlertsLoaded = alerts.length + newUniqueAlerts.length;
         const totalExpected = operatingRegionCount + response.totalCount;
-        
+
         setHasMore(totalAlertsLoaded < totalExpected);
         setPage(nextPage);
       } else {
@@ -973,7 +998,7 @@ export default function Feed() {
 
   return (
     <Layout onFilterOpen={() => setIsFilterDrawerOpen(true)}>
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" style={{padding:0}}>
         {/* Low Accuracy Warning Dialog */}
         <Dialog
           open={lowAccuracyWarning}
@@ -1056,39 +1081,39 @@ export default function Feed() {
         </Dialog>
 
         {/* Feed Header with Title and Filter Button */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
+        <Box sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
           mb: 2,
         }}>
-        <Box>
-        <Typography variant="h6" sx={{ fontWeight: 500 }}>
-            Feed
-          </Typography>
-          <Typography variant="body2" sx={{ fontWeight: 400 }}>
-            View upcoming travel disruptions
-          </Typography>
-        </Box>
-          <IconButton 
+          <Box>
+            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+              Feed
+            </Typography>
+            <Typography variant="body2" sx={{ fontWeight: 400 }}>
+              View upcoming travel disruptions
+            </Typography>
+          </Box>
+          <IconButton
             onClick={() => setIsFilterDrawerOpen(true)}
-            sx={{ 
+            sx={{
               bgcolor: '#f5f5f5',
-              '&:hover': { 
-                bgcolor: '#e0e0e0' 
+              '&:hover': {
+                bgcolor: '#e0e0e0'
               },
             }}
             aria-label="open filter"
           >
-          <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect x="0.5" y="0.5" width="33" height="33" rx="7.5" fill="white"/>
-<rect x="0.5" y="0.5" width="33" height="33" rx="7.5" stroke="#E0E1E2"/>
-<path fill-rule="evenodd" clip-rule="evenodd" d="M12.6366 9.68752C12.6496 9.68752 12.6626 9.68752 12.6757 9.68752L21.3634 9.68752C21.9413 9.68749 22.4319 9.68747 22.819 9.74024C23.2287 9.7961 23.6205 9.9222 23.9204 10.2523C24.2229 10.5854 24.3057 10.9867 24.3121 11.397C24.318 11.7801 24.2568 12.2561 24.1853 12.811L24.1801 12.8514C24.1549 13.0478 24.117 13.2377 24.038 13.4278C23.9578 13.6209 23.8474 13.7853 23.7098 13.9488C22.975 14.8217 21.6091 16.3992 19.6861 17.8358C19.655 17.859 19.6157 17.9141 19.6082 17.9968C19.4214 20.0615 19.257 21.1539 19.1385 21.7868C19.0102 22.4711 18.4882 22.9448 18.0381 23.2709C17.8026 23.4416 17.5525 23.5953 17.3299 23.7308C17.312 23.7417 17.2944 23.7524 17.277 23.763C17.0689 23.8895 16.8921 23.997 16.7443 24.1016C16.3389 24.3882 15.8712 24.3681 15.5137 24.1598C15.1764 23.9633 14.939 23.6049 14.891 23.1995C14.7856 22.3097 14.5946 20.5677 14.3838 17.992C14.3771 17.9093 14.3641 17.8854 14.3631 17.8834C14.3623 17.882 14.3604 17.8785 14.3541 17.8716C14.3471 17.8638 14.333 17.8501 14.3063 17.8301C12.3871 16.3953 11.0239 14.8205 10.2901 13.9487C10.1531 13.7859 10.0394 13.6254 9.95834 13.4302C9.87898 13.2391 9.84514 13.0482 9.81983 12.8514C9.81809 12.8379 9.81636 12.8244 9.81463 12.811C9.74322 12.2561 9.68197 11.7801 9.6879 11.397C9.69425 10.9867 9.77706 10.5854 10.0796 10.2523C10.3795 9.9222 10.7713 9.7961 11.181 9.74024C11.5681 9.68747 12.0587 9.68749 12.6366 9.68752ZM11.333 10.8549C11.0449 10.8942 10.9581 10.9584 10.9123 11.0088C10.8691 11.0563 10.817 11.14 10.8128 11.4144C10.8082 11.7066 10.8576 12.1011 10.9356 12.7079C10.9573 12.8765 10.9763 12.9482 10.9973 12.9987C11.0166 13.0452 11.0508 13.1054 11.1509 13.2243C11.8696 14.0782 13.1663 15.5732 14.9799 16.9291C15.1256 17.038 15.2593 17.1729 15.356 17.3545C15.4513 17.5334 15.4903 17.7195 15.5051 17.9002C15.7147 20.4619 15.9044 22.1903 16.0082 23.0672C16.0113 23.094 16.0211 23.1203 16.0361 23.1433C16.0514 23.1668 16.0684 23.181 16.08 23.1878C16.0815 23.1886 16.0828 23.1893 16.0839 23.1899C16.0866 23.1884 16.0902 23.1862 16.0947 23.183C16.2763 23.0546 16.4871 22.9265 16.686 22.8057C16.7058 22.7936 16.7255 22.7817 16.745 22.7698C16.9691 22.6334 17.1835 22.5009 17.378 22.3599C17.7881 22.0628 17.9893 21.8113 18.0327 21.5796C18.1426 20.9932 18.3029 19.9386 18.4878 17.8954C18.5217 17.521 18.7055 17.1641 19.0128 16.9345C20.83 15.5769 22.1294 14.0793 22.8491 13.2243C22.9364 13.1206 22.9752 13.0537 22.9991 12.9962C23.0242 12.9358 23.0453 12.8558 23.0643 12.7079C23.1424 12.1011 23.1917 11.7066 23.1872 11.4144C23.183 11.14 23.1308 11.0563 23.0877 11.0088C23.0419 10.9584 22.9551 10.8942 22.667 10.8549C22.365 10.8138 21.952 10.8125 21.3242 10.8125H12.6757C12.0479 10.8125 11.635 10.8138 11.333 10.8549ZM16.078 23.1925C16.078 23.1924 16.0784 23.1923 16.0791 23.1921L16.078 23.1925Z" fill="black"/>
-</svg>
+            <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="0.5" y="0.5" width="33" height="33" rx="7.5" fill="white" />
+              <rect x="0.5" y="0.5" width="33" height="33" rx="7.5" stroke="#E0E1E2" />
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M12.6366 9.68752C12.6496 9.68752 12.6626 9.68752 12.6757 9.68752L21.3634 9.68752C21.9413 9.68749 22.4319 9.68747 22.819 9.74024C23.2287 9.7961 23.6205 9.9222 23.9204 10.2523C24.2229 10.5854 24.3057 10.9867 24.3121 11.397C24.318 11.7801 24.2568 12.2561 24.1853 12.811L24.1801 12.8514C24.1549 13.0478 24.117 13.2377 24.038 13.4278C23.9578 13.6209 23.8474 13.7853 23.7098 13.9488C22.975 14.8217 21.6091 16.3992 19.6861 17.8358C19.655 17.859 19.6157 17.9141 19.6082 17.9968C19.4214 20.0615 19.257 21.1539 19.1385 21.7868C19.0102 22.4711 18.4882 22.9448 18.0381 23.2709C17.8026 23.4416 17.5525 23.5953 17.3299 23.7308C17.312 23.7417 17.2944 23.7524 17.277 23.763C17.0689 23.8895 16.8921 23.997 16.7443 24.1016C16.3389 24.3882 15.8712 24.3681 15.5137 24.1598C15.1764 23.9633 14.939 23.6049 14.891 23.1995C14.7856 22.3097 14.5946 20.5677 14.3838 17.992C14.3771 17.9093 14.3641 17.8854 14.3631 17.8834C14.3623 17.882 14.3604 17.8785 14.3541 17.8716C14.3471 17.8638 14.333 17.8501 14.3063 17.8301C12.3871 16.3953 11.0239 14.8205 10.2901 13.9487C10.1531 13.7859 10.0394 13.6254 9.95834 13.4302C9.87898 13.2391 9.84514 13.0482 9.81983 12.8514C9.81809 12.8379 9.81636 12.8244 9.81463 12.811C9.74322 12.2561 9.68197 11.7801 9.6879 11.397C9.69425 10.9867 9.77706 10.5854 10.0796 10.2523C10.3795 9.9222 10.7713 9.7961 11.181 9.74024C11.5681 9.68747 12.0587 9.68749 12.6366 9.68752ZM11.333 10.8549C11.0449 10.8942 10.9581 10.9584 10.9123 11.0088C10.8691 11.0563 10.817 11.14 10.8128 11.4144C10.8082 11.7066 10.8576 12.1011 10.9356 12.7079C10.9573 12.8765 10.9763 12.9482 10.9973 12.9987C11.0166 13.0452 11.0508 13.1054 11.1509 13.2243C11.8696 14.0782 13.1663 15.5732 14.9799 16.9291C15.1256 17.038 15.2593 17.1729 15.356 17.3545C15.4513 17.5334 15.4903 17.7195 15.5051 17.9002C15.7147 20.4619 15.9044 22.1903 16.0082 23.0672C16.0113 23.094 16.0211 23.1203 16.0361 23.1433C16.0514 23.1668 16.0684 23.181 16.08 23.1878C16.0815 23.1886 16.0828 23.1893 16.0839 23.1899C16.0866 23.1884 16.0902 23.1862 16.0947 23.183C16.2763 23.0546 16.4871 22.9265 16.686 22.8057C16.7058 22.7936 16.7255 22.7817 16.745 22.7698C16.9691 22.6334 17.1835 22.5009 17.378 22.3599C17.7881 22.0628 17.9893 21.8113 18.0327 21.5796C18.1426 20.9932 18.3029 19.9386 18.4878 17.8954C18.5217 17.521 18.7055 17.1641 19.0128 16.9345C20.83 15.5769 22.1294 14.0793 22.8491 13.2243C22.9364 13.1206 22.9752 13.0537 22.9991 12.9962C23.0242 12.9358 23.0453 12.8558 23.0643 12.7079C23.1424 12.1011 23.1917 11.7066 23.1872 11.4144C23.183 11.14 23.1308 11.0563 23.0877 11.0088C23.0419 10.9584 22.9551 10.8942 22.667 10.8549C22.365 10.8138 21.952 10.8125 21.3242 10.8125H12.6757C12.0479 10.8125 11.635 10.8138 11.333 10.8549ZM16.078 23.1925C16.078 23.1924 16.0784 23.1923 16.0791 23.1921L16.078 23.1925Z" fill="black" />
+            </svg>
 
           </IconButton>
         </Box>
-        
+
         {/* Alerts List */}
         {loading && alerts.length === 0 ? (
           // Skeleton loading
@@ -1122,25 +1147,25 @@ export default function Feed() {
         ) : (
           <>
             {/* Restructured grid layout for cards and alerts */}
-            <Box sx={{ 
+            <Box sx={{
               display: 'grid',
               gridTemplateColumns: {
-                xs: '1fr', 
-                sm: 'repeat(2, 1fr)', 
+                xs: '1fr',
+                sm: 'repeat(2, 1fr)',
                 md: 'repeat(3, 1fr)'
               },
-              gap: 2, 
-              mt: 2 
+              gap: 2,
+              mt: 2
             }}>
               {/* First position: Feature Card based on auth state */}
               {isAuthenticated && userProfile && (!userProfile.isProfileComplete) && showUnlockFeaturesCard ? (
                 <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
-                  <IconButton 
+                  <IconButton
                     onClick={() => handleDismissCard('unlock')}
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
                       zIndex: 1,
                       bgcolor: 'rgba(255, 255, 255, 0.8)',
                       width: 24,
@@ -1150,22 +1175,22 @@ export default function Feed() {
                     aria-label="dismiss card"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 6L6 18M6 6L18 18" stroke="#666666" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </IconButton>
-                  <UnlockFeaturesCard 
-                    progress={userProfile?.profileCompletionPercentage || 75} 
-                    onClick={() => router.push('/profile')} 
+                  <UnlockFeaturesCard
+                    progress={userProfile?.profileCompletionPercentage || 75}
+                    onClick={() => router.push('/profile')}
                   />
                 </Box>
               ) : !isAuthenticated && showGetAccessCard ? (
                 <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
-                  <IconButton 
+                  <IconButton
                     onClick={() => handleDismissCard('access')}
-                    sx={{ 
-                      position: 'absolute', 
-                      top: 8, 
-                      right: 8, 
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      right: 8,
                       zIndex: 1,
                       bgcolor: 'rgba(255, 255, 255, 0.3)',
                       width: 24,
@@ -1176,7 +1201,7 @@ export default function Feed() {
                     aria-label="dismiss card"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   </IconButton>
                   <GetAccessCard onClick={handleLogin} />
@@ -1184,34 +1209,20 @@ export default function Feed() {
               ) : (
                 // If user is authenticated and profile is complete, or card is dismissed, show the first alert
                 alerts.length > 0 && (
-                  <Paper 
-                    key={`alert-${alerts[0]._id}-0`} 
-                    sx={{ 
+                  <Paper
+                    key={`alert-${alerts[0]._id}-0`}
+                    sx={{
                       p: 2,
-                      bgcolor: 'white', 
-                      borderRadius: 2, 
+                      bgcolor: 'white',
+                      borderRadius: 2,
                       boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
                       border: '1px solid #EAEAEA',
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column'
                     }}
-                  >
-                    {/* Alert Header with Follow Button */}
-                    <Box sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: 1.5
-                    }}>
-                      <Typography variant="subtitle1" sx={{ 
-                        fontWeight: 600, 
-                        fontSize: '16px',
-                        flex: 1
-                      }}>
-                        {alerts[0].title || ""}
-                      </Typography>
-                      
+                  >           
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Box
                         onClick={() => isViewOnly() ? null : handleFollowUpdate(alerts[0]._id || '')}
                         sx={{
@@ -1228,7 +1239,7 @@ export default function Feed() {
                           border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
-                          '&:hover': { 
+                          '&:hover': {
                             bgcolor: 'rgba(0, 0, 0, 0.04)'
                           },
                           ml: 1,
@@ -1249,13 +1260,34 @@ export default function Feed() {
                             </svg>
                             <Typography variant="body2">Follow</Typography>
                           </>
-                        )}
+                        )}  
                       </Box>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
+                          {formatRelativeTime(alerts[0].createdAt)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    {/* Alert Header with Follow Button */}
+                    <Box sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 1.5
+                    }}>
+
+                      <Typography variant="subtitle1" sx={{
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        flex: 1
+                      }}>
+                        {alerts[0].title || ""}
+                      </Typography>
                     </Box>
 
                     {/* Location & Time info */}
-                    <Typography variant="body2" 
-                      sx={{ 
+                    <Typography variant="body2"
+                      sx={{
                         color: '#616161',
                         fontSize: '14px',
                         mb: 1
@@ -1265,8 +1297,8 @@ export default function Feed() {
                     </Typography>
 
                     {/* Alert Content */}
-                    <Typography variant="body2" sx={{ 
-                      mb: 1.5, 
+                    <Typography variant="body2" sx={{
+                      mb: 1.5,
                       color: '#333',
                       flex: 1
                     }}>
@@ -1279,12 +1311,12 @@ export default function Feed() {
                       {/* Start and End Time */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant="body2" sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
                             Start: {alerts[0].expectedStart ? formatDateForDisplay(alerts[0].expectedStart) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant="body2" sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
                             End: {alerts[0].expectedEnd ? formatDateForDisplay(alerts[0].expectedEnd) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
@@ -1292,18 +1324,18 @@ export default function Feed() {
 
                       {/* Impact Level */}
                       <Box sx={{ mt: 1 }}>
-                        <Typography variant="body2" sx={{ 
+                        <Typography variant="body2" sx={{
                           display: 'inline-block',
-                          px: 1.5, 
+                          px: 1.5,
                           py: 0.5,
                           fontSize: '14px',
                           borderRadius: 1,
-                          backgroundColor: alerts[0].risk === 'Low' ? '#e6f4ea' : 
-                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#fff4e5' : 
-                            alerts[0].risk === 'High' ? '#fdecea' : 'transparent',
-                          color: alerts[0].risk === 'Low' ? '#00855b' : 
-                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#c17e00' : 
-                            alerts[0].risk === 'High' ? '#d32f2f' : 'inherit',
+                          backgroundColor: alerts[0].risk === 'Low' ? '#e6f4ea' :
+                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#fff4e5' :
+                              alerts[0].risk === 'High' ? '#fdecea' : 'transparent',
+                          color: alerts[0].risk === 'Low' ? '#00855b' :
+                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#c17e00' :
+                              alerts[0].risk === 'High' ? '#d32f2f' : 'inherit',
                           fontWeight: 500,
                         }}>
                           {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderated Impact' : `${alerts[0].risk} Impact`}
@@ -1313,22 +1345,22 @@ export default function Feed() {
                   </Paper>
                 )
               )}
-              
+
               {/* Render rest of the alerts - starting from index 0 or 1 depending on the first position */}
               {alerts.map((alert: AlertType, index: number) => {
                 // Skip rendering if this alert would have been in the first position
                 // and we're already showing a card or if we've already rendered it
                 const startIndex = ((isAuthenticated && userProfile && !userProfile.isProfileComplete && showUnlockFeaturesCard) || (!isAuthenticated && showGetAccessCard)) ? 0 : 1;
-                
+
                 if (index < startIndex) return null;
-                
+
                 return (
-                  <Paper 
-                    key={`alert-${alert._id}-${index}`} 
-                    sx={{ 
+                  <Paper
+                    key={`alert-${alert._id}-${index}`}
+                    sx={{
                       p: 2,
-                      bgcolor: 'white', 
-                      borderRadius: 2, 
+                      bgcolor: 'white',
+                      borderRadius: 2,
                       boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
                       border: '1px solid #EAEAEA',
                       height: '100%',
@@ -1336,22 +1368,9 @@ export default function Feed() {
                       flexDirection: 'column'
                     }}
                   >
-                    {/* Alert Header with Follow Button */}
-                    <Box sx={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-start',
-                      mb: 1.5
-                    }}>
-                      <Typography variant="subtitle1" sx={{ 
-                        fontWeight: 600, 
-                        fontSize: '16px',
-                        flex: 1
-                      }}>
-                        {alert.title || ""}
-                      </Typography>
-                      
-                      <Box
+                    
+                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                   <Box
                         onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
                         sx={{
                           display: 'flex',
@@ -1367,7 +1386,7 @@ export default function Feed() {
                           border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
-                          '&:hover': { 
+                          '&:hover': {
                             bgcolor: 'rgba(0, 0, 0, 0.04)'
                           },
                           ml: 1,
@@ -1390,11 +1409,32 @@ export default function Feed() {
                           </>
                         )}
                       </Box>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
+                          {formatRelativeTime(alert.createdAt)}
+                        </Typography>
+                      </Box>
+                   </Box>
+                    {/* Alert Header with Follow Button */}
+                    <Box sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 1.5
+                    }}>
+                      <Typography variant="subtitle1" sx={{
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        flex: 1
+                      }}>
+                        {alert.title || ""}
+                      </Typography>
+
                     </Box>
 
                     {/* Location & Time info */}
-                    <Typography variant="body2" 
-                      sx={{ 
+                    <Typography variant="body2"
+                      sx={{
                         color: '#616161',
                         fontSize: '14px',
                         mb: 1
@@ -1404,8 +1444,8 @@ export default function Feed() {
                     </Typography>
 
                     {/* Alert Content */}
-                    <Typography variant="body2" sx={{ 
-                      mb: 1.5, 
+                    <Typography variant="body2" sx={{
+                      mb: 1.5,
                       color: '#333',
                       flex: 1
                     }}>
@@ -1416,14 +1456,14 @@ export default function Feed() {
                     {/* Alert Details */}
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                       {/* Start and End Time */}
-                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant="body2"  sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
                             Start: {alert.expectedStart ? formatDateForDisplay(alert.expectedStart) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
                         <Box>
-                            <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                          <Typography variant="body2"  sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
                             End: {alert.expectedEnd ? formatDateForDisplay(alert.expectedEnd) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
@@ -1431,18 +1471,18 @@ export default function Feed() {
 
                       {/* Impact Level */}
                       <Box sx={{ mt: 1 }}>
-                        <Typography variant="body2" sx={{ 
+                        <Typography variant="body2" sx={{
                           display: 'inline-block',
-                          px: 1.5, 
+                          px: 1.5,
                           py: 0.5,
                           fontSize: '14px',
                           borderRadius: 1,
-                          backgroundColor: alert.risk === 'Low' ? '#e6f4ea' : 
-                            alert.risk === 'Medium' || !alert.risk ? '#fff4e5' : 
-                            alert.risk === 'High' ? '#fdecea' : 'transparent',
-                          color: alert.risk === 'Low' ? '#00855b' : 
-                            alert.risk === 'Medium' || !alert.risk ? '#c17e00' : 
-                            alert.risk === 'High' ? '#d32f2f' : 'inherit',
+                          backgroundColor: alert.risk === 'Low' ? '#e6f4ea' :
+                            alert.risk === 'Medium' || !alert.risk ? '#fff4e5' :
+                              alert.risk === 'High' ? '#fdecea' : 'transparent',
+                          color: alert.risk === 'Low' ? '#00855b' :
+                            alert.risk === 'Medium' || !alert.risk ? '#c17e00' :
+                              alert.risk === 'High' ? '#d32f2f' : 'inherit',
                           fontWeight: 500,
                         }}>
                           {alert.risk === 'Medium' || !alert.risk ? 'Moderated Impact' : `${alert.risk} Impact`}
@@ -1497,7 +1537,7 @@ export default function Feed() {
         locationLoading={locationLoading}
         locationAccuracy={locationAccuracy}
       />
-      
+
       <Dialog
         open={loginDialogOpen}
         onClose={handleCloseLoginDialog}

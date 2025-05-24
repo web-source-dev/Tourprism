@@ -29,8 +29,8 @@ interface FeatureStatus {
   teamMembers: boolean;
 }
 
-const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({ 
-  onClick 
+const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
+  onClick
 }) => {
   const router = useRouter();
   const { user } = useAuth();
@@ -57,10 +57,10 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
 
         // Check if user has main operating regions set up
         console.log('User company', user?.company);
-        if (user?.company?.MainOperatingRegions && 
-            user.company.MainOperatingRegions.length > 0) {
+        if (user?.company?.MainOperatingRegions &&
+          user.company.MainOperatingRegions.length > 0) {
           newStatus.personalizedContent = true;
-          console.log('Personalized content is true' , newStatus.personalizedContent, user.company.MainOperatingRegions);
+          console.log('Personalized content is true', newStatus.personalizedContent, user.company.MainOperatingRegions);
         }
 
         // Check if user has any summaries created
@@ -80,8 +80,8 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
           // If collaborators aren't in the user object, fetch them separately
           try {
             const collaboratorsResponse = await api.get<CollaboratorResponse>('/profile/collaborators');
-            if (collaboratorsResponse.data?.collaborators && 
-                collaboratorsResponse.data.collaborators.length > 0) {
+            if (collaboratorsResponse.data?.collaborators &&
+              collaboratorsResponse.data.collaborators.length > 0) {
               newStatus.teamMembers = true;
             }
           } catch (error) {
@@ -92,7 +92,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
         // Calculate progress (25% for each completed feature)
         const completedCount = Object.values(newStatus).filter(Boolean).length;
         const calculatedProgress = Math.floor((completedCount / 4) * 100);
-        
+
         setFeatureStatus(newStatus);
         setProgress(calculatedProgress);
         setIsLoading(false);
@@ -149,16 +149,16 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
       }}
     >
       {/* Progress circle */}
-      <Box 
+      <Box
         sx={{
           display: 'flex',
-          flexDirection: 'column',
           alignItems: 'center',
+          justifyContent: 'space-around',
           mb: 2,
         }}
       >
         <Box sx={{ position: 'relative', mb: 1 }}>
-          <svg width="80" height="80" viewBox="0 0 80 80">
+          <svg width="50" height="50" viewBox="0 0 80 80">
             <circle
               cx="40"
               cy="40"
@@ -189,51 +189,74 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
               alignItems: 'center',
             }}
           >
-            <Typography variant="h6" fontWeight="bold" sx={{ color: '#0066FF' }}>
+            <Typography variant="body2" fontWeight="400" sx={{ fontSize: "12px", color: '#333' }}>
               {progress}%
             </Typography>
           </Box>
         </Box>
 
-        <Typography variant="h6" fontWeight="bold" sx={{ mb: 0.5 }}>
+        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "18px", mb: 0.5 }}>
           Unlock Your Features
         </Typography>
       </Box>
 
       {/* Feature list */}
       <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
-            <path d="M8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0ZM11.7071 6.70711C12.0976 6.31658 12.0976 5.68342 11.7071 5.29289C11.3166 4.90237 10.6834 4.90237 10.2929 5.29289L7 8.58579L5.70711 7.29289C5.31658 6.90237 4.68342 6.90237 4.29289 7.29289C3.90237 7.68342 3.90237 8.31658 4.29289 8.70711L6.29289 10.7071C6.68342 11.0976 7.31658 11.0976 7.70711 10.7071L11.7071 6.70711Z" fill="#0066FF"/>
-          </svg>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+          {featureStatus.accountCreated ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00065 1.83331C4.5949 1.83331 1.83398 4.59422 1.83398 7.99998C1.83398 11.4057 4.5949 14.1666 8.00065 14.1666C11.4064 14.1666 14.1673 11.4057 14.1673 7.99998C14.1673 4.59422 11.4064 1.83331 8.00065 1.83331ZM0.833984 7.99998C0.833984 4.04194 4.04261 0.833313 8.00065 0.833313C11.9587 0.833313 15.1673 4.04194 15.1673 7.99998C15.1673 11.958 11.9587 15.1666 8.00065 15.1666C4.04261 15.1666 0.833984 11.958 0.833984 7.99998Z" fill="#757575" />
+            </svg>
+          )}
           <Typography variant="body2">Account Created</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
-            <path d="M8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0ZM11.7071 6.70711C12.0976 6.31658 12.0976 5.68342 11.7071 5.29289C11.3166 4.90237 10.6834 4.90237 10.2929 5.29289L7 8.58579L5.70711 7.29289C5.31658 6.90237 4.68342 6.90237 4.29289 7.29289C3.90237 7.68342 3.90237 8.31658 4.29289 8.70711L6.29289 10.7071C6.68342 11.0976 7.31658 11.0976 7.70711 10.7071L11.7071 6.70711Z" fill={featureStatus.personalizedContent ? "#0066FF" : "#F0F0F0"}/>
-          </svg>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+          {featureStatus.personalizedContent ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00065 1.83331C4.5949 1.83331 1.83398 4.59422 1.83398 7.99998C1.83398 11.4057 4.5949 14.1666 8.00065 14.1666C11.4064 14.1666 14.1673 11.4057 14.1673 7.99998C14.1673 4.59422 11.4064 1.83331 8.00065 1.83331ZM0.833984 7.99998C0.833984 4.04194 4.04261 0.833313 8.00065 0.833313C11.9587 0.833313 15.1673 4.04194 15.1673 7.99998C15.1673 11.958 11.9587 15.1666 8.00065 15.1666C4.04261 15.1666 0.833984 11.958 0.833984 7.99998Z" fill="#757575" />
+            </svg>
+          )}
           <Typography variant="body2" sx={{ color: featureStatus.personalizedContent ? 'inherit' : '#888' }}>
             View personalized content
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
-            <path d="M8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0ZM11.7071 6.70711C12.0976 6.31658 12.0976 5.68342 11.7071 5.29289C11.3166 4.90237 10.6834 4.90237 10.2929 5.29289L7 8.58579L5.70711 7.29289C5.31658 6.90237 4.68342 6.90237 4.29289 7.29289C3.90237 7.68342 3.90237 8.31658 4.29289 8.70711L6.29289 10.7071C6.68342 11.0976 7.31658 11.0976 7.70711 10.7071L11.7071 6.70711Z" fill={featureStatus.weeklyForecast ? "#0066FF" : "#F0F0F0"}/>
-          </svg>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+          {featureStatus.weeklyForecast ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00065 1.83331C4.5949 1.83331 1.83398 4.59422 1.83398 7.99998C1.83398 11.4057 4.5949 14.1666 8.00065 14.1666C11.4064 14.1666 14.1673 11.4057 14.1673 7.99998C14.1673 4.59422 11.4064 1.83331 8.00065 1.83331ZM0.833984 7.99998C0.833984 4.04194 4.04261 0.833313 8.00065 0.833313C11.9587 0.833313 15.1673 4.04194 15.1673 7.99998C15.1673 11.958 11.9587 15.1666 8.00065 15.1666C4.04261 15.1666 0.833984 11.958 0.833984 7.99998Z" fill="#757575" />
+            </svg>
+          )}
           <Typography variant="body2" sx={{ color: featureStatus.weeklyForecast ? 'inherit' : '#888' }}>
             Get weekly forecast
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginRight: 8 }}>
-            <path d="M8 0C3.58172 0 0 3.58172 0 8C0 12.4183 3.58172 16 8 16C12.4183 16 16 12.4183 16 8C16 3.58172 12.4183 0 8 0ZM11.7071 6.70711C12.0976 6.31658 12.0976 5.68342 11.7071 5.29289C11.3166 4.90237 10.6834 4.90237 10.2929 5.29289L7 8.58579L5.70711 7.29289C5.31658 6.90237 4.68342 6.90237 4.29289 7.29289C3.90237 7.68342 3.90237 8.31658 4.29289 8.70711L6.29289 10.7071C6.68342 11.0976 7.31658 11.0976 7.70711 10.7071L11.7071 6.70711Z" fill={featureStatus.teamMembers ? "#0066FF" : "#F0F0F0"}/>
-          </svg>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          {featureStatus.teamMembers ? (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
+            </svg>
+          ) : (
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fill-rule="evenodd" clip-rule="evenodd" d="M8.00065 1.83331C4.5949 1.83331 1.83398 4.59422 1.83398 7.99998C1.83398 11.4057 4.5949 14.1666 8.00065 14.1666C11.4064 14.1666 14.1673 11.4057 14.1673 7.99998C14.1673 4.59422 11.4064 1.83331 8.00065 1.83331ZM0.833984 7.99998C0.833984 4.04194 4.04261 0.833313 8.00065 0.833313C11.9587 0.833313 15.1673 4.04194 15.1673 7.99998C15.1673 11.958 11.9587 15.1666 8.00065 15.1666C4.04261 15.1666 0.833984 11.958 0.833984 7.99998Z" fill="#757575" />
+            </svg>
+          )}
           <Typography variant="body2" sx={{ color: featureStatus.teamMembers ? 'inherit' : '#888' }}>
             Invite team members
           </Typography>
         </Box>
       </Box>
-
       <Button
         fullWidth
         variant="contained"
@@ -242,8 +265,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
           bgcolor: '#0066FF',
           color: 'white',
           fontWeight: 'bold',
-          borderRadius: 10,
-          py: 1,
+          borderRadius: 2,
           '&:hover': {
             bgcolor: '#0055DD',
           },
