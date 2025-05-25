@@ -75,7 +75,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
     // Ensure we have at least one default location
     const availableLocations = locations.length > 0
         ? locations
-        : ['All Locations'];
+        : ['All'];
 
     return (
         <Box sx={{ mb: isModal ? 0 : 4 }}>
@@ -106,7 +106,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                             displayEmpty
                             renderValue={(selected) => (
                                 <Typography variant="body2" sx={{ color: 'text.secondary', py: 0 }}>
-                                    {selected || 'All Report Types'}
+                                    {selected || 'All'}
                                 </Typography>
                             )}
                             sx={{
@@ -128,7 +128,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                                 },
                             }}
                         >
-                            <MenuItem value="">All Report Types</MenuItem>
+                            <MenuItem value="">All</MenuItem>
                             <MenuItem value="forecast" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 Weekly Forecast
                                 {filters.reportType === 'forecast' && <CheckIcon color="success" />}
@@ -167,7 +167,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                             displayEmpty
                             renderValue={(selected) => (
                                 <Typography variant="body2" sx={{ color: 'text.secondary', py: 0.5 }}>
-                                    {selected || 'All Locations'}
+                                    {selected || 'All'}
                                 </Typography>
                             )}
                             sx={{
@@ -189,7 +189,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                                 },
                             }}
                         >
-                            <MenuItem value="">All Locations</MenuItem>
+                            <MenuItem value="">All</MenuItem>
                             {availableLocations.map((location) => (
                                 <MenuItem
                                     key={location}
@@ -230,7 +230,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                             displayEmpty
                             renderValue={(selected) => (
                                 <Typography variant="body2" sx={{ color: 'text.secondary', py: 0.5 }}>
-                                    {selected || 'All Time'}
+                                    {selected || 'All'}
                                 </Typography>
                             )}
                             sx={{
@@ -252,18 +252,10 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                                 },
                             }}
                         >
-                            <MenuItem value="">All Time</MenuItem>
+                            <MenuItem value="">All</MenuItem>
                             <MenuItem value="This Week" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 This Week
                                 {filters.dateCreated === 'This Week' && <CheckIcon color="success" />}
-                            </MenuItem>
-                            <MenuItem value="Last 7 Days" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                Last 7 Days
-                                {filters.dateCreated === 'Last 7 Days' && <CheckIcon color="success" />}
-                            </MenuItem>
-                            <MenuItem value="Last 30 Days" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                Last 30 Days
-                                {filters.dateCreated === 'Last 30 Days' && <CheckIcon color="success" />}
                             </MenuItem>
                             <MenuItem
                                 value="Custom"
@@ -358,7 +350,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                             displayEmpty
                             renderValue={(selected) => (
                                 <Typography variant="body2" sx={{ color: 'text.secondary', py: 0.5 }}>
-                                    {selected || 'All Methods'}
+                                    {selected || 'All'}
                                 </Typography>
                             )}
                             sx={{
@@ -380,7 +372,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                                 },
                             }}
                         >
-                            <MenuItem value="">All Methods</MenuItem>
+                            <MenuItem value="">All</MenuItem>
                             <MenuItem value="Email" sx={{ display: 'flex', justifyContent: 'space-between' }}>
                                 Email
                                 {filters.deliveryMethod === 'Email' && <CheckIcon color="success" />}

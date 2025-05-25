@@ -76,14 +76,18 @@ const formatRelativeTime = (dateString: string) => {
 // Helper function to sort alerts by the selected sort criteria
 const sortAlertsByFilter = (alerts: AlertType[], sortBy: string) => {
   return [...alerts].sort((a, b) => {
-    if (sortBy === 'newest') {
-      return new Date(b.createdAt || b.updatedAt).getTime() - new Date(a.createdAt || a.updatedAt).getTime();
+    if (sortBy === 'latest') {
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     } else if (sortBy === 'oldest') {
-      return new Date(a.createdAt || a.updatedAt).getTime() - new Date(b.createdAt || b.updatedAt).getTime();
-    } else {
-      // Default to sorting by most follows
+      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    } else if (sortBy === 'most_follows') {
       return (b.numberOfFollows || 0) - (a.numberOfFollows || 0);
+    } else if (sortBy === 'most_severe') {
+      const impactOrder = { 'Severe': 3, 'Moderate': 2, 'Minor': 1 };
+      return (impactOrder[b.impact as keyof typeof impactOrder] || 0) - (impactOrder[a.impact as keyof typeof impactOrder] || 0);
     }
+    // Default to latest
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 };
 
@@ -1158,7 +1162,7 @@ export default function Feed() {
               mt: 2
             }}>
               {/* First position: Feature Card based on auth state */}
-              {isAuthenticated && userProfile && (!userProfile.isProfileComplete) && showUnlockFeaturesCard ? (
+              {isAuthenticated && userProfile && (!userProfile.isProfileComplete) ? (
                 <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
                   <IconButton
                     onClick={() => handleDismissCard('unlock')}
@@ -1170,6 +1174,7 @@ export default function Feed() {
                       bgcolor: 'rgba(255, 255, 255, 0.8)',
                       width: 24,
                       height: 24,
+                      display:'none',
                       '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
                     }}
                     aria-label="dismiss card"
@@ -1183,7 +1188,7 @@ export default function Feed() {
                     onClick={() => router.push('/profile')}
                   />
                 </Box>
-              ) : !isAuthenticated && showGetAccessCard ? (
+              ) : !isAuthenticated ? (
                 <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
                   <IconButton
                     onClick={() => handleDismissCard('access')}
@@ -1195,6 +1200,7 @@ export default function Feed() {
                       bgcolor: 'rgba(255, 255, 255, 0.3)',
                       width: 24,
                       height: 24,
+                      display:'none',
                       '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.5)' },
                       color: 'white'
                     }}

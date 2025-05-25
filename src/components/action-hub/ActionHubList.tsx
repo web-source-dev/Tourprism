@@ -87,7 +87,7 @@ const ActionHubList: React.FC = () => {
     router.push(`/action-hub/alert/${alertId}`);
   };
 
-  // Get relative time (e.g., "3m", "17m", "3h", "4d", "2mo")
+  // Get relative time according to standardized format
   const getTimeAgo = (timestamp: string) => {
     if (!timestamp) return '';
     
@@ -95,32 +95,30 @@ const ActionHubList: React.FC = () => {
     const alertTime = new Date(timestamp);
     const diffInMs = now.getTime() - alertTime.getTime();
     
-    // Convert to minutes
+    // Calculate time differences in various units
+    const diffInSeconds = Math.floor(diffInMs / 1000);
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
     
-    if (diffInMinutes < 60) {
-      // Less than an hour, show minutes
+    // Format based on time difference:
+    // < 60s: show seconds
+    // < 60m: show minutes
+    // < 24h: show hours
+    // < 30d: show days
+    // >= 30d: show date as DD MMM
+    
+    if (diffInSeconds < 60) {
+      return `${diffInSeconds}s`;
+    } else if (diffInMinutes < 60) {
       return `${diffInMinutes}m`;
+    } else if (diffInHours < 24) {
+      return `${diffInHours}h`;
+    } else if (diffInDays < 30) {
+      return `${diffInDays}d`;
     } else {
-      // Convert to hours
-      const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
-      
-      if (diffInHours < 24) {
-        // Less than a day, show hours
-        return `${diffInHours}h`;
-      } else {
-        // Convert to days
-        const diffInDays = Math.floor(diffInMs / (1000 * 60 * 60 * 24));
-        
-        if (diffInDays < 30) {
-          // Less than a month, show days
-          return `${diffInDays}d`;
-        } else {
-          // Convert to months (approximately)
-          const diffInMonths = Math.floor(diffInDays / 30);
-          return `${diffInMonths}mo`;
-        }
-      }
+      // Format as DD MMM
+      return format(alertTime, 'd MMM');
     }
   };
 

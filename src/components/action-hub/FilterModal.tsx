@@ -53,7 +53,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
   readonly = false,
 }) => {
   const [filters, setFilters] = useState<FilterOptions>(filterOptions);
-  const [openSection, setOpenSection] = useState<string | null>("status");
+  const [openSection, setOpenSection] = useState<string | null>(null);
 
   // Update local state when props change
   React.useEffect(() => {

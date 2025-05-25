@@ -491,16 +491,38 @@ export default function ForecastDetail() {
     ? forecast.locations[0].city 
     : primaryAlert?.originCity || primaryAlert?.city || 'Edinburgh';
   
-  // Format creation time as "Xh ago"
+  // Format creation time according to standardized format
   const getTimeAgo = () => {
     if (!forecast.createdAt) return '';
     const createdDate = new Date(forecast.createdAt);
     const now = new Date();
-    const diffHours = Math.round((now.getTime() - createdDate.getTime()) / (1000 * 60 * 60));
+    const diffMs = now.getTime() - createdDate.getTime();
     
-    if (diffHours < 1) return 'Just now';
-    if (diffHours === 1) return '1h ago';
-    return `${diffHours}h ago`;
+    // Calculate time differences in various units
+    const diffSeconds = Math.floor(diffMs / 1000);
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    // Format based on time difference:
+    // < 60s: show seconds
+    // < 60m: show minutes
+    // < 24h: show hours
+    // < 30d: show days
+    // >= 30d: show date as DD MMM
+    
+    if (diffSeconds < 60) {
+      return `${diffSeconds}s ago`;
+    } else if (diffMinutes < 60) {
+      return `${diffMinutes}m ago`;
+    } else if (diffHours < 24) {
+      return `${diffHours}h ago`;
+    } else if (diffDays < 30) {
+      return `${diffDays}d ago`;
+    } else {
+      // Format as DD MMM
+      return format(createdDate, 'd MMM');
+    }
   };
 
   return (
