@@ -28,6 +28,7 @@ interface LocationSearchInputProps {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  hideIcon?: boolean;
 }
 
 const LocationSearchInput: React.FC<LocationSearchInputProps> = ({ 
@@ -36,7 +37,8 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   label = "Location",
   placeholder = "Search for a city...",
   required = false,
-  disabled = false
+  disabled = false,
+  hideIcon = false
 }) => {
   const {
     ready,
@@ -122,7 +124,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             }
           }}
           InputProps={{
-            endAdornment: <LocationIcon color="action" />,
+            endAdornment: hideIcon ? null : <LocationIcon color="action" />,
           }}
         />
         {isOpen && status === 'OK' && (

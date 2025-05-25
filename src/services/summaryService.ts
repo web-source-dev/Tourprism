@@ -111,8 +111,12 @@ export interface ForecastResponse {
 // Service functions
 export const generateSummary = async (data: GenerateSummaryRequest): Promise<GenerateSummaryResponse> => {
   try {
+    // Handle 'All' category for alert types
     const requestData = {
       ...data,
+      alertTypes: data.alertCategory === 'All' ? [] : data.alertTypes,
+      alertCategory: data.alertCategory === 'All' ? undefined : data.alertCategory,
+      impact: data.impact === 'All' ? undefined : data.impact,
       generatePDF: true,
       autoSave: data.autoSave === true
     };
@@ -238,8 +242,8 @@ export const getUpcomingForecasts = async (days: number = 7, location?: string, 
     const params = new URLSearchParams();
     if (days) params.append('days', days.toString());
     if (location) params.append('location', location);
-    if (alertCategory) params.append('alertCategory', alertCategory);
-    if (impact) params.append('impact', impact);
+    if (alertCategory && alertCategory !== 'All') params.append('alertCategory', alertCategory);
+    if (impact && impact !== 'All') params.append('impact', impact);
     
     const query = params.toString();
     const url = query ? `/api/summaries/forecasts/upcoming?${query}` : '/api/summaries/forecasts/upcoming';

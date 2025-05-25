@@ -14,9 +14,9 @@ import {
   CircularProgress,
   Alert,
   Stack,
-  Chip,
   Divider,
   IconButton,
+  SelectChangeEvent,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
@@ -41,21 +41,33 @@ import {
 import Layout from '@/components/Layout';
 
 // Define the category-type mapping to match admin create page
-const ALERT_TYPE_MAP = {
-  "Industrial Action": ["Strike", "Work-to-Rule", "Labor Dispute", "Other"],
-  "Extreme Weather": ["Storm", "Flooding", "Heatwave", "Wildfire", "Snow", "Other"],
-  "Infrastructure Failures": ["Power Outage", "IT & System Failure", "Transport Service Suspension", "Road, Rail & Tram Closure", "Repairs or Delays", "Other"],
-  "Public Safety Incidents": ["Protest", "Crime", "Terror Threats", "Travel Advisory", "Other"],
-  "Festivals and Events": ["Citywide Festival", "Sporting Event", "Concerts and Stadium Events", "Parades and Ceremonies", "Other"]
-};
+const ALERT_CATEGORIES = [
+  { value: "All", label: "All" },
+  { value: "Industrial Action", label: "Industrial Action" },
+  { value: "Transport", label: "Transport" },
+  { value: "Civil Unrest", label: "Civil Unrest" },
+  { value: "Health", label: "Health" },
+  { value: "General Safety", label: "General Safety" },
+  { value: "Natural Disaster", label: "Natural Disaster" }
+];
+
+// This can be removed or commented out as we're using direct categories now
+// const ALERT_TYPE_MAP = {
+//   "Industrial Action": ["Strike", "Work-to-Rule", "Labor Dispute", "Other"],
+//   "Extreme Weather": ["Storm", "Flooding", "Heatwave", "Wildfire", "Snow", "Other"],
+//   "Infrastructure Failures": ["Power Outage", "IT & System Failure", "Transport Service Suspension", "Road, Rail & Tram Closure", "Repairs or Delays", "Other"],
+//   "Public Safety Incidents": ["Protest", "Crime", "Terror Threats", "Travel Advisory", "Other"],
+//   "Festivals and Events": ["Citywide Festival", "Sporting Event", "Concerts and Stadium Events", "Parades and Ceremonies", "Other"]
+// };
 
 // Convert the map to the format needed for the dropdown
-const ALERT_TYPES = Object.keys(ALERT_TYPE_MAP).map(category => ({
-  value: category,
-  label: `${category} Events`,
-}));
+// const ALERT_TYPES = Object.keys(ALERT_TYPE_MAP).map(category => ({
+//   value: category,
+//   label: `${category} Events`,
+// }));
 
 const IMPACT_LEVELS = [
+  { value: 'All', label: 'All' },
   { value: 'Minor', label: 'Minor' },
   { value: 'Moderate', label: 'Moderate' },
   { value: 'Severe', label: 'Severe' },
@@ -80,7 +92,7 @@ export default function DisruptionForecast() {
   const { isCollaboratorViewer, isSubscribed } = useAuth();
 
   const isViewOnly = () => {
-    return isCollaboratorViewer || !isSubscribed;
+    return isCollaboratorViewer;
   };
 
   // const weeklyStartDate = new Date()
@@ -108,6 +120,17 @@ export default function DisruptionForecast() {
   const [sharingWeeklyForecast, setSharingWeeklyForecast] = useState(false);
   const [weeklyShareSuccess, setWeeklyShareSuccess] = useState(false);
   const [weeklyShareError, setWeeklyShareError] = useState(false);
+
+  // Add this state at the top with other state variables
+  const [dateRangeType, setDateRangeType] = useState<'thisWeek' | 'custom'>('thisWeek');
+
+  // Update the date fields when dateRangeType changes
+  useEffect(() => {
+    if (dateRangeType === 'thisWeek') {
+      setStartDate(new Date());
+      setEndDate(addDays(new Date(), 7));
+    }
+  }, [dateRangeType]);
 
   // Add useEffect to handle toast notifications based on state changes
   useEffect(() => {
@@ -213,7 +236,19 @@ export default function DisruptionForecast() {
       setLoading(true);
       setError('');
 
-      if (!location) {
+      // For non-subscribers, ensure we have the Edinburgh location set
+      if (!isSubscribed && (!location || location.city !== "Edinburgh")) {
+        setLocation({
+          city: "Edinburgh",
+          country: "United Kingdom",
+          latitude: 55.953251,
+          longitude: -3.188267,
+          placeId: "ChIJIyaYpQC4h0gRJxfnfHsU8mQ"
+        });
+      }
+
+      // For subscribers, require a location selection
+      if (isSubscribed && !location) {
         setError('Please select a location');
         setLocationError(true);
         setLoading(false);
@@ -223,24 +258,32 @@ export default function DisruptionForecast() {
       // Prepare locations array
       const locations = location ? [location] : [];
 
-      // Get all subcategory alert types for the selected category
-      const alertTypes = alertCategory ?
-        [alertCategory, ...(ALERT_TYPE_MAP[alertCategory as keyof typeof ALERT_TYPE_MAP] || [])] :
-        [];
+      // Set alert categories based on selection
+      const alertTypes = alertCategory === 'All' ? [] : [alertCategory];
+
+      // Prepare dates
+      let effectiveStartDate = startDate;
+      let effectiveEndDate = endDate;
+      
+      // If using "This Week" date range or not subscribed, calculate the dates
+      if (dateRangeType === 'thisWeek' || !isSubscribed) {
+        effectiveStartDate = new Date();
+        effectiveEndDate = addDays(new Date(), 7);
+      }
 
       const data = {
         title: `Disruption Forecast for ${location?.city || 'Selected Location'}`,
-        description: `Custom forecast for ${format(startDate || new Date(), 'dd MMM yyyy')} to ${format(endDate || new Date(), 'dd MMM yyyy')}`,
+        description: `Custom forecast for ${format(effectiveStartDate || new Date(), 'dd MMM yyyy')} to ${format(effectiveEndDate || new Date(), 'dd MMM yyyy')}`,
         summaryType: 'forecast' as const, // Use type assertion
-        startDate: startDate ? startDate.toISOString() : undefined,
-        endDate: endDate ? endDate.toISOString() : undefined,
+        startDate: effectiveStartDate ? effectiveStartDate.toISOString() : undefined,
+        endDate: effectiveEndDate ? effectiveEndDate.toISOString() : undefined,
         locations,
         alertTypes,
-        alertCategory, // Add the category explicitly 
+        alertCategory: alertCategory === 'All' ? undefined : alertCategory, 
         includeDuplicates: false,
         generatePDF: true,
         autoSave: true, // Auto-save enabled
-        impact: impact || undefined,
+        impact: impact === 'All' ? undefined : impact,
       };
 
       setGeneratingForecast(true);
@@ -440,6 +483,38 @@ export default function DisruptionForecast() {
   //   }
   // };
 
+  useEffect(() => {
+    // Set default location to Edinburgh for non-subscribed users
+    if (!isSubscribed && !location) {
+      setLocation({
+        city: "Edinburgh",
+        country: "United Kingdom",
+        latitude: 55.953251,
+        longitude: -3.188267,
+        placeId: "ChIJIyaYpQC4h0gRJxfnfHsU8mQ"
+      });
+    }
+  }, [isSubscribed, location]);
+
+  // Add this function to show toast for custom date selection
+  const handleDateRangeChange = (event: unknown) => {
+    const value = (event as SelectChangeEvent<string>).target.value as 'thisWeek' | 'custom';
+    
+    // If user tries to select custom but isn't subscribed, show toast
+    if (value === 'custom' && !isSubscribed) {
+      showToast('Please subscribe to unlock this filter', 'error');
+      return; // Don't update the state
+    }
+    
+    setDateRangeType(value);
+  };
+
+  // Add this function to handle location input click for non-subscribed users
+  const handleLocationClick = () => {
+    if (!isSubscribed) {
+      showToast('Please subscribe to unlock this filter', 'error');
+    }
+  };
 
   return (
     <Layout isFooter={false}>
@@ -468,7 +543,7 @@ export default function DisruptionForecast() {
               }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path fill-rule="evenodd" clip-rule="evenodd" d="M8.03672 0.833008H7.96394C6.73772 0.832999 5.76833 0.832991 5.01004 0.931213C4.23174 1.03203 3.60067 1.24416 3.10113 1.72543C2.59899 2.20921 2.37528 2.82463 2.26942 3.58317C2.16697 4.31734 2.16698 5.25438 2.167 6.43263L2.16699 12.0302C2.16697 12.7619 2.16695 13.3699 2.23721 13.8267C2.30991 14.2993 2.47937 14.7594 2.94671 15.0089C3.3635 15.2315 3.82193 15.1862 4.21062 15.0682C4.60375 14.9489 5.00335 14.7323 5.36923 14.5011C5.73858 14.2677 6.10076 14.0016 6.41566 13.7689L6.45269 13.7415C6.76123 13.5134 7.00904 13.3302 7.19826 13.2163C7.46463 13.0559 7.63283 12.9553 7.76917 12.8911C7.895 12.8318 7.95613 12.8224 8.00033 12.8224C8.04453 12.8224 8.10565 12.8318 8.23149 12.8911C8.36783 12.9553 8.53602 13.0559 8.8024 13.2163C8.99161 13.3302 9.23943 13.5134 9.54797 13.7415L9.585 13.7689C9.8999 14.0016 10.2621 14.2677 10.6314 14.5011C10.9973 14.7323 11.3969 14.9489 11.79 15.0682C12.1787 15.1862 12.6372 15.2315 13.0539 15.0089C13.5213 14.7594 13.6907 14.2993 13.7634 13.8267C13.8337 13.3699 13.8337 12.7619 13.8337 12.0302V6.43264C13.8337 5.25439 13.8337 4.31734 13.7312 3.58317C13.6254 2.82463 13.4017 2.20921 12.8995 1.72543C12.4 1.24416 11.7689 1.03203 10.9906 0.931213C10.2323 0.832991 9.26294 0.832999 8.03672 0.833008ZM3.79495 2.44558C4.07647 2.17435 4.46446 2.01024 5.1385 1.92293C5.82507 1.834 6.72962 1.83301 8.00033 1.83301C9.27104 1.83301 10.1756 1.834 10.8622 1.92293C11.5362 2.01024 11.9242 2.17435 12.2057 2.44558C12.4846 2.71429 12.6514 3.08068 12.7408 3.72138C12.7602 3.8599 12.7755 4.00776 12.7876 4.16634H3.21307C3.22519 4.00776 3.2405 3.8599 3.25983 3.72138C3.34924 3.08068 3.51605 2.71429 3.79495 2.44558ZM3.17321 5.16634C3.16718 5.55058 3.167 5.98244 3.167 6.47136V11.9869C3.167 12.7731 3.16843 13.3031 3.22559 13.6746C3.28169 14.0394 3.36985 14.1012 3.41774 14.1268C3.49983 14.1706 3.6495 14.1935 3.92012 14.1113C4.18629 14.0305 4.49721 13.8692 4.83504 13.6557C5.16939 13.4444 5.50411 13.1991 5.82129 12.9647L5.88113 12.9204C6.16732 12.7088 6.45086 12.499 6.68241 12.3596L6.70198 12.3478C6.94296 12.2027 7.15498 12.075 7.343 11.9864C7.54659 11.8905 7.75773 11.8224 8.00033 11.8224C8.24292 11.8224 8.45407 11.8905 8.65766 11.9864C8.84568 12.075 9.0577 12.2027 9.29867 12.3478L9.31825 12.3596C9.54979 12.499 9.83332 12.7087 10.1195 12.9204L10.1794 12.9647C10.4965 13.1991 10.8313 13.4444 11.1656 13.6557C11.5034 13.8692 11.8144 14.0305 12.0805 14.1113C12.3512 14.1935 12.5008 14.1706 12.5829 14.1268C12.6308 14.1012 12.719 14.0394 12.7751 13.6746C12.8322 13.3031 12.8337 12.7731 12.8337 11.9869V6.47136C12.8337 5.98244 12.8335 5.55058 12.8274 5.16634H3.17321Z" fill="#616161" />
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M8.03672 0.833008H7.96394C6.73772 0.832999 5.76833 0.832991 5.01004 0.931213C4.23174 1.03203 3.60067 1.24416 3.10113 1.72543C2.59899 2.20921 2.37528 2.82463 2.26942 3.58317C2.16697 4.31734 2.16698 5.25438 2.167 6.43263L2.16699 12.0302C2.16697 12.7619 2.16695 13.3699 2.23721 13.8267C2.30991 14.2993 2.47937 14.7594 2.94671 15.0089C3.3635 15.2315 3.82193 15.1862 4.21062 15.0682C4.60375 14.9489 5.00335 14.7323 5.36923 14.5011C5.73858 14.2677 6.10076 14.0016 6.41566 13.7689L6.45269 13.7415C6.76123 13.5134 7.00904 13.3302 7.19826 13.2163C7.46463 13.0559 7.63283 12.9553 7.76917 12.8911C7.895 12.8318 7.95613 12.8224 8.00033 12.8224C8.04453 12.8224 8.10565 12.8318 8.23149 12.8911C8.36783 12.9553 8.53602 13.0559 8.8024 13.2163C8.99161 13.3302 9.23943 13.5134 9.54797 13.7415L9.585 13.7689C9.8999 14.0016 10.2621 14.2677 10.6314 14.5011C10.9973 14.7323 11.3969 14.9489 11.79 15.0682C12.1787 15.1862 12.6372 15.2315 13.0539 15.0089C13.5213 14.7594 13.6907 14.2993 13.7634 13.8267C13.8337 13.3699 13.8337 12.7619 13.8337 12.0302V6.43264C13.8337 5.25439 13.8337 4.31734 13.7312 3.58317C13.6254 2.82463 13.4017 2.20921 12.8995 1.72543C12.4 1.24416 11.7689 1.03203 10.9906 0.931213C10.2323 0.832991 9.26294 0.832999 8.03672 0.833008ZM3.79495 2.44558C4.07647 2.17435 4.46446 2.01024 5.1385 1.92293C5.82507 1.834 6.72962 1.83301 8.00033 1.83301C9.27104 1.83301 10.1756 1.834 10.8622 1.92293C11.5362 2.01024 11.9242 2.17435 12.2057 2.44558C12.4846 2.71429 12.6514 3.08068 12.7408 3.72138C12.7602 3.8599 12.7755 4.00776 12.7876 4.16634H3.21307C3.22519 4.00776 3.2405 3.8599 3.25983 3.72138C3.34924 3.08068 3.51605 2.71429 3.79495 2.44558ZM3.17321 5.16634C3.16718 5.55058 3.167 5.98244 3.167 6.47136V11.9869C3.167 12.7731 3.16843 13.3031 3.22559 13.6746C3.28169 14.0394 3.36985 14.1012 3.41774 14.1268C3.49983 14.1706 3.6495 14.1935 3.92012 14.1113C4.18629 14.0305 4.49721 13.8692 4.83504 13.6557C5.16939 13.4444 5.50411 13.1991 5.82129 12.9647L5.88113 12.9204C6.16732 12.7088 6.45086 12.499 6.68241 12.3596L6.70198 12.3478C6.94296 12.2027 7.15498 12.075 7.343 11.9864C7.54659 11.8905 7.75773 11.8224 8.00033 11.8224C8.24292 11.8224 8.45407 11.8905 8.65766 11.9864C8.84568 12.075 9.0577 12.2027 9.29867 12.3478L9.31825 12.3596C9.54979 12.499 9.83332 12.7087 10.1195 12.9204L10.1794 12.9647C10.4965 13.1991 10.8313 13.4444 11.1656 13.6557C11.5034 13.8692 11.8144 14.0305 12.0805 14.1113C12.3512 14.1935 12.5008 14.1706 12.5829 14.1268C12.6308 14.1012 12.719 14.0394 12.7751 13.6746C12.8322 13.3031 12.8337 12.7731 12.8337 11.9869V6.43264C12.8337 5.25439 12.8337 4.31734 12.7312 3.58317C12.6254 2.82463 12.4017 2.20921 11.8995 1.72543C11.4 1.24416 10.7689 1.03203 9.99062 0.931213C9.23234 0.832991 8.26294 0.832999 7.03672 0.833008Z" fill="#616161" />
               </svg>
 
             </IconButton>
@@ -576,41 +651,30 @@ export default function DisruptionForecast() {
             {/* Alert Type */}
             <Box>
               <FormControl fullWidth>
-                <InputLabel id="alert-type-label">Alert Type</InputLabel>
+                <InputLabel id="alert-type-label">Alert Category</InputLabel>
                 <Select
                   labelId="alert-type-label"
                   id="alert-type"
                   value={alertCategory}
-                  label="Alert Type"
+                  label="Alert Category"
                   onChange={(e) => setAlertCategory(e.target.value)}
                   disabled={isViewOnly()}
                   sx={{
-                    opacity: isViewOnly() ? 0.5 : 1,
-                    cursor: isViewOnly() ? 'not-allowed' : 'pointer',
                     borderRadius: 2
                   }}
                 >
-                  <MenuItem value="">Select</MenuItem>
-                  {ALERT_TYPES.map((type) => (
-                    <MenuItem key={type.value} value={type.value}>
-                      {type.label}
+                  {ALERT_CATEGORIES.map((category) => (
+                    <MenuItem key={category.value} value={category.value}>
+                      {category.label}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
 
-              {alertCategory && (
+              {alertCategory && alertCategory !== 'All' && (
                 <Box sx={{ mt: 1 }}>
                   <Typography variant="body2" color="text.secondary">
-                    Will include all {alertCategory.toLowerCase()} types:
-                    {ALERT_TYPE_MAP[alertCategory as keyof typeof ALERT_TYPE_MAP]?.map((subtype) => (
-                      <Chip
-                        key={subtype}
-                        label={subtype}
-                        size="small"
-                        sx={{ ml: 0.5, mb: 0.5, mt: 0.5 }}
-                      />
-                    ))}
+                    Selected category: {alertCategory}
                   </Typography>
                 </Box>
               )}
@@ -620,26 +684,64 @@ export default function DisruptionForecast() {
             <Box>
               <FormControl fullWidth>
                 {isLoaded ? (
-                  <LocationSearchInput
-                    setValue={setLocation}
-                    value={location}
-                    label="Location"
-                    disabled={isViewOnly()}
-                  />
+                  <Box sx={{ position: 'relative' }}>
+                    <Box onClick={handleLocationClick}>
+                      <LocationSearchInput
+                        setValue={setLocation}
+                        value={location}
+                        label="Location"
+                        disabled={!isSubscribed}
+                        hideIcon={!isSubscribed}
+                      />
+                    </Box>
+                    {!isSubscribed && (
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        right: 14, 
+                        top: '50%', 
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'none'
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
+                        </svg>
+                      </Box>
+                    )}
+                  </Box>
                 ) : (
-                  <TextField
-                    label="Location"
-                    fullWidth
-                    disabled={isViewOnly()}
-                    placeholder="Loading location search..."
-                    sx={{
-                      opacity: isViewOnly() ? 0.5 : 1,
-                      cursor: isViewOnly() ? 'not-allowed' : 'pointer',
-                      '& .MuiOutlinedInput-root': {
-                        borderRadius: 2
-                      }
-                    }}
-                  />
+                  <Box sx={{ position: 'relative' }}>
+                    <Box onClick={handleLocationClick}>
+                      <TextField
+                        label="Location"
+                        fullWidth
+                        disabled={!isSubscribed}
+                        placeholder={!isSubscribed ? "Edinburgh (Default)" : "Loading location search..."}
+                        value={!isSubscribed ? "Edinburgh, United Kingdom" : ""}
+                        sx={{
+                          '& .MuiOutlinedInput-root': {
+                            borderRadius: 2
+                          }
+                        }}
+                      />
+                    </Box>
+                    {!isSubscribed && (
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        right: 14, 
+                        top: '50%', 
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        pointerEvents: 'none'
+                      }}>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
+                        </svg>
+                      </Box>
+                    )}
+                  </Box>
                 )}
               </FormControl>
             </Box>
@@ -649,60 +751,74 @@ export default function DisruptionForecast() {
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                 Date Range
               </Typography>
-              <FormControl fullWidth>
-                <Stack direction="row" spacing={2}>
-                  <Box sx={{ width: '50%' }}>
-                    <DatePicker
-                      label="dd/mm/yyyy"
-                      value={startDate}
-                      onChange={(newValue) => setStartDate(newValue)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2
-                            }
-                          }
-                        }
-                      }}
-                      disabled={isViewOnly()}
-                      sx={{
-                        opacity: isViewOnly() ? 0.5 : 1,
-                        cursor: isViewOnly() ? 'not-allowed' : 'pointer'
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ width: '50%' }}>
-                    <DatePicker
-                      label="dd/mm/yyyy"
-                      value={endDate}
-                      onChange={(newValue) => setEndDate(newValue)}
-                      slotProps={{
-                        textField: {
-                          fullWidth: true,
-                          sx: {
-                            '& .MuiOutlinedInput-root': {
-                              borderRadius: 2
-                            }
-                          }
-                        }
-                      }}
-                      disabled={isViewOnly()}
-                      sx={{
-                        opacity: isViewOnly() ? 0.5 : 1,
-                        cursor: isViewOnly() ? 'not-allowed' : 'pointer'
-                      }}
-                    />
-                  </Box>
-                </Stack>
+              <FormControl fullWidth sx={{ mb: 2 }}>
+                <Select
+                  value={dateRangeType}
+                  onChange={handleDateRangeChange}
+                  disabled={isViewOnly()}
+                  sx={{
+                    borderRadius: 2
+                  }}
+                >
+                  <MenuItem value="thisWeek">This Week</MenuItem>
+                  <MenuItem value="custom" disabled={!isSubscribed}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                      <span>Custom Range</span>
+                      {!isSubscribed && (
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
+                        </svg>
+                      )}
+                    </Box>
+                  </MenuItem>
+                </Select>
               </FormControl>
+              {(dateRangeType === 'custom' && isSubscribed) && (
+                <FormControl fullWidth>
+                  <Stack direction="row" spacing={2}>
+                    <Box sx={{ width: '50%' }}>
+                      <DatePicker
+                        label="Start date"
+                        value={startDate}
+                        onChange={(newValue) => setStartDate(newValue)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            sx: {
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 2
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
+                    <Box sx={{ width: '50%' }}>
+                      <DatePicker
+                        label="End date"
+                        value={endDate}
+                        onChange={(newValue) => setEndDate(newValue)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            sx: {
+                              '& .MuiOutlinedInput-root': {
+                                borderRadius: 2
+                              }
+                            }
+                          }
+                        }}
+                      />
+                    </Box>
+                  </Stack>
+                </FormControl>
+              )}
             </Box>
 
             {/* Impact Level */}
             <Box>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Impacted Level
+                Impact Level
               </Typography>
               <FormControl fullWidth>
                 <Select
@@ -719,14 +835,9 @@ export default function DisruptionForecast() {
                     return selected;
                   }}
                   sx={{
-                    opacity: isViewOnly() ? 0.5 : 1,
-                    cursor: isViewOnly() ? 'not-allowed' : 'pointer',
                     borderRadius: 2
                   }}
                 >
-                  <MenuItem value="" disabled>
-                    <em>Select</em>
-                  </MenuItem>
                   {IMPACT_LEVELS.map((level) => (
                     <MenuItem key={level.value} value={level.value}>
                       {level.label}
@@ -779,7 +890,7 @@ export default function DisruptionForecast() {
               </Box>
             )}
 
-            {/* Generate Button - Make it clearer that subscription is required */}
+            {/* Generate Button */}
             <Box sx={{ mt: 3 }}>
               <Button
                 variant="contained"
@@ -789,15 +900,13 @@ export default function DisruptionForecast() {
                 sx={{
                   py: 1.5,
                   borderRadius: 6,
-                  opacity: isViewOnly() ? 0.5 : 1,
-                  cursor: isViewOnly() ? 'not-allowed' : 'pointer',
                   backgroundColor: '#000',
                   '&:hover': {
                     backgroundColor: '#333',
                   }
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : (!isSubscribed ? 'Subscribe to Generate' : 'Generate')}
+                {loading ? <CircularProgress size={24} color="inherit" /> : 'Generate Forecast'}
               </Button>
             </Box>
           </Box>
