@@ -513,7 +513,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
 
         </Box>
       </Box>
-      <Box style={{ display: 'flex' }}>
+      <Box sx={{ display: 'flex' , flexDirection:{xs:"column", md:"row"} }}>
 
         {/* Right column - Action panel */}
         <Box sx={{

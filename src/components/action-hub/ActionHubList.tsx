@@ -29,6 +29,7 @@ const ActionHubList: React.FC = () => {
     status: '',
     team: '',
     impactLevel: '',
+    dateRangeType: '',
     dateRange: {
       startDate: null,
       endDate: null,
@@ -138,8 +139,7 @@ const ActionHubList: React.FC = () => {
       filters.status !== '' ||
       filters.team !== '' ||
       filters.impactLevel !== '' ||
-      filters.dateRange.startDate !== null ||
-      filters.dateRange.endDate !== null;
+      filters.dateRangeType !== '';
 
     setIsFiltered(hasActiveFilter);
 
@@ -164,8 +164,10 @@ const ActionHubList: React.FC = () => {
       );
     }
 
-    // Filter by date range
-    if (filters.dateRange.startDate || filters.dateRange.endDate) {
+    // Filter by date range based on dateRangeType
+    if (filters.dateRangeType === 'this_week' || 
+        (filters.dateRangeType === 'custom' && (filters.dateRange.startDate || filters.dateRange.endDate))) {
+      
       if (filters.dateRange.startDate) {
         const startDate = new Date(filters.dateRange.startDate);
         filtered = filtered.filter(alert =>
@@ -189,6 +191,7 @@ const ActionHubList: React.FC = () => {
       status: '',
       team: '',
       impactLevel: '',
+      dateRangeType: '',
       dateRange: {
         startDate: null,
         endDate: null,
@@ -360,39 +363,66 @@ const ActionHubList: React.FC = () => {
                 </Typography>
               </Box>
             )}
-            {filterOptions.dateRange.startDate && (
-              <Box
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  bgcolor: 'white',
-                  borderRadius: 4,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  border: '1px solid #e0e0e0',
-                }}
-              >
-                <Typography variant="body2">
-                  From: {new Date(filterOptions.dateRange.startDate).toLocaleDateString()}
-                </Typography>
-              </Box>
+            {filterOptions.dateRangeType === 'this_week' && (
+              <Tooltip title="Filtered from Monday to Sunday of the current week">
+                <Box
+                  sx={{
+                    px: 1.5,
+                    py: 0.5,
+                    bgcolor: 'white',
+                    borderRadius: 4,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    border: '1px solid #e0e0e0',
+                  }}
+                >
+                  <Typography variant="body2">
+                    Date: This Week
+                  </Typography>
+                </Box>
+              </Tooltip>
             )}
-            {filterOptions.dateRange.endDate && (
-              <Box
-                sx={{
-                  px: 1.5,
-                  py: 0.5,
-                  bgcolor: 'white',
-                  borderRadius: 4,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  border: '1px solid #e0e0e0',
-                }}
-              >
-                <Typography variant="body2">
-                  To: {new Date(filterOptions.dateRange.endDate).toLocaleDateString()}
-                </Typography>
-              </Box>
+            {filterOptions.dateRangeType === 'custom' && (
+              <>
+                {filterOptions.dateRange.startDate && (
+                  <Tooltip title="Custom date range start">
+                    <Box
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        bgcolor: 'white',
+                        borderRadius: 4,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        border: '1px solid #e0e0e0',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        From: {new Date(filterOptions.dateRange.startDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
+                )}
+                {filterOptions.dateRange.endDate && (
+                  <Tooltip title="Custom date range end">
+                    <Box
+                      sx={{
+                        px: 1.5,
+                        py: 0.5,
+                        bgcolor: 'white',
+                        borderRadius: 4,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        border: '1px solid #e0e0e0',
+                      }}
+                    >
+                      <Typography variant="body2">
+                        To: {new Date(filterOptions.dateRange.endDate).toLocaleDateString()}
+                      </Typography>
+                    </Box>
+                  </Tooltip>
+                )}
+              </>
             )}
           </Box>
           <Button

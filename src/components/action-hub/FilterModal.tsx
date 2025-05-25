@@ -16,6 +16,7 @@ import {
   Collapse,
   useTheme,
   useMediaQuery,
+  Tooltip,
 } from '@mui/material';
 import { 
   LocalizationProvider, 
@@ -26,11 +27,15 @@ import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ClearIcon from '@mui/icons-material/Clear';
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useAuth } from '@/context/AuthContext';
+import { startOfWeek, endOfWeek } from 'date-fns';
 
 export interface FilterOptions {
   status: string;
   team: string;
   impactLevel: string;
+  dateRangeType: 'this_week' | 'custom' | '';
   dateRange: {
     startDate: string | null;
     endDate: string | null;
@@ -52,12 +57,19 @@ const FilterModal: React.FC<FilterModalProps> = ({
   onApplyFilters,
   readonly = false,
 }) => {
-  const [filters, setFilters] = useState<FilterOptions>(filterOptions);
+  const [filters, setFilters] = useState<FilterOptions>({
+    ...filterOptions,
+    dateRangeType: filterOptions.dateRangeType || '',
+  });
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const { isSubscribed } = useAuth();
 
   // Update local state when props change
   React.useEffect(() => {
-    setFilters(filterOptions);
+    setFilters({
+      ...filterOptions,
+      dateRangeType: filterOptions.dateRangeType || '',
+    });
   }, [filterOptions]);
 
   const toggleSection = (section: string) => {
@@ -76,14 +88,55 @@ const FilterModal: React.FC<FilterModalProps> = ({
     setFilters({ ...filters, impactLevel });
   };
 
+  const handleDateRangeTypeChange = (dateRangeType: 'this_week' | 'custom' | '') => {
+    // If selecting "This Week", auto-set the date range
+    if (dateRangeType === 'this_week') {
+      const now = new Date();
+      // Start of week (Monday)
+      const weekStart = startOfWeek(now, { weekStartsOn: 1 });
+      // End of week (Sunday)
+      const weekEnd = endOfWeek(now, { weekStartsOn: 1 });
+      
+      setFilters({
+        ...filters,
+        dateRangeType,
+        dateRange: {
+          startDate: weekStart.toISOString(),
+          endDate: weekEnd.toISOString(),
+        }
+      });
+    } 
+    // If clearing or if user is not subscribed and trying to select custom, just update the type
+    else if (dateRangeType === '' || (!isSubscribed && dateRangeType === 'custom')) {
+      setFilters({
+        ...filters,
+        dateRangeType,
+        dateRange: {
+          startDate: null,
+          endDate: null,
+        }
+      });
+    }
+    // Otherwise just update the type without changing the dates
+    else {
+      setFilters({
+        ...filters,
+        dateRangeType,
+      });
+    }
+  };
+
   const handleDateChange = (type: 'startDate' | 'endDate', value: Date | null) => {
-    setFilters({
-      ...filters,
-      dateRange: {
-        ...filters.dateRange,
-        [type]: value ? value.toISOString() : null,
-      },
-    });
+    // Only allow date changes if the dateRangeType is 'custom'
+    if (filters.dateRangeType === 'custom' && isSubscribed) {
+      setFilters({
+        ...filters,
+        dateRange: {
+          ...filters.dateRange,
+          [type]: value ? value.toISOString() : null,
+        },
+      });
+    }
   };
 
   const handleClearAll = () => {
@@ -91,6 +144,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       status: '',
       team: '',
       impactLevel: '',
+      dateRangeType: 'this_week',
       dateRange: {
         startDate: null,
         endDate: null,
@@ -216,6 +270,87 @@ const FilterModal: React.FC<FilterModalProps> = ({
     );
   };
 
+  const renderDateRangeOptions = () => {
+    const dateRangeOptions = [
+      { value: 'this_week', label: 'This Week' },
+      { 
+        value: 'custom', 
+        label: 'Custom', 
+        locked: !isSubscribed 
+      }
+    ];
+
+    return (
+      <List sx={{ py: 0 }}>
+        {dateRangeOptions.map((option) => (
+          <ListItem 
+            key={option.value}
+            onClick={() => !readonly && !option.locked && handleDateRangeTypeChange(option.value as 'this_week' | 'custom')}
+            sx={{ 
+              py: 1.5,
+              borderBottom: '1px solid #f0f0f0',
+              cursor: (readonly || option.locked) ? 'default' : 'pointer',
+              bgcolor: filters.dateRangeType === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              '&:hover': {
+                bgcolor: (readonly || option.locked) ? 'transparent' : 'rgba(0, 0, 0, 0.08)',
+              }
+            }}
+          >
+            <ListItemText 
+              primary={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {option.label}
+                  {option.locked && (
+                    <Tooltip title="Subscribe to unlock custom date range filtering">
+                      <LockOutlinedIcon sx={{ ml: 1, fontSize: 16, color: 'text.secondary' }} />
+                    </Tooltip>
+                  )}
+                </Box>
+              } 
+            />
+            {filters.dateRangeType === option.value && (
+              <CheckCircleIcon color="success" fontSize="small" />
+            )}
+          </ListItem>
+        ))}
+        
+        {/* Custom date inputs - only show if 'custom' is selected and user is subscribed */}
+        {filters.dateRangeType === 'custom' && isSubscribed && (
+          <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Start Date"
+                value={filters.dateRange.startDate ? new Date(filters.dateRange.startDate) : null}
+                onChange={(newValue) => !readonly && handleDateChange('startDate', newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    placeholder: "Select start date",
+                    disabled: readonly
+                  }
+                }}
+              />
+              <DatePicker
+                label="End Date"
+                value={filters.dateRange.endDate ? new Date(filters.dateRange.endDate) : null}
+                onChange={(newValue) => !readonly && handleDateChange('endDate', newValue)}
+                slotProps={{
+                  textField: {
+                    fullWidth: true,
+                    size: "small",
+                    placeholder: "Select end date",
+                    disabled: readonly
+                  }
+                }}
+              />
+            </LocalizationProvider>
+          </Box>
+        )}
+      </List>
+    );
+  };
+
   const getFilterSummary = () => {
     const activeFilters = [];
     
@@ -231,20 +366,24 @@ const FilterModal: React.FC<FilterModalProps> = ({
       activeFilters.push(`Impact: ${filters.impactLevel.charAt(0).toUpperCase() + filters.impactLevel.slice(1)}`);
     }
     
-    if (filters.dateRange.startDate || filters.dateRange.endDate) {
-      let dateString = 'Date: ';
-      
-      if (filters.dateRange.startDate) {
-        const startDate = new Date(filters.dateRange.startDate);
-        dateString += `From ${startDate.toLocaleDateString()}`;
+    if (filters.dateRangeType) {
+      if (filters.dateRangeType === 'this_week') {
+        activeFilters.push('Date: This Week');
+      } else if (filters.dateRangeType === 'custom' && (filters.dateRange.startDate || filters.dateRange.endDate)) {
+        let dateString = 'Date: Custom - ';
+        
+        if (filters.dateRange.startDate) {
+          const startDate = new Date(filters.dateRange.startDate);
+          dateString += `From ${startDate.toLocaleDateString()}`;
+        }
+        
+        if (filters.dateRange.endDate) {
+          const endDate = new Date(filters.dateRange.endDate);
+          dateString += filters.dateRange.startDate ? ` to ${endDate.toLocaleDateString()}` : `Until ${endDate.toLocaleDateString()}`;
+        }
+        
+        activeFilters.push(dateString);
       }
-      
-      if (filters.dateRange.endDate) {
-        const endDate = new Date(filters.dateRange.endDate);
-        dateString += filters.dateRange.startDate ? ` to ${endDate.toLocaleDateString()}` : `Until ${endDate.toLocaleDateString()}`;
-      }
-      
-      activeFilters.push(dateString);
     }
     
     return activeFilters.length > 0 
@@ -252,7 +391,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       : 'No filters applied';
   };
 
-  const showAppliedFilters = filters.status || filters.team || filters.impactLevel || filters.dateRange.startDate || filters.dateRange.endDate;
+  const showAppliedFilters = filters.status || filters.team || filters.impactLevel || filters.dateRangeType;
   
   const useIsMobile = () => {
     const theme = useTheme();
@@ -461,21 +600,20 @@ const FilterModal: React.FC<FilterModalProps> = ({
               Date Range
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {filters.dateRange.startDate || filters.dateRange.endDate 
-                ? `${filters.dateRange.startDate ? new Date(filters.dateRange.startDate).toLocaleDateString() : ''} ${filters.dateRange.startDate && filters.dateRange.endDate ? 'to' : ''} ${filters.dateRange.endDate ? new Date(filters.dateRange.endDate).toLocaleDateString() : ''}`
-                : 'Any'}
+              {filters.dateRangeType === 'this_week' 
+                ? 'This Week'
+                : filters.dateRangeType === 'custom' && (filters.dateRange.startDate || filters.dateRange.endDate)
+                  ? 'Custom Range'
+                  : 'Any'}
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {(filters.dateRange.startDate || filters.dateRange.endDate) && !readonly && (
+            {filters.dateRangeType && !readonly && (
               <IconButton 
                 size="small" 
                 onClick={(e) => {
                   e.stopPropagation();
-                  setFilters({
-                    ...filters,
-                    dateRange: { startDate: null, endDate: null }
-                  });
+                  handleDateRangeTypeChange('');
                 }}
                 sx={{ mr: 1 }}
               >
@@ -492,36 +630,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
           </Box>
         </Box>
         <Collapse in={openSection === 'date'}>
-          <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Start Date"
-                value={filters.dateRange.startDate ? new Date(filters.dateRange.startDate) : null}
-                onChange={(newValue) => !readonly && handleDateChange('startDate', newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                    placeholder: "Select start date",
-                    disabled: readonly
-                  }
-                }}
-              />
-              <DatePicker
-                label="End Date"
-                value={filters.dateRange.endDate ? new Date(filters.dateRange.endDate) : null}
-                onChange={(newValue) => !readonly && handleDateChange('endDate', newValue)}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    size: "small",
-                    placeholder: "Select end date",
-                    disabled: readonly
-                  }
-                }}
-              />
-            </LocalizationProvider>
-          </Box>
+          {renderDateRangeOptions()}
         </Collapse>
       </DialogContent>
 

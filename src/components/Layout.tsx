@@ -194,9 +194,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
           duration: theme.transitions.duration.enteringScreen,
         }),
       }}>
-        <Box sx={{ flex: 1, pt: 2, px: { xs: 2, sm: 3, md: 4 } }}>
-        <SubscriptionToggle />  
-        </Box>
+       
         {/* Navbar Component */}
         <Navbar 
           isFeedPage={isFeedPage}
@@ -209,7 +207,6 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
           currentPageName={currentPageName}
           currentPageIcon={currentPageIcon}
         />
-
         {/* Mobile Sidebar Component */}
         <MobileSidebar
           mobileOpen={mobileOpen}
@@ -221,6 +218,8 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
         {/* Display Banner for authenticated users */}
 
         <Container component="main" sx={{ flex: 1, py: 0, px: { xs: 2, sm: 3, md: 4 } }}>
+        <SubscriptionToggle />  
+
           {children}
         </Container>
 

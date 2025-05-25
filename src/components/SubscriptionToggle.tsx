@@ -61,8 +61,9 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
         border: '1px solid #FFC107',
         borderRadius: 3,
         p: 1,
+        mb: 2,
         mx: 'auto',
-        width: '95%',
+        width: '100%',
         boxShadow: 0,
       }}
     >
