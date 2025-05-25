@@ -218,7 +218,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
         {/* Display Banner for authenticated users */}
 
         <Container component="main" sx={{ flex: 1, py: 0, px: { xs: 2, sm: 3, md: 4 } }}>
-        <SubscriptionToggle />  
+       {isAuthenticated && <SubscriptionToggle />}  
 
           {children}
         </Container>
