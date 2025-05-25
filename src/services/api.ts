@@ -821,6 +821,19 @@ export const updatePreferences = async (data: {
   }
 };
 
+// Update subscription status
+export const updateSubscriptionStatus = async (isSubscribed: boolean): Promise<User> => {
+  try {
+    console.log('Updating subscription status to:', isSubscribed);
+    const response = await api.put<User>('/profile/subscription', { isSubscribed });
+    console.log('Subscription update response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Error updating subscription status:', error);
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
 export const getCompanySuggestions = async (query: string): Promise<string[]> => {
   try {
     const response = await api.get<string[]>('/profile/company-suggestions', {

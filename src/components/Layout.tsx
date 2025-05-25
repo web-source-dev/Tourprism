@@ -17,6 +17,7 @@ import BackToTop from './BackToTop';
 import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
 import MobileSidebar from './layout/MobileSidebar';
+import SubscriptionToggle from './SubscriptionToggle';
 
 interface LayoutProps {
   children: ReactNode;
@@ -193,6 +194,9 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
           duration: theme.transitions.duration.enteringScreen,
         }),
       }}>
+        <Box sx={{ flex: 1, pt: 2, px: { xs: 2, sm: 3, md: 4 } }}>
+        <SubscriptionToggle />  
+        </Box>
         {/* Navbar Component */}
         <Navbar 
           isFeedPage={isFeedPage}
