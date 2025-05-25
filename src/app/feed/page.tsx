@@ -108,9 +108,9 @@ export default function Feed() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [operatingRegionAlerts, setOperatingRegionAlerts] = useState<AlertType[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
-    sortBy: '',
+    sortBy: 'latest',
     alertCategory: [],
-    timeRange: 0,
+    timeRange: 7,
     distance: 50,
     impactLevel: '',
     customDateFrom: new Date(),
