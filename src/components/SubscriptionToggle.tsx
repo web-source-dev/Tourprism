@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Typography,
   Button,
@@ -13,6 +13,7 @@ import { updateSubscriptionStatus } from '../services/api';
 import { useToast } from '../ui/toast';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import { usePathname } from 'next/navigation';
 
 interface SubscriptionToggleProps {
   onClick?: () => void;
@@ -21,22 +22,32 @@ interface SubscriptionToggleProps {
 const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
   const { user, setUser } = useAuth();
   const { showToast } = useToast();
-
-  const isSubscribed = user?.isSubscribed || false;
+  const pathname = usePathname();
+  
+  // Use state to track subscription status
+  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(user?.isSubscribed || false);
   const [loading, setLoading] = useState(false);
+  
+  // Update the subscription status whenever the user object changes
+  useEffect(() => {
+    setSubscriptionStatus(user?.isSubscribed || false);
+  }, [user, pathname]);
 
   const handleToggleSubscription = async () => {
     try {
       setLoading(true);
 
-      const updatedUser = await updateSubscriptionStatus(!isSubscribed);
+      const updatedUser = await updateSubscriptionStatus(!subscriptionStatus);
 
       if (setUser) {
         setUser(updatedUser);
       }
+      
+      // Update local state
+      setSubscriptionStatus(updatedUser.isSubscribed || false);
 
       showToast(
-        `You have successfully ${!isSubscribed ? 'subscribed to' : 'unsubscribed from'
+        `You have successfully ${!subscriptionStatus ? 'subscribed to' : 'unsubscribed from'
         } pro features.`,
         'success'
       );
@@ -74,15 +85,15 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
         alignItems="center"
       >
         <Stack direction="row" spacing={1.5} alignItems="center">
-          {isSubscribed ? (
+          {subscriptionStatus ? (
             <CheckCircleOutlineIcon sx={{ color: '#FFC107', fontSize: 28 }} />
           ) : (
             <NotificationsActiveIcon sx={{ color: '#FFC107', fontSize: 28 }} />
           )}
           <Typography variant="body1" sx={{ color: '#333', fontWeight: 500 }}>
-           <span style={{fontWeight: 'bold'}}>For Testing :</span> {isSubscribed
-              ? 'You’re currently subscribed to pro features.'
-              : 'Subscribe to access pro features.'}
+           <span style={{fontWeight: 'bold'}}>For Testing :</span> {subscriptionStatus
+              ? "You're currently subscribed to pro features."
+              : "Subscribe to access pro features."}
           </Typography>
         </Stack>
 
@@ -91,7 +102,7 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
           variant="contained"
           disabled={loading}
           sx={{
-            backgroundColor: isSubscribed ? '#FFC107' : '#FFC107',
+            backgroundColor: subscriptionStatus ? '#FFC107' : '#FFC107',
             color: '#fff',
             textTransform: 'none',
             fontWeight: 600,
@@ -102,14 +113,14 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
             minWidth: 140,
             boxShadow: 'none',
             '&:hover': {
-              backgroundColor: isSubscribed ? '#FFC107' : '#FFC107',
+              backgroundColor: subscriptionStatus ? '#FFC107' : '#FFC107',
               boxShadow: 'none',
             },
           }}
         >
           {loading ? (
             <CircularProgress size={24} color="inherit" />
-          ) : isSubscribed ? (
+          ) : subscriptionStatus ? (
             'Unsubscribe'
           ) : (
             'Subscribe'

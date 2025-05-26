@@ -24,6 +24,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { format, addDays } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
+import CheckIcon from '@mui/icons-material/Check';
 
 // Google Places Autocomplete
 import { useLoadScript } from '@react-google-maps/api';
@@ -68,10 +69,27 @@ const ALERT_CATEGORIES = [
 
 const IMPACT_LEVELS = [
   { value: 'All', label: 'All' },
-  { value: 'Minor', label: 'Minor' },
+  { value: 'Minor', label: 'Low' },
   { value: 'Moderate', label: 'Moderate' },
-  { value: 'Severe', label: 'Severe' },
+  { value: 'Severe', label: 'High' },
 ];
+
+// Custom checkbox component with green background
+const SelectedTickIcon = () => (
+  <Box 
+    sx={{ 
+      bgcolor: '#4caf50', 
+      borderRadius: '50%', 
+      width: 20, 
+      height: 20, 
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center' 
+    }}
+  >
+    <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
+  </Box>
+);
 
 export default function DisruptionForecast() {
   const router = useRouter();
@@ -82,7 +100,7 @@ export default function DisruptionForecast() {
   const { showToast } = useToast();
 
   // Form state for custom forecast
-  const [alertCategory, setAlertCategory] = useState('');
+  const [alertCategory, setAlertCategory] = useState<string[]>([]);
   const [location, setLocation] = useState<SummaryLocation | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(addDays(new Date(), 7));
@@ -214,7 +232,8 @@ export default function DisruptionForecast() {
 
   const checkWeeklyAlerts = async () => {
     try {
-      const response = await getUpcomingForecasts(7);
+      // Pass false to explicitly avoid PDF generation on initial load
+      const response = await getUpcomingForecasts(7, undefined, undefined, undefined, false);
       if (response.success && response.forecast) {
         const alertCount = response.forecast.alerts?.length || 0;
         console.log('alertCount', alertCount);
@@ -259,7 +278,9 @@ export default function DisruptionForecast() {
       const locations = location ? [location] : [];
 
       // Set alert categories based on selection
-      const alertTypes = alertCategory === 'All' ? [] : [alertCategory];
+      const alertTypes = alertCategory.includes('All') || alertCategory.length === 0 
+        ? [] 
+        : [...alertCategory];
 
       // Prepare dates
       let effectiveStartDate = startDate;
@@ -279,7 +300,7 @@ export default function DisruptionForecast() {
         endDate: effectiveEndDate ? effectiveEndDate.toISOString() : undefined,
         locations,
         alertTypes,
-        alertCategory: alertCategory === 'All' ? undefined : alertCategory, 
+        alertCategory: alertCategory.includes('All') ? undefined : undefined, // We only use alertTypes now
         includeDuplicates: false,
         generatePDF: true,
         autoSave: true, // Auto-save enabled
@@ -651,33 +672,50 @@ export default function DisruptionForecast() {
             {/* Alert Type */}
             <Box>
               <FormControl fullWidth>
-                <InputLabel id="alert-type-label">Alert Category</InputLabel>
+                <InputLabel id="alert-type-label">Type</InputLabel>
                 <Select
                   labelId="alert-type-label"
                   id="alert-type"
                   value={alertCategory}
-                  label="Alert Category"
-                  onChange={(e) => setAlertCategory(e.target.value)}
+                  label="Type"
+                  onChange={(e) => {
+                    const value = e.target.value as string[];
+                    // If "All" is selected, clear other selections
+                    if (value.includes('All') && !alertCategory.includes('All')) {
+                      setAlertCategory(['All']);
+                    } 
+                    // If other items are selected while "All" is already selected, remove "All"
+                    else if (value.includes('All') && value.length > 1) {
+                      setAlertCategory(value.filter(v => v !== 'All'));
+                    } 
+                    // Otherwise use the selection as is
+                    else {
+                      setAlertCategory(value);
+                    }
+                  }}
                   disabled={isViewOnly()}
+                  multiple
+                  renderValue={(selected: string[]) => {
+                    if (selected.length === 0) {
+                      return <em>Select types</em>;
+                    }
+                    if (selected.includes('All')) {
+                      return 'All Types';
+                    }
+                    return selected.join(', ');
+                  }}
                   sx={{
                     borderRadius: 2
                   }}
                 >
                   {ALERT_CATEGORIES.map((category) => (
-                    <MenuItem key={category.value} value={category.value}>
+                    <MenuItem key={category.value} value={category.value} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       {category.label}
+                      {alertCategory.includes(category.value) && <SelectedTickIcon />}
                     </MenuItem>
                   ))}
                 </Select>
               </FormControl>
-
-              {alertCategory && alertCategory !== 'All' && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="body2" color="text.secondary">
-                    Selected category: {alertCategory}
-                  </Typography>
-                </Box>
-              )}
             </Box>
 
             {/* Location */}
@@ -689,7 +727,6 @@ export default function DisruptionForecast() {
                       <LocationSearchInput
                         setValue={setLocation}
                         value={location}
-                        label="Location"
                         disabled={!isSubscribed}
                         hideIcon={!isSubscribed}
                       />
@@ -714,10 +751,9 @@ export default function DisruptionForecast() {
                   <Box sx={{ position: 'relative' }}>
                     <Box onClick={handleLocationClick}>
                       <TextField
-                        label="Location"
                         fullWidth
                         disabled={!isSubscribed}
-                        placeholder={!isSubscribed ? "Edinburgh (Default)" : "Loading location search..."}
+                        placeholder={!isSubscribed ? "Edinburgh" : "Loading location search..."}
                         value={!isSubscribed ? "Edinburgh, United Kingdom" : ""}
                         sx={{
                           '& .MuiOutlinedInput-root': {
@@ -748,10 +784,7 @@ export default function DisruptionForecast() {
 
             {/* Date Range */}
             <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Date Range
-              </Typography>
-              <FormControl fullWidth sx={{ mb: 2 }}>
+              <FormControl fullWidth sx={{mb:2}}>
                 <Select
                   value={dateRangeType}
                   onChange={handleDateRangeChange}
@@ -774,7 +807,7 @@ export default function DisruptionForecast() {
                 </Select>
               </FormControl>
               {(dateRangeType === 'custom' && isSubscribed) && (
-                <FormControl fullWidth>
+                <FormControl fullWidth sx={{mb: 1}}>
                   <Stack direction="row" spacing={2}>
                     <Box sx={{ width: '50%' }}>
                       <DatePicker
@@ -816,10 +849,7 @@ export default function DisruptionForecast() {
             </Box>
 
             {/* Impact Level */}
-            <Box>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Impact Level
-              </Typography>
+            <Box sx={{mt: -2}}>
               <FormControl fullWidth>
                 <Select
                   labelId="impact-label"
@@ -830,17 +860,18 @@ export default function DisruptionForecast() {
                   displayEmpty
                   renderValue={(selected) => {
                     if (selected === "") {
-                      return <em>Select</em>;
+                      return <>Select</>;
                     }
                     return selected;
                   }}
                   sx={{
-                    borderRadius: 2
+                    borderRadius: 2,
                   }}
                 >
                   {IMPACT_LEVELS.map((level) => (
-                    <MenuItem key={level.value} value={level.value}>
+                    <MenuItem key={level.value} value={level.value} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       {level.label}
+                      {impact === level.value && <SelectedTickIcon />}
                     </MenuItem>
                   ))}
                 </Select>
@@ -854,6 +885,7 @@ export default function DisruptionForecast() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexDirection:{xs:'column', md:'row' },
                   backgroundColor: '#fff8e6',
                   border: '1px solid #fcd581',
                   borderRadius: '12px',
@@ -863,7 +895,7 @@ export default function DisruptionForecast() {
                   gap: 2
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: {xs:'',md:'center'}, gap: 1 }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
                   </svg>
@@ -879,6 +911,7 @@ export default function DisruptionForecast() {
                     color: 'white',
                     fontWeight: 'bold',
                     borderRadius: '8px',
+                    width:{xs:'100%', md:'150px'},
                     textTransform: 'none',
                     '&:hover': {
                       backgroundColor: '#e29800',

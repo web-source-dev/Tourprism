@@ -14,10 +14,8 @@ const publicPaths = [
   '/not-found',
   '/feature',
   '/resources',
-  '/action-hub',
   '/insights',
   '/subscription',
-  '/archive',
   '/invite/accept'
   // Add other public paths here
 ];

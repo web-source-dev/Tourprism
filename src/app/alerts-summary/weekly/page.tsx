@@ -28,7 +28,7 @@ export default function WeeklyForecast() {
     try {
       setLoading(true);
       // Get the forecast with proper MainOperatingRegions
-      const response = await getUpcomingForecasts(7);
+      const response = await getUpcomingForecasts(7, undefined, undefined, undefined, false);
       
       if (response.success && response.forecast) {
         // Check if there are any alerts found
@@ -54,14 +54,15 @@ export default function WeeklyForecast() {
           impact: response.forecast.impact,
           generatePDF: true,
           autoSave: false,
-          includedAlerts: response.forecast.alerts || []
+          includedAlerts: response.forecast.alerts || [],
+          skipPdfGeneration: true // Skip backend PDF generation, we'll do it client-side
         };
 
         try {
           const saveResponse = await generateSummary(data);
           
-          if (saveResponse.success && saveResponse.summary.pdfUrl) {
-            router.push(`/alerts-summary/weekly-forecast?pdf=${encodeURIComponent(saveResponse.summary.pdfUrl)}`);
+          if (saveResponse.success) {
+            router.push(`/alerts-summary/weekly-forecast?pdf=${encodeURIComponent(saveResponse.summary.pdfUrl || '')}&clientData=true`);
           } else if (response.forecast.pdfUrl) {
             router.push(`/alerts-summary/weekly-forecast?pdf=${encodeURIComponent(response.forecast.pdfUrl)}`);
           } else {
@@ -71,7 +72,8 @@ export default function WeeklyForecast() {
               setLoading(false);
             } else {
               // If no PDF URL is returned but the API call was successful, still show the forecast page
-              router.push('/alerts-summary/weekly-forecast');
+              // Pass client data flag to indicate we should generate PDF on client
+              router.push('/alerts-summary/weekly-forecast?clientData=true');
             }
           }
         } catch (saveError) {

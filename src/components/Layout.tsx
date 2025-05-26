@@ -134,6 +134,9 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
 
     if (text === 'Logout') {
       logout();
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 1000);
     } else {
       router.push(path);
     }

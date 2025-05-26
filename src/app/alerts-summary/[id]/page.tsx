@@ -10,13 +10,17 @@ import {
   CircularProgress,
   Alert,
   IconButton,
+  Chip,
+  Paper,
 } from '@mui/material';
 import { 
   ArrowBack as ArrowBackIcon,
   Download as DownloadIcon,
   Bookmark as BookmarkIcon,
   BookmarkBorder as BookmarkBorderIcon,
-    ArrowForward as ArrowForwardIcon,
+  ArrowForward as ArrowForwardIcon,
+  LocationOn as LocationIcon,
+  Event as EventIcon,
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
@@ -38,12 +42,12 @@ interface AlertItem {
   title: string;
   description: string;
   alertType: string;
+  alertCategory?: string;
   impact: string;
   originCity?: string;
   city?: string;
   expectedStart?: string;
   expectedEnd?: string;
-  alertCategory?: string;
 }
 
 export default function ForecastDetail() {
@@ -137,63 +141,6 @@ export default function ForecastDetail() {
     }
   }, [showToast]);
 
-  // New function to handle custom forecasts
-  const loadCustomForecast = useCallback(async (existingPdfUrl: string) => {
-    setLoading(true);
-    
-    try {
-      // For custom forecasts, we need to extract information from the URL
-      // and create a temporary forecast object
-      const urlParams = new URLSearchParams(window.location.search);
-      
-      // Create a placeholder forecast
-      const customForecast: Summary = {
-        _id: 'custom-forecast',
-        userId: '',
-        title: 'Custom Disruption Forecast',
-        description: 'Custom generated forecast',
-        summaryType: 'forecast',
-        parameters: {
-          // Try to extract any parameters from URL if they were passed
-          alertCategory: urlParams.get('category') || undefined,
-          impact: urlParams.get('impact') || undefined,
-        },
-        timeRange: {
-          startDate: urlParams.get('startDate') || new Date().toISOString(),
-          endDate: urlParams.get('endDate') || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        includedAlerts: [],
-        pdfUrl: existingPdfUrl,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      
-      // Try to get the forecast content using the PDF URL
-      // This is a hack, but it allows us to get the content without saving
-      if (existingPdfUrl) {
-        try {
-          // Use the existing PDF URL to extract location and other attributes if possible
-          const location = urlParams.get('location');
-          if (location) {
-            customForecast.title = `Disruption Forecast for ${location}`;
-          }
-        } catch (err) {
-          console.error('Error parsing custom forecast parameters:', err);
-        }
-      }
-      
-      setForecast(customForecast);
-      setPdfUrl(existingPdfUrl);
-      setSaved(false); // Custom forecasts are not saved by default
-    } catch (error) {
-      console.error('Error creating custom forecast:', error);
-      setError('Failed to load custom forecast.');
-      showToast('Failed to load custom forecast', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [showToast]);
-  
   useEffect(() => {
     const loadForecastData = async () => {
       // Parse query parameters
@@ -212,22 +159,11 @@ export default function ForecastDetail() {
           // No PDF URL provided - load standard weekly forecast
           loadWeeklyForecast();
         }
-      } else if (id === 'custom-forecast') {
-        // Handle custom forecast - we need the PDF URL in query params
-        if (queriedPdfUrl) {
-          setPdfUrl(queriedPdfUrl);
-          loadCustomForecast(queriedPdfUrl);
-        } else {
-          // Without a PDF URL, we can't display a custom forecast
-          setError('Custom forecast data is missing. Please try generating a new forecast.');
-          showToast('Custom forecast data is missing', 'error');
-          setLoading(false);
-        }
       }
     };
     
     loadForecastData();
-  }, [id, loadForecastDetails, loadWeeklyForecast, loadCustomForecast, showToast]);
+  }, [id, loadForecastDetails, loadWeeklyForecast, showToast]);
 
   const handleSave = async () => {
     // Only proceed if not already saved
@@ -300,9 +236,40 @@ export default function ForecastDetail() {
       setLoading(true);
       showToast('Preparing download...', 'success');
       
-      // Use the PDF URL if available (either from forecast or from state)
+      // Check if we have alert data available for client-side generation
+      if (Array.isArray(forecast.includedAlerts) && forecast.includedAlerts.length > 0) {
+        // Generate PDF on client side using alert data
+        const options = {
+          title: forecast.title,
+          startDate: forecast.timeRange.startDate,
+          endDate: forecast.timeRange.endDate,
+          location: forecast.locations && forecast.locations.length > 0 
+            ? forecast.locations[0].city 
+            : undefined,
+          alertCategory: forecast.parameters.alertCategory,
+          impact: forecast.parameters.impact
+        };
+        
+        const success = await downloadPdf(
+          null, // No need for backend URL
+          `${forecast.title.replace(/\s+/g, '_')}.pdf`,
+          forecast.includedAlerts as unknown as AlertItem[],
+          options
+        );
+        
+        if (success) {
+          showToast('Download started', 'success');
+        } else {
+          showToast('Failed to generate PDF', 'error');
+        }
+        
+        setLoading(false);
+        return;
+      }
+      
+      // Fallback to using the PDF URL if client-side generation fails or no alert data
       if (forecast.pdfUrl || pdfUrl) {
-        // Use the downloadPdf utility function
+        // Use the downloadPdf utility function with the URL
         const success = await downloadPdf(
           forecast.pdfUrl || pdfUrl || '', 
           `${forecast.title.replace(/\s+/g, '_')}.pdf`
@@ -318,9 +285,46 @@ export default function ForecastDetail() {
         return;
       }
       
-      // No PDF available - handle based on whether this is a saved forecast or not
-      if (forecast._id && forecast._id !== 'weekly-forecast') {
-        // It's a saved forecast without a PDF, so generate one without saving again
+      // No PDF URL or alert data - try to generate one
+      if (forecast._id && forecast._id !== 'weekly-forecast' && forecast._id !== 'custom-forecast') {
+        // Try to get the alert data first for client-side generation
+        try {
+          const response = await getSummaryById(forecast._id);
+          if (response.success && response.summary && Array.isArray(response.summary.includedAlerts) && response.summary.includedAlerts.length > 0) {
+            // Update the forecast with the full alert data
+            setForecast(response.summary);
+            
+            // Generate PDF on client side
+            const options = {
+              title: response.summary.title,
+              startDate: response.summary.timeRange.startDate,
+              endDate: response.summary.timeRange.endDate,
+              location: response.summary.locations && response.summary.locations.length > 0 
+                ? response.summary.locations[0].city 
+                : undefined,
+              alertCategory: response.summary.parameters.alertCategory,
+              impact: response.summary.parameters.impact
+            };
+            
+            const success = await downloadPdf(
+              null,
+              `${response.summary.title.replace(/\s+/g, '_')}.pdf`,
+              response.summary.includedAlerts as unknown as AlertItem[],
+              options
+            );
+            
+            if (success) {
+              showToast('Download started', 'success');
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error getting alert data for PDF generation:', error);
+          // Fall through to backend generation if client-side fails
+        }
+        
+        // Fall back to backend generation if necessary
         showToast('Generating PDF...', 'success');
         const pdfUrl = await generatePdfOnDemand(forecast._id);
         
@@ -344,8 +348,7 @@ export default function ForecastDetail() {
           showToast('Failed to generate PDF', 'error');
         }
       } else {
-        // It's not a saved forecast - generate a PDF without saving
-        // Use the current forecast data to generate a new summary with PDF but don't save
+        // It's a weekly or custom forecast - try to generate a new PDF without saving
         showToast('Generating PDF...', 'success');
         const data = {
           title: forecast.title,
@@ -361,25 +364,52 @@ export default function ForecastDetail() {
         
         const response = await generateSummary(data);
         
-        if (response.success && response.summary.pdfUrl) {
-          // Store the PDF URL
-          setPdfUrl(response.summary.pdfUrl);
-          
-          // Download the PDF
-          const success = await downloadPdf(
-            response.summary.pdfUrl,
-            `${forecast.title.replace(/\s+/g, '_')}.pdf`
-          );
-          
-          if (success) {
-            showToast('Download started', 'success');
-          } else {
-            showToast('Failed to download PDF', 'error');
+        if (response.success) {
+          if (response.summary.alerts && response.summary.alerts.length > 0) {
+            // We have alert data, use client-side generation
+            const options = {
+              title: forecast.title,
+              startDate: forecast.timeRange.startDate,
+              endDate: forecast.timeRange.endDate,
+              location: forecast.locations && forecast.locations.length > 0 
+                ? forecast.locations[0].city 
+                : undefined,
+              alertCategory: forecast.parameters.alertCategory,
+              impact: forecast.parameters.impact
+            };
+            
+            const success = await downloadPdf(
+              null,
+              `${forecast.title.replace(/\s+/g, '_')}.pdf`,
+              response.summary.alerts as unknown as AlertItem[],
+              options
+            );
+            
+            if (success) {
+              showToast('Download started', 'success');
+              setLoading(false);
+              return;
+            }
+          } else if (response.summary.pdfUrl) {
+            // Fall back to using the backend URL if available
+            setPdfUrl(response.summary.pdfUrl);
+            
+            const success = await downloadPdf(
+              response.summary.pdfUrl,
+              `${forecast.title.replace(/\s+/g, '_')}.pdf`
+            );
+            
+            if (success) {
+              showToast('Download started', 'success');
+              setLoading(false);
+              return;
+            }
           }
-        } else {
-          setError('Failed to generate PDF. Please try again.');
-          showToast('Failed to generate PDF', 'error');
         }
+        
+        // If we get here, all attempts failed
+        setError('Failed to generate PDF. Please try again.');
+        showToast('Failed to generate PDF', 'error');
       }
     } catch (error) {
       console.error('Error downloading forecast:', error);
@@ -399,43 +429,48 @@ export default function ForecastDetail() {
     router.push('/alerts-summary');
   };
 
-  // Find the main alert to display - avoid displaying duplicates
-  const findPrimaryAlert = () => {
+  // Sort alerts by impact severity and date
+  const getSortedAlerts = () => {
     if (!Array.isArray(forecast?.includedAlerts) || forecast?.includedAlerts.length === 0) {
-      return null;
+      return [];
     }
     
-    // Use the first alert as primary by default
-    const primaryAlert = forecast.includedAlerts[0] as unknown as AlertItem;
+    const alerts = forecast.includedAlerts as unknown as AlertItem[];
     
-    // Simple check for duplicates - if there are multiple alerts with same title/location
-    // we'll display the one with the most detailed information
-    if (forecast.includedAlerts.length > 1) {
-      const similarAlerts = forecast.includedAlerts.filter(alert => {
-        const a = alert as unknown as AlertItem;
-        // Check if this might be similar to the primary
-        return a.title === primaryAlert.title || 
-               a.alertType === primaryAlert.alertType ||
-               (a.originCity && a.originCity === primaryAlert.originCity);
-      }) as unknown as AlertItem[];
+    // Sort alerts by impact severity (Severe > Moderate > Minor) and then by date
+    const impactOrder: Record<string, number> = { "Severe": 0, "Moderate": 1, "Minor": 2, "": 3 };
+    
+    return alerts.sort((a, b) => {
+      // First by impact severity
+      const aImpactScore = impactOrder[a.impact || ""] || 3;
+      const bImpactScore = impactOrder[b.impact || ""] || 3;
       
-      if (similarAlerts.length > 1) {
-        // Return the one with the most detailed description or most recent
-        return similarAlerts.sort((a, b) => {
-          // First check description length
-          if ((a.description?.length || 0) !== (b.description?.length || 0)) {
-            return (b.description?.length || 0) - (a.description?.length || 0);
-          }
-          
-          // If descriptions are similar in length, prefer the one with more specified data
-          const aScore = (a.expectedStart ? 1 : 0) + (a.expectedEnd ? 1 : 0) + (a.impact ? 1 : 0);
-          const bScore = (b.expectedStart ? 1 : 0) + (b.expectedEnd ? 1 : 0) + (b.impact ? 1 : 0);
-          return bScore - aScore;
-        })[0];
+      if (aImpactScore !== bImpactScore) {
+        return aImpactScore - bImpactScore;
       }
+      
+      // Then by start date if available
+      if (a.expectedStart && b.expectedStart) {
+        return new Date(a.expectedStart).getTime() - new Date(b.expectedStart).getTime();
+      }
+      
+      // Otherwise keep original order
+      return 0;
+    });
+  };
+
+  // Get impact color based on severity
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case 'Severe':
+        return '#d32f2f';
+      case 'Moderate':
+        return '#f57c00';
+      case 'Minor':
+        return '#4caf50';
+      default:
+        return '#757575';
     }
-    
-    return primaryAlert;
   };
 
   if (loading) {
@@ -485,11 +520,11 @@ export default function ForecastDetail() {
     );
   }
 
-  // Get the primary alert to display, using our improved function
-  const primaryAlert = findPrimaryAlert();
+  // Get all alerts sorted by impact
+  const sortedAlerts = getSortedAlerts();
   const location = forecast.locations && forecast.locations.length > 0 
     ? forecast.locations[0].city 
-    : primaryAlert?.originCity || primaryAlert?.city || 'Edinburgh';
+    : sortedAlerts.length > 0 ? (sortedAlerts[0].originCity || sortedAlerts[0].city) : 'Selected Location';
   
   // Format creation time according to standardized format
   const getTimeAgo = () => {
@@ -527,7 +562,6 @@ export default function ForecastDetail() {
 
   return (
     <Layout isFooter={false}>
-
       <IconButton onClick={() => router.back()}>
         <ArrowBackIcon />
         <Typography variant="body1" fontWeight="500" color="text.primary" sx={{ ml: 1 , fontSize: '20px' }}>
@@ -537,7 +571,6 @@ export default function ForecastDetail() {
       <Box sx={{ 
         px: 3, 
         py: 2,
-        maxWidth: '1000px', 
         mx: 'auto',
         display: 'flex',
         flexDirection: 'column',
@@ -550,6 +583,7 @@ export default function ForecastDetail() {
           </Typography>
           <Typography variant="body1" color="text.secondary">
             {forecast.timeRange.startDate ? format(parseISO(forecast.timeRange.startDate), 'd MMM, yyyy') : new Date().toLocaleDateString()}
+            {forecast.timeRange.endDate && ` - ${format(parseISO(forecast.timeRange.endDate), 'd MMM, yyyy')}`}
           </Typography>
         </Box>
         
@@ -588,39 +622,219 @@ export default function ForecastDetail() {
         </Typography>
         
         {/* Alert Content */}
-        {primaryAlert ? (
+        {sortedAlerts.length > 0 ? (
           <Box sx={{ mb: 'auto' }}>
-            <Typography variant="h6" fontWeight="bold" gutterBottom>
-              {primaryAlert.title}
-            </Typography>
-            
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-              {primaryAlert.originCity || primaryAlert.city}, {primaryAlert.originCity ? primaryAlert.originCity.split(',').pop()?.trim() : 'EH1'}
-            </Typography>
-            
-            <Typography variant="body2" sx={{ mb: 3 }}>
-              {primaryAlert.description}
-            </Typography>
-            
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="body2" fontWeight="medium">
-                Start: {primaryAlert.expectedStart 
-                  ? format(parseISO(primaryAlert.expectedStart), 'dd MMM h:mma')
-                  : '06 May 9:00AM'}
+            {/* Summary */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" color="text.secondary">
+                {sortedAlerts.length} {sortedAlerts.length === 1 ? 'alert' : 'alerts'} found matching your criteria
               </Typography>
             </Box>
-            
-            <Box sx={{ mb: 1 }}>
-              <Typography variant="body2" fontWeight="medium">
-                End: {primaryAlert.expectedEnd
-                  ? format(parseISO(primaryAlert.expectedEnd), 'dd MMM h:mma')
-                  : '06 May 9:00AM'}
-              </Typography>
+
+            {/* List of alerts grouped by impact */}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Group alerts by impact */}
+              {['Severe', 'Moderate', 'Minor'].map(impactLevel => {
+                const alertsWithImpact = sortedAlerts.filter(alert => alert.impact === impactLevel);
+                if (alertsWithImpact.length === 0) return null;
+                
+                return (
+                  <Box key={impactLevel} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ 
+                        width: 12, 
+                        height: 12, 
+                        borderRadius: '50%', 
+                        backgroundColor: getImpactColor(impactLevel) 
+                      }} />
+                      <Typography variant="subtitle1" fontWeight="bold">
+                        {impactLevel} Impact ({alertsWithImpact.length})
+                      </Typography>
+                    </Box>
+                    
+                    {alertsWithImpact.map((alert, index) => (
+                      <Paper 
+                        key={alert._id || index} 
+                        elevation={0}
+                        sx={{ 
+                          p: 2, 
+                          border: '1px solid #eaeaea',
+                          position: 'relative',
+                          overflow: 'hidden'
+                        }}
+                      >
+                        {/* Impact indicator bar */}
+                        <Box sx={{ 
+                          position: 'absolute', 
+                          top: 0, 
+                          left: 0, 
+                          width: '4px', 
+                          height: '100%', 
+                          backgroundColor: getImpactColor(alert.impact || 'Moderate') 
+                        }} />
+                        
+                        <Box sx={{ pl: 0.5 }}>
+                          <Typography variant="h6" fontWeight="bold" gutterBottom>
+                            {alert.title || 'Untitled Alert'}
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                            <Typography variant="body2" color="text.secondary">
+                              {alert.originCity || alert.city || 'Location not specified'}
+                            </Typography>
+                          </Box>
+                          
+                          <Typography variant="body2" sx={{ mb: 2 }}>
+                            {alert.description}
+                          </Typography>
+                          
+                          <Box sx={{ display: 'flex', flexWrap: 'wrap', flexDirection: 'column', gap: 2, mt: 2 }}>
+                            {alert.expectedStart && (
+                              <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" fontWeight="medium" color="text.secondary">
+                                      Start: {format(parseISO(alert.expectedStart), 'dd MMM h:mma')}
+                                    </Typography>
+                                </Box>
+                              </Box>
+                            )}
+                            
+                            {alert.expectedEnd && (
+                              <Box>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" fontWeight="medium" color="text.secondary">
+                                      End: {format(parseISO(alert.expectedEnd), 'dd MMM h:mma')}
+                                    </Typography>
+                                </Box>
+                              </Box>
+                            )}
+                          </Box>
+
+                          <Typography variant="body1" fontWeight="bold" mt={2} color="text.primary">
+                            {alert.impact} Impact
+                          </Typography>
+                        </Box>
+                      </Paper>
+                    ))}
+                  </Box>
+                );
+              })}
+              
+              {/* Display alerts with unknown/unspecified impact */}
+              {sortedAlerts.filter(alert => !['Severe', 'Moderate', 'Minor'].includes(alert.impact || '')).length > 0 && (
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ 
+                      width: 12, 
+                      height: 12, 
+                      borderRadius: '50%', 
+                      backgroundColor: '#757575' 
+                    }} />
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Other Alerts
+                    </Typography>
+                  </Box>
+                  
+                  {sortedAlerts.filter(alert => !['Severe', 'Moderate', 'Minor'].includes(alert.impact || '')).map((alert, index) => (
+                    <Paper 
+                      key={alert._id || index} 
+                      elevation={0}
+                      sx={{ 
+                        p: 2, 
+                        borderRadius: 2,
+                        border: '1px solid #eaeaea',
+                        position: 'relative',
+                        overflow: 'hidden'
+                      }}
+                    >
+                      <Box sx={{ 
+                        position: 'absolute', 
+                        top: 0, 
+                        left: 0, 
+                        width: '4px', 
+                        height: '100%', 
+                        backgroundColor: '#757575' 
+                      }} />
+                      
+                      <Box sx={{ pl: 0.5 }}>
+                        <Typography variant="h6" fontWeight="bold" gutterBottom>
+                          {alert.title || 'Untitled Alert'}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <LocationIcon fontSize="small" color="action" sx={{ mr: 0.5 }} />
+                          <Typography variant="body2" color="text.secondary">
+                            {alert.originCity || alert.city || 'Location not specified'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ 
+                          display: 'flex', 
+                          gap: 2, 
+                          flexWrap: 'wrap', 
+                          alignItems: 'center', 
+                          mb: 2 
+                        }}>
+                          {alert.alertCategory && (
+                            <Chip 
+                              label={alert.alertCategory} 
+                              size="small"
+                              sx={{ backgroundColor: '#f0f0f0' }} 
+                            />
+                          )}
+                          
+                          {alert.alertType && alert.alertType !== alert.alertCategory && (
+                            <Chip 
+                              label={alert.alertType} 
+                              size="small"
+                              sx={{ backgroundColor: '#f0f0f0' }} 
+                            />
+                          )}
+                        </Box>
+                        
+                        <Typography variant="body2" sx={{ mb: 2 }}>
+                          {alert.description}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mt: 2 }}>
+                          {alert.expectedStart && (
+                            <Box sx={{ flex: '1 1 45%', minWidth: '150px' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <EventIcon fontSize="small" color="action" />
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Start
+                                  </Typography>
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {format(parseISO(alert.expectedStart), 'dd MMM h:mma')}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          )}
+                          
+                          {alert.expectedEnd && (
+                            <Box sx={{ flex: '1 1 45%', minWidth: '150px' }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <EventIcon fontSize="small" color="action" />
+                                <Box>
+                                  <Typography variant="caption" color="text.secondary">
+                                    End
+                                  </Typography>
+                                  <Typography variant="body2" fontWeight="medium">
+                                    {format(parseISO(alert.expectedEnd), 'dd MMM h:mma')}
+                                  </Typography>
+                                </Box>
+                              </Box>
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+                    </Paper>
+                  ))}
+                </Box>
+              )}
             </Box>
-            
-            <Typography variant="body2" fontWeight="medium" sx={{ mt: 2 }}>
-              {primaryAlert.impact || 'Moderate'} impact
-            </Typography>
           </Box>
         ) : (
           <Box sx={{ mb: 'auto', mt: 2 }}>

@@ -1,4 +1,5 @@
 import { api } from './api';
+import { jsPDF } from 'jspdf';
 
 // Types for the summary/forecast feature
 export interface SummaryLocation {
@@ -108,13 +109,29 @@ export interface ForecastResponse {
   };
 }
 
+// Interface for alert items used in PDF generation
+export interface AlertItem {
+  title?: string;
+  originCity?: string;
+  city?: string;
+  alertCategory?: string;
+  alertType?: string;
+  impact?: string;
+  expectedStart?: string | Date;
+  expectedEnd?: string | Date;
+  description?: string;
+}
+
 // Service functions
 export const generateSummary = async (data: GenerateSummaryRequest): Promise<GenerateSummaryResponse> => {
   try {
-    // Handle 'All' category for alert types
+    // Handle alertTypes array for categories
+    // If alertTypes is provided, use it directly without modifying based on alertCategory
     const requestData = {
       ...data,
-      alertTypes: data.alertCategory === 'All' ? [] : data.alertTypes,
+      // If alertTypes is explicitly provided, use it; otherwise, leave it as is
+      alertTypes: data.alertTypes || [],
+      // We're now primarily using alertTypes array, so alertCategory is less important
       alertCategory: data.alertCategory === 'All' ? undefined : data.alertCategory,
       impact: data.impact === 'All' ? undefined : data.impact,
       generatePDF: true,
@@ -237,13 +254,37 @@ export const deleteSummary = async (summaryId: string): Promise<{ success: boole
   }
 };
 
-export const getUpcomingForecasts = async (days: number = 7, location?: string, alertCategory?: string, impact?: string): Promise<ForecastResponse> => {
+export const getUpcomingForecasts = async (
+  days: number = 7, 
+  location?: string, 
+  alertCategories?: string | string[], 
+  impact?: string, 
+  generatePdfOnLoad: boolean = false
+): Promise<ForecastResponse> => {
   try {
     const params = new URLSearchParams();
     if (days) params.append('days', days.toString());
     if (location) params.append('location', location);
-    if (alertCategory && alertCategory !== 'All') params.append('alertCategory', alertCategory);
+    
+    // Handle multiple alert categories
+    if (alertCategories) {
+      // If it's an array, append each category separately
+      if (Array.isArray(alertCategories)) {
+        // Skip if it contains 'All' or is empty
+        if (!alertCategories.includes('All') && alertCategories.length > 0) {
+          alertCategories.forEach(category => {
+            params.append('alertCategory', category);
+          });
+        }
+      } 
+      // If it's a string and not 'All', append it
+      else if (alertCategories !== 'All') {
+        params.append('alertCategory', alertCategories);
+      }
+    }
+    
     if (impact && impact !== 'All') params.append('impact', impact);
+    if (!generatePdfOnLoad) params.append('skipPdfGeneration', 'true');
     
     const query = params.toString();
     const url = query ? `/api/summaries/forecasts/upcoming?${query}` : '/api/summaries/forecasts/upcoming';
@@ -261,7 +302,7 @@ export const getUpcomingForecasts = async (days: number = 7, location?: string, 
             endDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString() 
           },
           location: location || 'Your Operating Regions',
-          alertCategory,
+          alertCategory: Array.isArray(alertCategories) ? alertCategories.join(', ') : alertCategories,
           impact,
           alerts: [],
           htmlContent: '<div class="no-alerts-message"><p>No alerts found for this period. Your selected regions are currently clear of any reported disruptions.</p></div>',
@@ -315,12 +356,232 @@ export const scheduleSummary = async (data: {
   }
 };
 
-// Update the downloadPdf function to handle backend URLs properly
-export const downloadPdf = async (pdfUrl: string, filename: string = 'forecast.pdf'): Promise<boolean> => {
+// Update the generateClientPdf function to use autoTable as a separate import
+export const generateClientPdf = async (alerts: AlertItem[], options: {
+  title: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  location?: string;
+  alertCategory?: string;
+  impact?: string;
+}): Promise<Blob> => {
   try {
-    // Validate inputs
+    const doc = new jsPDF();
+    const { title, startDate, endDate, location, alertCategory, impact } = options;
+    
+    // Format dates for display
+    const formatDate = (date: string | Date | undefined) => {
+      if (!date) return 'N/A';
+      return new Date(date).toLocaleDateString('en-US', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      });
+    };
+    
+    // Add header
+    doc.setFontSize(18);
+    doc.setTextColor(0, 0, 0);
+    doc.text(title || 'Alert Summary', 105, 15, { align: 'center' });
+    
+    // Add subtitle with date range and location
+    doc.setFontSize(11);
+    const dateRange = startDate && endDate 
+      ? `${formatDate(startDate)} - ${formatDate(endDate)}`
+      : 'Custom Date Range';
+    doc.text(dateRange, 105, 25, { align: 'center' });
+    
+    if (location) {
+      doc.text(`Location: ${location}`, 105, 32, { align: 'center' });
+    }
+    
+    // Add filters if applicable
+    let filterText = '';
+    if (alertCategory && alertCategory !== 'All') {
+      filterText += `Category: ${alertCategory} | `;
+    }
+    if (impact && impact !== 'All') {
+      filterText += `Impact: ${impact} | `;
+    }
+    
+    if (filterText) {
+      filterText = filterText.slice(0, -3); // Remove trailing " | "
+      doc.text(filterText, 105, 39, { align: 'center' });
+    }
+    
+    // Add horizontal line
+    doc.setDrawColor(70, 70, 70);
+    doc.line(20, 45, 190, 45);
+    
+    // If no alerts, add a message
+    if (!alerts || alerts.length === 0) {
+      doc.setFontSize(14);
+      doc.text('No Alerts Found', 105, 60, { align: 'center' });
+      doc.setFontSize(11);
+      doc.text('There are currently no disruptions matching your criteria.', 105, 70, { align: 'center' });
+    } else {
+      // Remove table and display alerts in a card-like format
+      let yPos = 55;
+      
+      // Add alert count
+      doc.setFontSize(12);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`${alerts.length} ${alerts.length === 1 ? 'alert' : 'alerts'} found`, 20, yPos);
+      yPos += 10;
+      
+      alerts.forEach((alert: AlertItem) => {
+        // Check if we need a new page
+        if (yPos > 250) {
+          doc.addPage();
+          yPos = 20;
+        }
+        
+        // Card background (light gray rectangle)
+        doc.setFillColor(248, 248, 248);
+        doc.rect(20, yPos, 170, 55, 'F');
+        
+        // Add impact color bar
+        const getImpactColor = (impact: string) => {
+          switch(impact) {
+            case 'Severe': return [211, 47, 47]; // Red
+            case 'Moderate': return [245, 124, 0]; // Orange
+            case 'Minor': return [76, 175, 80]; // Green
+            default: return [117, 117, 117]; // Gray
+          }
+        };
+        
+        const impactColor = getImpactColor(alert.impact || 'Moderate');
+        doc.setFillColor(impactColor[0], impactColor[1], impactColor[2]);
+        doc.rect(20, yPos, 1, 55, 'F');
+        
+        // Alert title
+        doc.setFontSize(13);
+        doc.setTextColor(0, 0, 0);
+        doc.setFont('helvetica', 'bold');
+        const title = alert.title || 'Untitled Alert';
+        doc.text(title, 30, yPos + 10);
+        
+        // Location
+        doc.setFontSize(10);
+        doc.setTextColor(100, 100, 100);
+        doc.setFont('helvetica', 'normal');
+        const location = alert.originCity || alert.city || 'Location not specified';
+        doc.text(`${location}`, 30, yPos + 20);
+        
+        // Type & Impact
+        let typeText = '';
+        if (alert.alertCategory) {
+          typeText += `${alert.alertCategory}`;
+        }
+        if (alert.alertType && alert.alertType !== alert.alertCategory) {
+          typeText += typeText ? `${alert.alertType}` : alert.alertType;
+        }
+        if (!typeText) {
+          typeText = 'Type not specified';
+        }
+        
+        doc.text(`${typeText} (${alert.impact || 'Impact not specified'})`, 30, yPos + 28);
+        
+        // Date range
+        let dateText = '';
+        if (alert.expectedStart) {
+          const formattedStart = formatDate(alert.expectedStart);
+          dateText += `From: ${formattedStart}`;
+        }
+        if (alert.expectedEnd) {
+          const formattedEnd = formatDate(alert.expectedEnd);
+          dateText += dateText ? ` To: ${formattedEnd}` : `To: ${formattedEnd}`;
+        }
+        if (dateText) {
+          doc.text(`${dateText}`, 30, yPos + 36);
+        }
+        
+        // Description (smaller font)
+        doc.setFontSize(9);
+        doc.setTextColor(60, 60, 60);
+        
+        // Handle long descriptions with word wrapping
+        const description = alert.description || 'No description available';
+        const splitDescription = doc.splitTextToSize(description, 150);
+        
+        // Only show first 2 lines of description in the card
+        const displayLines = splitDescription.slice(0, 2);
+        doc.text(displayLines, 30, yPos + 45);
+        
+        // Add ellipsis if there are more lines
+        if (splitDescription.length > 2) {
+          doc.text("...", 30, yPos + 52);
+        }
+        
+        // Move y position for next alert
+        yPos += 65; // Card height + margin
+      });
+    }
+    
+    // Add footer
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Generated by Tourprism | ${new Date().toLocaleDateString()}`, 
+        105, 
+        285, 
+        { align: 'center' }
+      );
+      doc.text(`Page ${i} of ${pageCount}`, 190, 285, { align: 'right' });
+    }
+    
+    // Return the PDF as a blob
+    return doc.output('blob');
+  } catch (error) {
+    console.error('Error generating client-side PDF:', error);
+    throw error;
+  }
+};
+
+// Update the downloadPdf function to use client-side generation when possible
+export const downloadPdf = async (pdfUrl: string | null, filename: string = 'forecast.pdf', alerts?: AlertItem[], options?: {
+  title: string;
+  startDate?: string | Date;
+  endDate?: string | Date;
+  location?: string;
+  alertCategory?: string;
+  impact?: string;
+}): Promise<boolean> => {
+  try {
+    // If we have alerts and options, generate PDF on the client side
+    if (alerts && options) {
+      try {
+        const pdfBlob = await generateClientPdf(alerts, options);
+        
+        // Create a download link for the blob
+        const url = URL.createObjectURL(pdfBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', filename);
+        
+        // Trigger the download
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        // Clean up the URL object
+        URL.revokeObjectURL(url);
+        
+        return true;
+      } catch (clientPdfError) {
+        console.error('Error generating client-side PDF:', clientPdfError);
+        // Fall back to server PDF if available
+        if (!pdfUrl) return false;
+      }
+    }
+    
+    // Fall back to using the backend URL if client-side generation isn't possible
+    // or we don't have alert data
     if (!pdfUrl) {
-      console.error('downloadPdf called with empty URL');
+      console.error('downloadPdf called with empty URL and no alert data');
       return false;
     }
     

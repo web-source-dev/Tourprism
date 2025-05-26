@@ -8,7 +8,7 @@ import {api} from '../services/api';
 
 // Public routes that don't require authentication
 // Keep this in sync with the list in ProtectedRoute.tsx
-const publicRoutes = ['/', '/login', '/signup', '/forgot-password','/action-hub','/insights','/subscription', '/feed','/feature','/resources', '/about', '/pricing', '/ambassadors', '/not-found', '/archive'];
+const publicRoutes = ['/', '/login', '/signup', '/forgot-password','/insights','/subscription', '/feed','/feature','/resources', '/about', '/pricing', '/ambassadors', '/not-found'];
 // Auth process routes should never redirect, even during auth loading
 const authProcessRoutes = ['/auth/google/callback'];
 
@@ -97,9 +97,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 }
 
+  // Initial fetch on mount
   useEffect(() => {
     fetchUser();
   }, []);
+
+  // Add route change detection - refetch user data when pathname changes
+  useEffect(() => {
+    // Don't refetch during initial loading
+    if (!isLoading) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (token) {
+        fetchUser();
+      }
+    }
+  }, [pathname]);
 
   // Utility function to check roles
   const hasRole = useCallback((role: string | string[]): boolean => {
@@ -262,6 +274,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsSubscribed(false);
       
       router.push('/');
+      window.location.href = '/';
     }
   };
 
