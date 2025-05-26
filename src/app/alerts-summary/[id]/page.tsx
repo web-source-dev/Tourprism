@@ -658,20 +658,12 @@ export default function ForecastDetail() {
                         elevation={0}
                         sx={{ 
                           p: 2, 
+                          bgcolor: 'transparent',
                           border: '1px solid #eaeaea',
                           position: 'relative',
                           overflow: 'hidden'
                         }}
                       >
-                        {/* Impact indicator bar */}
-                        <Box sx={{ 
-                          position: 'absolute', 
-                          top: 0, 
-                          left: 0, 
-                          width: '4px', 
-                          height: '100%', 
-                          backgroundColor: getImpactColor(alert.impact || 'Moderate') 
-                        }} />
                         
                         <Box sx={{ pl: 0.5 }}>
                           <Typography variant="h6" fontWeight="bold" gutterBottom>
