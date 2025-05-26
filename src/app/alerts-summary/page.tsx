@@ -862,7 +862,9 @@ export default function DisruptionForecast() {
                     if (selected === "") {
                       return <>Select</>;
                     }
-                    return selected;
+                    // Find the matching label for the selected value
+                    const selectedLevel = IMPACT_LEVELS.find(level => level.value === selected);
+                    return selectedLevel ? selectedLevel.label : selected;
                   }}
                   sx={{
                     borderRadius: 2,

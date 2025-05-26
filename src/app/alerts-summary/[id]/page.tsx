@@ -21,6 +21,7 @@ import {
   ArrowForward as ArrowForwardIcon,
   LocationOn as LocationIcon,
   Event as EventIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { useAuth } from '@/context/AuthContext';
@@ -32,7 +33,8 @@ import {
   getUpcomingForecasts,
   generateSummary,
   downloadPdf,
-  generatePdfOnDemand
+  generatePdfOnDemand,
+  deleteSummary
 } from '@/services/summaryService';
 import Layout from '@/components/Layout';
 import ShareForecastModal from '@/components/ShareForecastModal';
@@ -225,6 +227,35 @@ export default function ForecastDetail() {
       setError('Failed to save the forecast.');
       showToast('Failed to save the forecast', 'error');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    // Only proceed if already saved, we have a forecast, and the user has permission
+    if (!saved || !forecast || isViewOnly() || !forecast._id || 
+        forecast._id === 'weekly-forecast' || forecast._id === 'custom-forecast') return;
+    
+    try {
+      setLoading(true);
+      showToast('Deleting forecast...', 'success');
+      
+      // Call the API to delete the forecast
+      const response = await deleteSummary(forecast._id);
+      
+      if (response.success) {
+        showToast('Forecast deleted successfully', 'success');
+        // Navigate to the saved forecasts page
+        router.push('/alerts-summary/saved');
+      } else {
+        setError('Failed to delete the forecast.');
+        showToast('Failed to delete the forecast', 'error');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error deleting forecast:', error);
+      setError('Failed to delete the forecast.');
+      showToast('Failed to delete the forecast', 'error');
       setLoading(false);
     }
   };
@@ -873,9 +904,18 @@ export default function ForecastDetail() {
             alignItems: 'center',
             cursor: isViewOnly() ? 'not-allowed' : 'pointer',
             opacity: isViewOnly() ? 0.5 : 1
-          }} onClick={isViewOnly() ? undefined : handleSave}>
-            {saved ? <BookmarkIcon sx={{ mb: 0.5 }} /> : <BookmarkBorderIcon sx={{ mb: 0.5 }} />}
-            <Typography variant="caption">Save</Typography>
+          }} onClick={isViewOnly() ? undefined : (saved ? handleDelete : handleSave)}>
+            {saved ? (
+              <>
+                <DeleteIcon sx={{ mb: 0.5, }} />
+                <Typography variant="caption">Delete</Typography>
+              </>
+            ) : (
+              <>
+                <BookmarkBorderIcon sx={{ mb: 0.5 }} />
+                <Typography variant="caption">Save</Typography>
+              </>
+            )}
           </Box>
         </Box>
         

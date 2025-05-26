@@ -20,6 +20,7 @@ interface CollaboratorResponse {
 interface UnlockFeaturesCardProps {
   progress?: number; // 0-100
   onClick?: () => void;
+  onComplete?: () => void; // New callback for when all features are unlocked
 }
 
 interface FeatureStatus {
@@ -30,7 +31,8 @@ interface FeatureStatus {
 }
 
 const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
-  onClick
+  onClick,
+  onComplete
 }) => {
   const router = useRouter();
   const { user } = useAuth();
@@ -43,6 +45,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [progress, setProgress] = useState<number>(25); // Start with 25% for account created
   const { showToast } = useToast();
+  const [isComplete, setIsComplete] = useState<boolean>(false);
 
   useEffect(() => {
     const checkFeatureStatus = async () => {
@@ -55,25 +58,22 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
           teamMembers: false
         };
 
-        // Check if user has main operating regions set up
-        console.log('User company', user?.company);
-        if (user?.company?.MainOperatingRegions &&
-          user.company.MainOperatingRegions.length > 0) {
+        // Step 2 (50%): Check if user has completed personal and company details
+        // This requires both personal info (firstName, lastName) and company info
+        if (user?.firstName && 
+            user?.lastName && 
+            user?.company?.name && 
+            user?.company?.MainOperatingRegions && 
+            user.company.MainOperatingRegions.length > 0) {
           newStatus.personalizedContent = true;
-          console.log('Personalized content is true', newStatus.personalizedContent, user.company.MainOperatingRegions);
         }
 
-        // Check if user has any summaries created
-        try {
-          const summaryResponse = await api.get<SummaryResponse>('/api/summaries/saved');
-          if (summaryResponse.data?.summaries && summaryResponse.data.summaries.length > 0) {
-            newStatus.weeklyForecast = true;
-          }
-        } catch (error) {
-          console.error('Error fetching summaries:', error);
+        // Step 3 (75%): Check if user has set preferences for weekly disruption forecast reports
+        if (user?.preferences?.AlertSummaries?.weekly === true) {
+          newStatus.weeklyForecast = true;
         }
 
-        // Check if user has collaborators
+        // Step 4 (100%): Check if user has invited team members (collaborators)
         if (user?.collaborators && user.collaborators.length > 0) {
           newStatus.teamMembers = true;
         } else {
@@ -93,6 +93,13 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
         const completedCount = Object.values(newStatus).filter(Boolean).length;
         const calculatedProgress = Math.floor((completedCount / 4) * 100);
 
+        // Check if all features are unlocked
+        const allComplete = completedCount === 4;
+        if (allComplete && onComplete) {
+          onComplete();
+        }
+        
+        setIsComplete(allComplete);
         setFeatureStatus(newStatus);
         setProgress(calculatedProgress);
         setIsLoading(false);
@@ -108,7 +115,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
     } else {
       setIsLoading(false);
     }
-  }, [user, showToast]);
+  }, [user, showToast, onComplete]);
 
   const handleClick = () => {
     if (onClick) {
@@ -117,6 +124,11 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
       router.push('/profile');
     }
   };
+
+  // Don't render the card if all features are unlocked
+  if (isComplete) {
+    return null;
+  }
 
   if (isLoading) {
     return (

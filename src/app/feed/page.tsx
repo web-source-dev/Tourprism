@@ -139,7 +139,44 @@ export default function Feed() {
       if (isAuthenticated) {
         try {
           const { user } = await getUserProfile();
-          setUserProfile(user);
+          
+          // Calculate profile completion status
+          const profileCompletion = {
+            accountCreated: true, // Always true if the user exists
+            personalizedContent: false,
+            weeklyForecast: false,
+            teamMembers: false
+          };
+          
+          // Step 2 (50%): Check if user has completed personal and company details
+          if (user?.firstName && 
+              user?.lastName && 
+              user?.company?.name && 
+              user?.company?.MainOperatingRegions && 
+              user.company.MainOperatingRegions.length > 0) {
+            profileCompletion.personalizedContent = true;
+          }
+          
+          // Step 3 (75%): Check if user has set preferences for weekly disruption forecast reports
+          if (user?.preferences?.AlertSummaries?.weekly === true) {
+            profileCompletion.weeklyForecast = true;
+          }
+          
+          // Step 4 (100%): Check if user has invited team members (collaborators)
+          if (user?.collaborators && user.collaborators.length > 0) {
+            profileCompletion.teamMembers = true;
+          }
+          
+          // Calculate the percentage (25% for each completed feature)
+          const completedCount = Object.values(profileCompletion).filter(Boolean).length;
+          const calculatedProgress = Math.floor((completedCount / 4) * 100);
+          
+          // Set user with profile completion status
+          setUserProfile({
+            ...user,
+            profileCompletionPercentage: calculatedProgress,
+            isProfileComplete: completedCount === 4 // Only complete when all 4 steps are done
+          });
         } catch (error) {
           console.error('Error fetching user profile:', error);
         } finally {
@@ -1186,6 +1223,10 @@ export default function Feed() {
                   <UnlockFeaturesCard
                     progress={userProfile?.profileCompletionPercentage || 75}
                     onClick={() => router.push('/profile')}
+                    onComplete={() => {
+                      setShowUnlockFeaturesCard(false);
+                      localStorage.setItem('hideUnlockFeaturesCard', 'true');
+                    }}
                   />
                 </Box>
               ) : !isAuthenticated ? (
