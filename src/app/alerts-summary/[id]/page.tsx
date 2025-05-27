@@ -654,12 +654,6 @@ export default function ForecastDetail() {
         {/* Alert Content */}
         {sortedAlerts.length > 0 ? (
           <Box sx={{ mb: 'auto' }}>
-            {/* Summary */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="body2" color="text.secondary">
-                {sortedAlerts.length} {sortedAlerts.length === 1 ? 'alert' : 'alerts'} found matching your criteria
-              </Typography>
-            </Box>
 
             {/* List of alerts grouped by impact */}
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
