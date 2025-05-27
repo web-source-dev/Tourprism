@@ -26,7 +26,6 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CloseIcon from '@mui/icons-material/Close';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import ClearIcon from '@mui/icons-material/Clear';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '@/context/AuthContext';
 import { startOfWeek, endOfWeek } from 'date-fns';
@@ -173,7 +172,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             onClick={() => !readonly && handleStatusChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               cursor: readonly ? 'default' : 'pointer',
               bgcolor: filters.status === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
               '&:hover': {
@@ -219,7 +218,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             onClick={() => !readonly && handleTeamChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               cursor: readonly ? 'default' : 'pointer',
               bgcolor: filters.team === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
               '&:hover': {
@@ -252,7 +251,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             onClick={() => !readonly && handleImpactLevelChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               cursor: readonly ? 'default' : 'pointer',
               bgcolor: filters.impactLevel === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
               '&:hover': {
@@ -288,7 +287,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             onClick={() => !readonly && !option.locked && handleDateRangeTypeChange(option.value as 'this_week' | 'custom')}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid #f0f0f0',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               cursor: (readonly || option.locked) ? 'default' : 'pointer',
               bgcolor: filters.dateRangeType === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
               '&:hover': {
@@ -350,49 +349,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
       </List>
     );
   };
-
-  const getFilterSummary = () => {
-    const activeFilters = [];
-    
-    if (filters.status) {
-      activeFilters.push(`Status: ${filters.status.charAt(0).toUpperCase() + filters.status.slice(1).replace('_', ' ')}`);
-    }
-    
-    if (filters.team) {
-      activeFilters.push(`Team: ${filters.team.charAt(0).toUpperCase() + filters.team.slice(1)}`);
-    }
-    
-    if (filters.impactLevel) {
-      activeFilters.push(`Impact: ${filters.impactLevel.charAt(0).toUpperCase() + filters.impactLevel.slice(1)}`);
-    }
-    
-    if (filters.dateRangeType) {
-      if (filters.dateRangeType === 'this_week') {
-        activeFilters.push('Date: This Week');
-      } else if (filters.dateRangeType === 'custom' && (filters.dateRange.startDate || filters.dateRange.endDate)) {
-        let dateString = 'Date: Custom - ';
-        
-        if (filters.dateRange.startDate) {
-          const startDate = new Date(filters.dateRange.startDate);
-          dateString += `From ${startDate.toLocaleDateString()}`;
-        }
-        
-        if (filters.dateRange.endDate) {
-          const endDate = new Date(filters.dateRange.endDate);
-          dateString += filters.dateRange.startDate ? ` to ${endDate.toLocaleDateString()}` : `Until ${endDate.toLocaleDateString()}`;
-        }
-        
-        activeFilters.push(dateString);
-      }
-    }
-    
-    return activeFilters.length > 0 
-      ? activeFilters.join(', ') 
-      : 'No filters applied';
-  };
-
-  const showAppliedFilters = filters.status || filters.team || filters.impactLevel || filters.dateRangeType;
-  
   const useIsMobile = () => {
     const theme = useTheme();
     return useMediaQuery(theme.breakpoints.down('sm'));
@@ -403,11 +359,11 @@ const FilterModal: React.FC<FilterModalProps> = ({
       open={open} 
       onClose={onClose}
       fullWidth
-      maxWidth="sm"
       PaperProps={{
         sx: {
           width: useIsMobile() ? '100%' : 560,
           height: useIsMobile() ? '100%' : 'auto',
+          minHeight: useIsMobile() ? '100%' : 'auto',
           m: 0, // remove margins
           borderRadius: useIsMobile() ? 0 : 2,
           p: 2,
@@ -422,10 +378,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
           justifyContent: 'space-between', 
           alignItems: 'center',
           p: 2,
-          fontWeight: 'bold'
+          fontWeight: 'bold',
+          textAlign: 'center'
         }}
       >
-        Filter By
+        <Box></Box>
+        <Typography variant='h6' sx={{fontWeight:'500'}}>
+          Filter By
+        </Typography>
         <IconButton 
           edge="end" 
           color="inherit" 
@@ -436,15 +396,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </IconButton>
       </DialogTitle>
 
-      {showAppliedFilters && (
-        <Box sx={{ px: 2, pb: 1 }}>
-          <Typography variant="body2" color="text.secondary" fontWeight="medium">
-            Current filters: {getFilterSummary()}
-          </Typography>
-        </Box>
-      )}
-
-      <DialogContent dividers sx={{ px: 2, py: 1 }}>
+      <DialogContent dividers sx={{ px: 2, py: 1,border:'1px solid rgb(226, 226, 226)' , borderRadius:2 }}>
         {/* Status Filter */}
         <Box 
           sx={{ 
@@ -453,7 +405,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             alignItems: 'center', 
             justifyContent: 'space-between',
             cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'status' ? 'none' : '1px solid #f0f0f0',
+            borderBottom: openSection === 'status' ? 'none' : '1px solid rgb(226, 226, 226)',
           }}
           onClick={() => !readonly && toggleSection('status')}
         >
@@ -466,18 +418,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {filters.status && !readonly && (
-              <IconButton 
-                size="small" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleStatusChange('');
-                }}
-                sx={{ mr: 1 }}
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            )}
             <KeyboardArrowDownIcon 
               sx={{ 
                 transform: openSection === 'status' ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -499,7 +439,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             alignItems: 'center', 
             justifyContent: 'space-between',
             cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'team' ? 'none' : '1px solid #f0f0f0',
+            borderBottom: openSection === 'team' ? 'none' : '1px solid rgb(226, 226, 226)',
           }}
           onClick={() => !readonly && toggleSection('team')}
         >
@@ -512,18 +452,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {filters.team && !readonly && (
-              <IconButton 
-                size="small" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleTeamChange('');
-                }}
-                sx={{ mr: 1 }}
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            )}
             <KeyboardArrowDownIcon 
               sx={{ 
                 transform: openSection === 'team' ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -545,7 +473,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             alignItems: 'center', 
             justifyContent: 'space-between',
             cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'impact' ? 'none' : '1px solid #f0f0f0',
+            borderBottom: openSection === 'impact' ? 'none' : '1px solid rgb(226, 226, 226)',
           }}
           onClick={() => !readonly && toggleSection('impact')}
         >
@@ -558,18 +486,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {filters.impactLevel && !readonly && (
-              <IconButton 
-                size="small" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleImpactLevelChange('');
-                }}
-                sx={{ mr: 1 }}
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            )}
             <KeyboardArrowDownIcon 
               sx={{ 
                 transform: openSection === 'impact' ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -591,7 +507,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             alignItems: 'center', 
             justifyContent: 'space-between',
             cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'date' ? 'none' : '1px solid #f0f0f0',
+            borderBottom: openSection === 'date' ? 'none' : '1px solid rgb(226, 226, 226)',
           }}
           onClick={() => !readonly && toggleSection('date')}
         >
@@ -608,18 +524,6 @@ const FilterModal: React.FC<FilterModalProps> = ({
             </Typography>
           </Box>
           <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {filters.dateRangeType && !readonly && (
-              <IconButton 
-                size="small" 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDateRangeTypeChange('');
-                }}
-                sx={{ mr: 1 }}
-              >
-                <ClearIcon fontSize="small" />
-              </IconButton>
-            )}
             <KeyboardArrowDownIcon 
               sx={{ 
                 transform: openSection === 'date' ? 'rotate(180deg)' : 'rotate(0deg)',
@@ -644,7 +548,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             color: 'white',
             '&:hover': { bgcolor: '#333' },
             py: 1,
-            borderRadius: 1
+            borderRadius: 2
           }}
           onClick={handleApplyFilters}
         >
@@ -656,8 +560,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
           disabled={readonly}
           sx={{
             color: 'black',
-            '&:hover': { bgcolor: '#f5f5f5' },
-            py: 1
+            border: '1px solid rgb(226, 226, 226)',
+            '&:hover': { bgcolor: 'transparent' },
+            py: 1,
+            borderRadius: 2
           }}
           onClick={handleClearAll}
         >

@@ -43,8 +43,8 @@ export default function SavedForecasts() {
   // Filter state
   const [filters, setFilters] = useState<FilterOptions>({
     reportType: '',
-    location: '',
-    dateCreated: '',
+    location: 'Edinburgh',
+    dateCreated: 'This Week',
     customDateStart: '',
     customDateEnd: '',
     deliveryMethod: '',
@@ -54,8 +54,8 @@ export default function SavedForecasts() {
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [tempFilters, setTempFilters] = useState<FilterOptions>({
     reportType: '',
-    location: '',
-    dateCreated: '',
+    location: 'Edinburgh',
+    dateCreated: 'This Week',
     customDateStart: '',
     customDateEnd: '',
     deliveryMethod: '',
@@ -141,8 +141,8 @@ export default function SavedForecasts() {
   const handleClearFilters = () => {
     const resetFilters = {
       reportType: '',
-      location: '',
-      dateCreated: '',
+      location: 'Edinburgh',
+      dateCreated: 'This Week',
       customDateStart: '',
       customDateEnd: '',
       deliveryMethod: '',
@@ -218,7 +218,7 @@ export default function SavedForecasts() {
 
   return (
     <Layout isFooter={false}>
-      <Container maxWidth="lg" sx={{ px: { xs: 2, sm: 3 }, py: 2 }}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 3 }, py: 2 }}>
         {/* Header with back button and title */}
         <Box sx={{
           display: 'flex',
@@ -295,6 +295,9 @@ export default function SavedForecasts() {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
+              bgcolor: 'transparent',
+              boxShadow: 'none',
+              border: '1px solid rgb(221,221,221)',
               gap: 2
             }}
           >
@@ -345,15 +348,16 @@ export default function SavedForecasts() {
               <Box key={forecast._id} sx={{ width: { xs: '100%', sm: 'calc(50% - 8px)', md: 'calc(33.333% - 11px)' } }}>
                 <Card sx={{
                   borderRadius: 3,
-                  p: 3,
+                  p: 2,
                   height: '100%',
                   display: 'flex',
                   flexDirection: 'column',
-                  boxShadow: '0px 2px 10px rgba(0,0,0,0.05)',
-                  border: '1px solid #f0f0f0'
+                  bgcolor: 'transparent',
+                  boxShadow: 'none',
+                  border: '1px solid rgb(221,221,221)',
                 }}>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="h6" fontWeight="500" gutterBottom>
+                    <Typography variant="body1" fontWeight="bold" gutterBottom>
                       {forecast.title}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
@@ -362,43 +366,9 @@ export default function SavedForecasts() {
                         'Date range not specified'
                       }
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ my: 1 }}>
                       Saved {format(parseISO(forecast.createdAt), 'MMM dd, yyyy')}
                     </Typography>
-
-                    {/* Display report type tag */}
-                    <Box sx={{ mb: 2, mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                      <Box
-                        sx={{
-                          display: 'inline-block',
-                          px: 1.5,
-                          py: 0.5,
-                          bgcolor: 'rgba(0,0,0,0.05)',
-                          borderRadius: 1,
-                          fontSize: '0.75rem'
-                        }}
-                      >
-                        {forecast.summaryType === 'forecast' ? 'Weekly Forecast' :
-                          forecast.summaryType === 'custom' ? 'Custom Report' :
-                            'Automated Report'}
-                      </Box>
-
-                      {/* Display location tag if available */}
-                      {forecast.locations && forecast.locations[0]?.city && (
-                        <Box
-                          sx={{
-                            display: 'inline-block',
-                            px: 1.5,
-                            py: 0.5,
-                            bgcolor: 'rgba(25,118,210,0.08)',
-                            borderRadius: 1,
-                            fontSize: '0.75rem'
-                          }}
-                        >
-                          {forecast.locations[0].city}
-                        </Box>
-                      )}
-                    </Box>
                   </Box>
 
                   <Box sx={{ mt: 'auto' }}>
@@ -407,14 +377,14 @@ export default function SavedForecasts() {
                       variant="outlined"
                       onClick={() => handleViewSavedForecast(forecast._id)}
                       sx={{
-                        borderRadius: 5,
-                        py: 1.2,
+                        borderRadius: 2,
+                        height:'40px',
                         textTransform: 'none',
                         color: 'black',
                         borderColor: '#e0e0e0',
-                        backgroundColor: '#f5f5f5',
+                        backgroundColor: '#EBEBEC',
                         '&:hover': {
-                          backgroundColor: '#eeeeee',
+                          backgroundColor: '#EBEBEC',
                           borderColor: '#d0d0d0',
                         }
                       }}

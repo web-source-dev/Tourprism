@@ -89,11 +89,22 @@ export const useToast = () => {
 // Toast Container component
 function ToastContainer({ toasts, hideToast }: { toasts: Toast[]; hideToast: (id: string) => void }) {
   return (
-    <div className="fixed bottom-8 z-9999 left-1/2 transform -translate-x-1/2 z-50 flex flex-col gap-3">
-      {toasts.map((toast) => (
-        <ToastItem key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
-      ))}
-    </div>
+    <>
+      {/* Backdrop overlay that covers the entire screen with 40% opacity */}
+      {toasts.length > 0 && (
+        <div 
+          className="fixed inset-0 bg-black z-40 transition-opacity duration-300" style={{opacity: 0.4}}
+          onClick={() => toasts.forEach(toast => hideToast(toast.id))}
+        />
+      )}
+      
+      {/* Toast notifications - keep them in the bottom center */}
+      <div className="fixed bottom-8 z-50 left-1/2 transform -translate-x-1/2 flex flex-col gap-3">
+        {toasts.map((toast) => (
+          <ToastItem key={toast.id} toast={toast} onClose={() => hideToast(toast.id)} />
+        ))}
+      </div>
+    </>
   );
 }
 

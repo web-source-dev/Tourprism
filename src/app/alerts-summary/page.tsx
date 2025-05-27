@@ -7,7 +7,6 @@ import {
   Typography,
   Button,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
   TextField,
@@ -18,7 +17,6 @@ import {
   IconButton,
   SelectChangeEvent,
 } from '@mui/material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { format, addDays } from 'date-fns';
@@ -76,15 +74,15 @@ const IMPACT_LEVELS = [
 
 // Custom checkbox component with green background
 const SelectedTickIcon = () => (
-  <Box 
-    sx={{ 
-      bgcolor: '#4caf50', 
-      borderRadius: '50%', 
-      width: 20, 
-      height: 20, 
-      display: 'flex', 
-      alignItems: 'center', 
-      justifyContent: 'center' 
+  <Box
+    sx={{
+      bgcolor: '#4caf50',
+      borderRadius: '50%',
+      width: 20,
+      height: 20,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center'
     }}
   >
     <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
@@ -278,14 +276,14 @@ export default function DisruptionForecast() {
       const locations = location ? [location] : [];
 
       // Set alert categories based on selection
-      const alertTypes = alertCategory.includes('All') || alertCategory.length === 0 
-        ? [] 
+      const alertTypes = alertCategory.includes('All') || alertCategory.length === 0
+        ? []
         : [...alertCategory];
 
       // Prepare dates
       let effectiveStartDate = startDate;
       let effectiveEndDate = endDate;
-      
+
       // If using "This Week" date range or not subscribed, calculate the dates
       if (dateRangeType === 'thisWeek' || !isSubscribed) {
         effectiveStartDate = new Date();
@@ -520,13 +518,13 @@ export default function DisruptionForecast() {
   // Add this function to show toast for custom date selection
   const handleDateRangeChange = (event: unknown) => {
     const value = (event as SelectChangeEvent<string>).target.value as 'thisWeek' | 'custom';
-    
+
     // If user tries to select custom but isn't subscribed, show toast
     if (value === 'custom' && !isSubscribed) {
       showToast('Please subscribe to unlock this filter', 'error');
       return; // Don't update the state
     }
-    
+
     setDateRangeType(value);
   };
 
@@ -547,7 +545,7 @@ export default function DisruptionForecast() {
             </Alert>
           )}
 
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
             <Typography variant="h5" component="h1" fontWeight="bold">
               Reports
             </Typography>
@@ -569,8 +567,6 @@ export default function DisruptionForecast() {
 
             </IconButton>
           </Box>
-
-          <Divider sx={{ mb: 4 }} />
 
           {/* {weeklyAlertCount === null && weeklyAlertCount !== 0 && weeklyAlertCount !== 1 ? (
             <Paper
@@ -663,31 +659,34 @@ export default function DisruptionForecast() {
           )} */}
 
 
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Create custom disruption forecasts
           </Typography>
 
+
+          <Divider sx={{ mb: 4 }} />
           {/* Form Fields in Clean Layout */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
             {/* Alert Type */}
             <Box>
+              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                Type
+              </Typography>
               <FormControl fullWidth>
-                <InputLabel id="alert-type-label">Type</InputLabel>
                 <Select
                   labelId="alert-type-label"
                   id="alert-type"
                   value={alertCategory}
-                  label="Type"
                   onChange={(e) => {
                     const value = e.target.value as string[];
                     // If "All" is selected, clear other selections
                     if (value.includes('All') && !alertCategory.includes('All')) {
                       setAlertCategory(['All']);
-                    } 
+                    }
                     // If other items are selected while "All" is already selected, remove "All"
                     else if (value.includes('All') && value.length > 1) {
                       setAlertCategory(value.filter(v => v !== 'All'));
-                    } 
+                    }
                     // Otherwise use the selection as is
                     else {
                       setAlertCategory(value);
@@ -697,16 +696,18 @@ export default function DisruptionForecast() {
                   multiple
                   renderValue={(selected: string[]) => {
                     if (selected.length === 0) {
-                      return <em>Select types</em>;
+                      return <>Select</>;
                     }
                     if (selected.includes('All')) {
-                      return 'All Types';
+                      return 'All';
                     }
                     return selected.join(', ');
                   }}
                   sx={{
-                    borderRadius: 2
+                    borderRadius: 2,
+                    height: '45px'
                   }}
+                  displayEmpty
                 >
                   {ALERT_CATEGORIES.map((category) => (
                     <MenuItem key={category.value} value={category.value} sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -720,6 +721,9 @@ export default function DisruptionForecast() {
 
             {/* Location */}
             <Box>
+              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                Location
+              </Typography>
               <FormControl fullWidth>
                 {isLoaded ? (
                   <Box sx={{ position: 'relative' }}>
@@ -729,13 +733,15 @@ export default function DisruptionForecast() {
                         value={location}
                         disabled={!isSubscribed}
                         hideIcon={!isSubscribed}
+                        placeholder={!isSubscribed ? "Edinburgh" : "Search for a city..."}
+                        useExternalLabel={true}
                       />
                     </Box>
                     {!isSubscribed && (
-                      <Box sx={{ 
-                        position: 'absolute', 
-                        right: 14, 
-                        top: '50%', 
+                      <Box sx={{
+                        position: 'absolute',
+                        right: 14,
+                        top: '50%',
                         transform: 'translateY(-50%)',
                         display: 'flex',
                         alignItems: 'center',
@@ -757,16 +763,17 @@ export default function DisruptionForecast() {
                         value={!isSubscribed ? "Edinburgh, United Kingdom" : ""}
                         sx={{
                           '& .MuiOutlinedInput-root': {
-                            borderRadius: 2
+                            borderRadius: 2,
+                            height: '45px'
                           }
                         }}
                       />
                     </Box>
                     {!isSubscribed && (
-                      <Box sx={{ 
-                        position: 'absolute', 
-                        right: 14, 
-                        top: '50%', 
+                      <Box sx={{
+                        position: 'absolute',
+                        right: 14,
+                        top: '50%',
                         transform: 'translateY(-50%)',
                         display: 'flex',
                         alignItems: 'center',
@@ -784,13 +791,19 @@ export default function DisruptionForecast() {
 
             {/* Date Range */}
             <Box>
-              <FormControl fullWidth sx={{mb:2}}>
+              <Typography variant="body2" fontWeight="bold" sx={{ mb: 1 }}>
+                Date Range
+              </Typography>
+              <FormControl fullWidth sx={{ mb: 1 }}>
                 <Select
                   value={dateRangeType}
                   onChange={handleDateRangeChange}
                   disabled={isViewOnly()}
+                  displayEmpty
+                  renderValue={(selected) => selected === 'thisWeek' ? 'This Week' : 'Custom'}
                   sx={{
-                    borderRadius: 2
+                    borderRadius: 2,
+                    height: '45px'
                   }}
                 >
                   <MenuItem value="thisWeek">This Week</MenuItem>
@@ -807,39 +820,39 @@ export default function DisruptionForecast() {
                 </Select>
               </FormControl>
               {(dateRangeType === 'custom' && isSubscribed) && (
-                <FormControl fullWidth sx={{mb: 1}}>
+                <FormControl fullWidth>
                   <Stack direction="row" spacing={2}>
                     <Box sx={{ width: '50%' }}>
-                      <DatePicker
-                        label="Start date"
-                        value={startDate}
-                        onChange={(newValue) => setStartDate(newValue)}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            sx: {
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2
-                              }
-                            }
-                          }
+                      <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                        Start Date
+                      </Typography>
+                      <input
+                        type="date"
+                        value={startDate ? startDate.toISOString().split('T')[0] : ''}
+                        onChange={(e) => setStartDate(new Date(e.target.value))}
+                        style={{
+                          width: '100%',
+                          height: '45px',
+                          borderRadius: '10px',
+                          border: '1px solid #ccc',
+                          padding: '0 10px',
                         }}
                       />
                     </Box>
                     <Box sx={{ width: '50%' }}>
-                      <DatePicker
-                        label="End date"
-                        value={endDate}
-                        onChange={(newValue) => setEndDate(newValue)}
-                        slotProps={{
-                          textField: {
-                            fullWidth: true,
-                            sx: {
-                              '& .MuiOutlinedInput-root': {
-                                borderRadius: 2
-                              }
-                            }
-                          }
+                      <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                        End Date
+                      </Typography>
+                      <input
+                        type="date"
+                        value={endDate ? endDate.toISOString().split('T')[0] : ''}
+                        onChange={(e) => setEndDate(new Date(e.target.value))}
+                        style={{
+                          width: '100%',
+                          height: '45px',
+                          borderRadius: '10px',
+                          border: '1px solid #ccc',
+                          padding: '0 10px',
                         }}
                       />
                     </Box>
@@ -849,7 +862,10 @@ export default function DisruptionForecast() {
             </Box>
 
             {/* Impact Level */}
-            <Box sx={{mt: -2}}>
+            <Box sx={{ mt: -1 }}>
+              <Typography variant="body2" fontWeight="bold" sx={{ mb: 0.5 }}>
+                Impact Level
+              </Typography>
               <FormControl fullWidth>
                 <Select
                   labelId="impact-label"
@@ -868,6 +884,7 @@ export default function DisruptionForecast() {
                   }}
                   sx={{
                     borderRadius: 2,
+                    height: '45px'
                   }}
                 >
                   {IMPACT_LEVELS.map((level) => (
@@ -887,17 +904,18 @@ export default function DisruptionForecast() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexDirection:{xs:'column', md:'row' },
+                  flexDirection: { xs: 'column', md: 'row' },
                   backgroundColor: '#fff8e6',
                   border: '1px solid #fcd581',
                   borderRadius: '12px',
                   padding: '12px 16px',
                   width: '100%',
                   boxSizing: 'border-box',
-                  gap: 2
+                  gap: 2,
+                  mt: 1
                 }}
               >
-                <Box sx={{ display: 'flex', alignItems: {xs:'',md:'center'}, gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: { xs: '', md: 'center' }, gap: 1 }}>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
                   </svg>
@@ -913,7 +931,7 @@ export default function DisruptionForecast() {
                     color: 'white',
                     fontWeight: 'bold',
                     borderRadius: '8px',
-                    width:{xs:'100%', md:'150px'},
+                    width: { xs: '100%', md: '150px' },
                     textTransform: 'none',
                     '&:hover': {
                       backgroundColor: '#e29800',
@@ -926,7 +944,7 @@ export default function DisruptionForecast() {
             )}
 
             {/* Generate Button */}
-            <Box sx={{ mt: 3 }}>
+            <Box sx={{ mt: 2 }}>
               <Button
                 variant="contained"
                 fullWidth
@@ -934,6 +952,7 @@ export default function DisruptionForecast() {
                 disabled={loading || isViewOnly()}
                 sx={{
                   py: 1.5,
+                  height: '45px',
                   borderRadius: 6,
                   backgroundColor: '#000',
                   '&:hover': {

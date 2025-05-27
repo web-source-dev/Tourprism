@@ -50,13 +50,13 @@ const formatDateForDisplay = (dateString: string) => {
 // Add this function after the formatDateForDisplay function
 const formatRelativeTime = (dateString: string) => {
   if (!dateString) return "";
-  
+
   const date = new Date(dateString);
   const now = new Date();
-  
+
   // Get time difference in seconds
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     // Less than a minute
     return `${diffInSeconds}s`;
@@ -139,7 +139,7 @@ export default function Feed() {
       if (isAuthenticated) {
         try {
           const { user } = await getUserProfile();
-          
+
           // Calculate profile completion status
           const profileCompletion = {
             accountCreated: true, // Always true if the user exists
@@ -147,30 +147,30 @@ export default function Feed() {
             weeklyForecast: false,
             teamMembers: false
           };
-          
+
           // Step 2 (50%): Check if user has completed personal and company details
-          if (user?.firstName && 
-              user?.lastName && 
-              user?.company?.name && 
-              user?.company?.MainOperatingRegions && 
-              user.company.MainOperatingRegions.length > 0) {
+          if (user?.firstName &&
+            user?.lastName &&
+            user?.company?.name &&
+            user?.company?.MainOperatingRegions &&
+            user.company.MainOperatingRegions.length > 0) {
             profileCompletion.personalizedContent = true;
           }
-          
+
           // Step 3 (75%): Check if user has set preferences for weekly disruption forecast reports
           if (user?.preferences?.AlertSummaries?.weekly === true) {
             profileCompletion.weeklyForecast = true;
           }
-          
+
           // Step 4 (100%): Check if user has invited team members (collaborators)
           if (user?.collaborators && user.collaborators.length > 0) {
             profileCompletion.teamMembers = true;
           }
-          
+
           // Calculate the percentage (25% for each completed feature)
           const completedCount = Object.values(profileCompletion).filter(Boolean).length;
           const calculatedProgress = Math.floor((completedCount / 4) * 100);
-          
+
           // Set user with profile completion status
           setUserProfile({
             ...user,
@@ -1039,7 +1039,7 @@ export default function Feed() {
 
   return (
     <Layout onFilterOpen={() => setIsFilterDrawerOpen(true)}>
-      <Container maxWidth="xl" style={{padding:0}}>
+      <Container maxWidth="xl" style={{ padding: 0 }}>
         {/* Low Accuracy Warning Dialog */}
         <Dialog
           open={lowAccuracyWarning}
@@ -1211,7 +1211,7 @@ export default function Feed() {
                       bgcolor: 'rgba(255, 255, 255, 0.8)',
                       width: 24,
                       height: 24,
-                      display:'none',
+                      display: 'none',
                       '&:hover': { bgcolor: 'rgba(0, 0, 0, 0.1)' }
                     }}
                     aria-label="dismiss card"
@@ -1241,7 +1241,7 @@ export default function Feed() {
                       bgcolor: 'rgba(255, 255, 255, 0.3)',
                       width: 24,
                       height: 24,
-                      display:'none',
+                      display: 'none',
                       '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.5)' },
                       color: 'white'
                     }}
@@ -1260,16 +1260,16 @@ export default function Feed() {
                     key={`alert-${alerts[0]._id}-0`}
                     sx={{
                       p: 2,
-                      bgcolor: 'white',
+                      bgcolor: 'transparent',
                       borderRadius: 2,
-                      boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid #EAEAEA',
+                      boxShadow: 'none',
+                      border: '1px solid #E0E0E0',
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column'
                     }}
-                  >           
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Box
                         onClick={() => isViewOnly() ? null : handleFollowUpdate(alerts[0]._id || '')}
                         sx={{
@@ -1282,14 +1282,14 @@ export default function Feed() {
                           opacity: isViewOnly() ? 0.5 : 1,
                           px: 1.5,
                           py: 0.5,
-                          borderRadius: 10,
+                          borderRadius: 2,
                           border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
                           '&:hover': {
                             bgcolor: 'rgba(0, 0, 0, 0.04)'
                           },
-                          ml: 1,
+                          mb: 1,
                           whiteSpace: 'nowrap'
                         }}
                       >
@@ -1302,12 +1302,14 @@ export default function Feed() {
                           </>
                         ) : (
                           <>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path fillRule="evenodd" clipRule="evenodd" d="M8.00012 0.833328C4.95497 0.833328 2.48355 3.29418 2.48353 6.33329C2.48347 7.04018 2.43605 7.57372 2.11097 8.05325C2.06577 8.11897 2.00579 8.20127 1.94026 8.2912C1.82644 8.4474 1.69585 8.62661 1.59679 8.78182C1.42197 9.05575 1.25116 9.38609 1.19245 9.77101C1.00088 11.0268 1.88398 11.8399 2.76346 12.2042C3.4182 12.4755 4.12567 12.6894 4.86357 12.8459C5.24629 14.1929 6.51269 15.1666 7.99947 15.1666C9.48615 15.1666 10.7525 14.1931 11.1353 12.8462C11.8737 12.6896 12.5816 12.4756 13.2368 12.2042C14.1162 11.8399 14.9994 11.0268 14.8078 9.77101C14.7491 9.3861 14.5783 9.05576 14.4034 8.78182C14.3044 8.62662 14.1738 8.44741 14.06 8.29121C13.9945 8.20131 13.9345 8.11901 13.8893 8.05331C13.5642 7.57375 13.5168 7.04027 13.5167 6.33333C13.5167 3.2942 11.0453 0.833328 8.00012 0.833328ZM3.48353 6.33333C3.48353 3.84961 5.50411 1.83333 8.00012 1.83333C10.4961 1.83333 12.5167 3.84965 12.5167 6.33337C12.5168 7.05499 12.5524 7.86444 13.0627 8.61613L13.0643 8.61847C13.1482 8.74056 13.2219 8.84064 13.2913 8.93497C13.3838 9.06063 13.4688 9.17611 13.5605 9.3198C13.7026 9.54255 13.7908 9.73558 13.8192 9.92181C13.9112 10.5247 13.5266 11.0017 12.8541 11.2804C10.0014 12.4621 5.99882 12.4621 3.14618 11.2804C2.47358 11.0017 2.08904 10.5247 2.18101 9.92181C2.20942 9.73558 2.29759 9.54255 2.43975 9.3198C2.53145 9.17611 2.61643 9.06065 2.70891 8.935C2.77824 8.8408 2.85215 8.74036 2.93592 8.61848L2.93752 8.61613C3.44788 7.86444 3.48347 7.05495 3.48353 6.33333ZM9.9754 13.0422C8.67637 13.2082 7.32244 13.2081 6.02345 13.0421C6.40445 13.7079 7.14181 14.1666 7.99947 14.1666C8.85706 14.1666 9.59436 13.708 9.9754 13.0422Z" fill="#616161" />
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
+                              <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
                             </svg>
+
                             <Typography variant="body2">Follow</Typography>
                           </>
-                        )}  
+                        )}
                       </Box>
                       <Box>
                         <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
@@ -1358,12 +1360,12 @@ export default function Feed() {
                       {/* Start and End Time */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
                             Start: {alerts[0].expectedStart ? formatDateForDisplay(alerts[0].expectedStart) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="body2" sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
                             End: {alerts[0].expectedEnd ? formatDateForDisplay(alerts[0].expectedEnd) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
@@ -1373,17 +1375,9 @@ export default function Feed() {
                       <Box sx={{ mt: 1 }}>
                         <Typography variant="body2" sx={{
                           display: 'inline-block',
-                          px: 1.5,
-                          py: 0.5,
                           fontSize: '14px',
                           borderRadius: 1,
-                          backgroundColor: alerts[0].risk === 'Low' ? '#e6f4ea' :
-                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#fff4e5' :
-                              alerts[0].risk === 'High' ? '#fdecea' : 'transparent',
-                          color: alerts[0].risk === 'Low' ? '#00855b' :
-                            alerts[0].risk === 'Medium' || !alerts[0].risk ? '#c17e00' :
-                              alerts[0].risk === 'High' ? '#d32f2f' : 'inherit',
-                          fontWeight: 500,
+                          fontWeight: 600,
                         }}>
                           {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderate Impact' : `${alerts[0].risk} Impact`}
                         </Typography>
@@ -1406,18 +1400,18 @@ export default function Feed() {
                     key={`alert-${alert._id}-${index}`}
                     sx={{
                       p: 2,
-                      bgcolor: 'white',
+                      bgcolor: 'transparent',
                       borderRadius: 2,
-                      boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.1)',
-                      border: '1px solid #EAEAEA',
+                      boxShadow: 'none',
                       height: '100%',
                       display: 'flex',
-                      flexDirection: 'column'
+                      flexDirection: 'column',
+                      border: '1px solid #E0E0E0'
                     }}
                   >
-                    
-                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                   <Box
+
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box
                         onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
                         sx={{
                           display: 'flex',
@@ -1429,14 +1423,14 @@ export default function Feed() {
                           opacity: isViewOnly() ? 0.5 : 1,
                           px: 1.5,
                           py: 0.5,
-                          borderRadius: 10,
+                          borderRadius: 2,
                           border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
                           '&:hover': {
                             bgcolor: 'rgba(0, 0, 0, 0.04)'
                           },
-                          ml: 1,
+                          mb: 1,
                           whiteSpace: 'nowrap'
                         }}
                       >
@@ -1449,9 +1443,11 @@ export default function Feed() {
                           </>
                         ) : (
                           <>
-                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path fillRule="evenodd" clipRule="evenodd" d="M8.00012 0.833328C4.95497 0.833328 2.48355 3.29418 2.48353 6.33329C2.48347 7.04018 2.43605 7.57372 2.11097 8.05325C2.06577 8.11897 2.00579 8.20127 1.94026 8.2912C1.82644 8.4474 1.69585 8.62661 1.59679 8.78182C1.42197 9.05575 1.25116 9.38609 1.19245 9.77101C1.00088 11.0268 1.88398 11.8399 2.76346 12.2042C3.4182 12.4755 4.12567 12.6894 4.86357 12.8459C5.24629 14.1929 6.51269 15.1666 7.99947 15.1666C9.48615 15.1666 10.7525 14.1931 11.1353 12.8462C11.8737 12.6896 12.5816 12.4756 13.2368 12.2042C14.1162 11.8399 14.9994 11.0268 14.8078 9.77101C14.7491 9.3861 14.5783 9.05576 14.4034 8.78182C14.3044 8.62662 14.1738 8.44741 14.06 8.29121C13.9945 8.20131 13.9345 8.11901 13.8893 8.05331C13.5642 7.57375 13.5168 7.04027 13.5167 6.33333C13.5167 3.2942 11.0453 0.833328 8.00012 0.833328ZM3.48353 6.33333C3.48353 3.84961 5.50411 1.83333 8.00012 1.83333C10.4961 1.83333 12.5167 3.84965 12.5167 6.33337C12.5168 7.05499 12.5524 7.86444 13.0627 8.61613L13.0643 8.61847C13.1482 8.74056 13.2219 8.84064 13.2913 8.93497C13.3838 9.06063 13.4688 9.17611 13.5605 9.3198C13.7026 9.54255 13.7908 9.73558 13.8192 9.92181C13.9112 10.5247 13.5266 11.0017 12.8541 11.2804C10.0014 12.4621 5.99882 12.4621 3.14618 11.2804C2.47358 11.0017 2.08904 10.5247 2.18101 9.92181C2.20942 9.73558 2.29759 9.54255 2.43975 9.3198C2.53145 9.17611 2.61643 9.06065 2.70891 8.935C2.77824 8.8408 2.85215 8.74036 2.93592 8.61848L2.93752 8.61613C3.44788 7.86444 3.48347 7.05495 3.48353 6.33333ZM9.9754 13.0422C8.67637 13.2082 7.32244 13.2081 6.02345 13.0421C6.40445 13.7079 7.14181 14.1666 7.99947 14.1666C8.85706 14.1666 9.59436 13.708 9.9754 13.0422Z" fill="#616161" />
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
+                              <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
                             </svg>
+
                             <Typography variant="body2">Follow</Typography>
                           </>
                         )}
@@ -1461,7 +1457,7 @@ export default function Feed() {
                           {formatRelativeTime(alert.createdAt)}
                         </Typography>
                       </Box>
-                   </Box>
+                    </Box>
                     {/* Alert Header with Follow Button */}
                     <Box sx={{
                       display: 'flex',
@@ -1505,12 +1501,12 @@ export default function Feed() {
                       {/* Start and End Time */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Box>
-                          <Typography variant="body2"  sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
                             Start: {alert.expectedStart ? formatDateForDisplay(alert.expectedStart) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="body2"  sx={{ fontSize:'14px',color:'#757575',fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
                             End: {alert.expectedEnd ? formatDateForDisplay(alert.expectedEnd) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
@@ -1520,17 +1516,9 @@ export default function Feed() {
                       <Box sx={{ mt: 1 }}>
                         <Typography variant="body2" sx={{
                           display: 'inline-block',
-                          px: 1.5,
-                          py: 0.5,
                           fontSize: '14px',
                           borderRadius: 1,
-                          backgroundColor: alert.risk === 'Low' ? '#e6f4ea' :
-                            alert.risk === 'Medium' || !alert.risk ? '#fff4e5' :
-                              alert.risk === 'High' ? '#fdecea' : 'transparent',
-                          color: alert.risk === 'Low' ? '#00855b' :
-                            alert.risk === 'Medium' || !alert.risk ? '#c17e00' :
-                              alert.risk === 'High' ? '#d32f2f' : 'inherit',
-                          fontWeight: 500,
+                          fontWeight: 600,
                         }}>
                           {alert.risk === 'Medium' || !alert.risk ? 'Moderate Impact' : `${alert.risk} Impact`}
                         </Typography>

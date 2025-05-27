@@ -29,16 +29,18 @@ interface LocationSearchInputProps {
   required?: boolean;
   disabled?: boolean;
   hideIcon?: boolean;
+  useExternalLabel?: boolean;
 }
 
 const LocationSearchInput: React.FC<LocationSearchInputProps> = ({ 
   setValue, 
   value, 
-  label = "Location",
+  label,
   placeholder = "Search for a city...",
   required = false,
   disabled = false,
-  hideIcon = false
+  hideIcon = false,
+  useExternalLabel = false
 }) => {
   const {
     ready,
@@ -110,7 +112,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     <ClickAwayListener onClickAway={handleClickAway}>
       <FormControl fullWidth ref={inputRef}>
         <TextField
-          label={label}
+          label={useExternalLabel ? undefined : (label || undefined)}
           value={inputValue}
           onChange={handleInputChange}
           onClick={() => inputValue && setIsOpen(true)}
@@ -121,6 +123,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 2,
+              height: '45px'
             }
           }}
           InputProps={{

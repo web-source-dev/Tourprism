@@ -7,11 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 import { useToast } from '../ui/toast';
 
-// Define response interfaces
-interface SummaryResponse {
-  summaries: Array<unknown>;
-  success?: boolean;
-}
 
 interface CollaboratorResponse {
   collaborators: Array<unknown>;

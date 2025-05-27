@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         fetchUser();
       }
     }
-  }, [pathname]);
+  }, [pathname,isLoading]);
 
   // Utility function to check roles
   const hasRole = useCallback((role: string | string[]): boolean => {
