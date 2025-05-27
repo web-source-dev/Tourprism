@@ -606,26 +606,6 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
                   )}
                 </Box>
               </MenuItem>
-              <MenuItem value="management">
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-                  <Typography>Management</Typography>
-                  {recipientType === "management" && (
-                    <Box
-                      sx={{
-                        backgroundColor: '#4caf50',
-                        borderRadius: '50%',
-                        width: 20,
-                        height: 20,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <CheckIcon sx={{ color: 'white', fontSize: 16 }} />
-                    </Box>
-                  )}
-                </Box>
-              </MenuItem>
             </Select>
           </FormControl>
 
