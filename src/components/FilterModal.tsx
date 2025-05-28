@@ -3,12 +3,10 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions,
   IconButton,
   Typography,
   Box,
   Button,
-  Divider,
   useMediaQuery,
   useTheme
 } from '@mui/material';
@@ -45,20 +43,22 @@ const FilterModal: React.FC<FilterModalProps> = ({
   const handleClearFilters = () => {
     onClearFilters();
   };
-  const useIsMobile = () =>{
+  
+  const useIsMobile = () => {
     const theme = useTheme();
     return useMediaQuery(theme.breakpoints.down('sm'));
-    } 
+  } 
+  
   return (
     <Dialog 
       open={open} 
       onClose={onClose}
       fullWidth
-      maxWidth="sm"
       PaperProps={{
         sx: {
           width: useIsMobile() ? '100%' : 560,
           height: useIsMobile() ? '100%' : 'auto',
+          minHeight: useIsMobile() ? '100%' : 'auto',
           m: 0, // remove margins
           borderRadius: useIsMobile() ? 0 : 2,
           p: 2,
@@ -67,68 +67,69 @@ const FilterModal: React.FC<FilterModalProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ p: 0, mb: 0 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 2 }}>
-          <Typography variant="h6" component="div" fontWeight="500">
-            Filter By
-          </Typography>
-          <IconButton 
-            edge="end" 
-            onClick={onClose} 
-            aria-label="close"
-            sx={{ p: 1 }}
-          >
-            <CloseIcon />
-          </IconButton>
-        </Box>
+      <DialogTitle 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center',
+          p: 2,
+          fontWeight: 'bold',
+          textAlign: 'center'
+        }}
+      >
+        <Box></Box>
+        <Typography variant='h6' sx={{fontWeight:'500'}}>
+          Filter By
+        </Typography>
+        <IconButton 
+          edge="end" 
+          color="inherit" 
+          onClick={onClose}
+          sx={{ p: 1 }}
+        >
+          <CloseIcon />
+        </IconButton>
       </DialogTitle>
       
-      <DialogContent sx={{ px: 2, py: 1 }}>
-        <Box sx={{ pb: 2 }}>
-          <SummaryFilters 
-            filters={filters} 
-            onFilterChange={onFilterChange} 
-            locations={locations}
-            isModal={true}
-          />
-        </Box>
+      <DialogContent style={{padding: '0px', overflowY: 'auto', height: '300px', scrollbarWidth: 'none'}}>
+        <SummaryFilters 
+          filters={filters} 
+          onFilterChange={onFilterChange} 
+          locations={locations}
+          isModal={true}
+        />
       </DialogContent>
 
-      <Divider />
-      
-      <DialogActions sx={{ p: 2, display: 'flex', justifyContent: 'space-between' }}>
-        <Button 
-          onClick={handleApplyFilters}
+      <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Button
+          fullWidth
           variant="contained"
-          sx={{ 
-            backgroundColor: '#000', 
-            color: '#fff',
-            borderRadius: 20,
-            px: 4,
-            '&:hover': {
-              backgroundColor: '#333',
-            }
+          sx={{
+            bgcolor: 'black',
+            color: 'white',
+            '&:hover': { bgcolor: '#333' },
+            py: 1,
+            borderRadius: 5
           }}
+          onClick={handleApplyFilters}
         >
           Show Results
         </Button>
-        <Button 
-          onClick={handleClearFilters}
+        <Button
+          fullWidth
           variant="outlined"
-          sx={{ 
-            color: '#000',
-            borderColor: '#ccc',
-            borderRadius: 20,
-            px: 4,
-            '&:hover': {
-              borderColor: '#999',
-              backgroundColor: 'rgba(0,0,0,0.04)',
-            }
+          sx={{
+            color: '#616161',
+            border: '1px solid #e0e0e0',
+            '&:hover': { borderColor: '#616161', backgroundColor: 'rgba(0,0,0,0.04)' },
+            py: 1,
+            borderRadius: 5
           }}
+          onClick={handleClearFilters}
         >
           Clear All
         </Button>
-      </DialogActions>
+      </Box>
     </Dialog>
   );
 };

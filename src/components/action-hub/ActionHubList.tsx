@@ -26,10 +26,10 @@ const ActionHubList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [filterOpen, setFilterOpen] = useState<boolean>(false);
   const [filterOptions, setFilterOptions] = useState<FilterOptions>({
-    status: '',
-    team: '',
-    impactLevel: '',
-    dateRangeType: '',
+    status: 'new',
+    team: 'housekeeping',
+    impactLevel: 'high',
+    dateRangeType: 'this_week',
     dateRange: {
       startDate: null,
       endDate: null,
@@ -188,10 +188,10 @@ const ActionHubList: React.FC = () => {
 
   const handleClearFilters = () => {
     setFilterOptions({
-      status: '',
-      team: '',
-      impactLevel: '',
-      dateRangeType: '',
+      status: 'new',
+      team: 'housekeeping',
+      impactLevel: 'high',
+      dateRangeType: 'this_week',
       dateRange: {
         startDate: null,
         endDate: null,

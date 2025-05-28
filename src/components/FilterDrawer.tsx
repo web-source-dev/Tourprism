@@ -229,7 +229,7 @@ const FilterDrawer = ({
           height: useIsMobile() ? '100%' : 'auto',
           m: 0, // remove margins
           borderRadius: useIsMobile() ? 0 : 2,
-          p: 2,
+          py: 2,
           backgroundColor: 'white',
           color: 'black',
         },
@@ -363,7 +363,10 @@ const FilterDrawer = ({
             </Box>
           </>
         ) : (
-          <>
+          <Box sx={{
+            borderRadius: 2,
+            border: '1px solid #e0e0e0',}}>
+
             {/* Type Filter */}
             <Accordion
               expanded={expanded === 'type'}
@@ -371,29 +374,49 @@ const FilterDrawer = ({
               sx={{
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
-                borderBottom: '1px solid #e0e0e0'
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative',
+                border:expanded === 'type' ? '1px solid #e0e0e0' : '',
+                borderRadius:expanded === 'type' ? 2 : '',
+                py:expanded === 'type' ? 0: ''
               }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={{ px: 0 }}
+                sx={{ px: 2,backgroundColor: 'white',
+                  zIndex: 4,
+                  py:0,
+                  borderRadius:2,
+                borderBottom: '1px solid #e0e0e0',
+                 }}
               >
-                <Box sx={{ width: '100%' }}>
+                <Box sx={{ width: '100%',  }}>
                   <Typography variant="body2" color="text.secondary">Type</Typography>
                   <Typography variant="body1" fontWeight="medium">{getSelectedIncidentType()}</Typography>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              <AccordionDetails sx={{ 
+                px: 1, 
+                pt: 0,
+                mt:2,
+                borderRadius:2,
+                position: 'absolute',
+                width: '100%',
+                backgroundColor: 'white',
+                boxShadow:4,
+                zIndex: 5,
+              }}>
                 <List sx={{ width: '100%', p: 0 }}>
                   {INCIDENT_TYPES.map((type) => (
                     <ListItem
                       key={type}
                       onClick={() => handleIncidentTypeChange(type)}
                       sx={{
-                        py: 0.5,
                         px: 0,
                         cursor: 'pointer',
-                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                        borderBottom:'1px solid rgb(221,221,221)',
+                        background:'white',
+                        '&:hover': { backgroundColor: 'rgb(255, 255, 255)' },
                         display: 'flex',
                         justifyContent: 'space-between'
                       }}
@@ -416,12 +439,21 @@ const FilterDrawer = ({
                 sx={{
                   boxShadow: 'none',
                   '&:before': { display: 'none' },
-                  borderBottom: '1px solid #e0e0e0'
+                  borderBottom: '1px solid #e0e0e0',
+                  position: 'relative',
+                  border:expanded === 'location' ? '1px solid #e0e0e0' : '',
+                  borderRadius:expanded === 'location' ? 2 : '',
+                  py:expanded === 'location' ? 0: ''
                 }}
               >
                 <AccordionSummary
                   expandIcon={<ExpandMoreIcon />}
-                  sx={{ px: 0 }}
+                  sx={{ px: 2,backgroundColor: 'white',
+                    zIndex: 4,
+                    py:0,
+                    borderRadius:2,
+                  borderBottom: '1px solid #e0e0e0',
+                }}
                 >
                   <Box sx={{ width: '100%' }}>
                     <Typography variant="body2" color="text.secondary">Location</Typography>
@@ -437,7 +469,17 @@ const FilterDrawer = ({
                     </Box>
                   </Box>
                 </AccordionSummary>
-                <AccordionDetails sx={{ px: 0, pt: 0 }}>
+                <AccordionDetails sx={{ 
+                    px: 1, 
+                    pt: 4,
+                    mt:2,
+                    borderRadius:2,
+                    position: 'absolute',
+                    width: '100%',
+                    backgroundColor: 'white',
+                    boxShadow:4,
+                    zIndex: 5,
+                 }}>
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {isUsingCurrentLocation ? (
                       <Button
@@ -483,7 +525,7 @@ const FilterDrawer = ({
                     )}
 
                     {/* Distance slider */}
-                    <Box sx={{ px: 1, mt: 1 }}>
+                    <Box sx={{ px: 1, mt: 1 , width: '98%'}}>
                       <Typography variant="body2" gutterBottom>Distance (km)</Typography>
                       <Slider
                         value={filters.distance || 50}
@@ -536,29 +578,48 @@ const FilterDrawer = ({
               sx={{
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
-                borderBottom: '1px solid #e0e0e0'
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative',
+                border:expanded === 'date' ? '1px solid #e0e0e0' : '',
+                borderRadius:expanded === 'date' ? 2 : '',
+                py:expanded === 'date' ? 0: ''
               }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={{ px: 0 }}
+                sx={{  px: 2,backgroundColor: 'white',
+                  zIndex: 4,
+                  py:0,
+                  borderRadius:2,
+                borderBottom: '1px solid #e0e0e0',}}
               >
                 <Box sx={{ width: '100%' }}>
                   <Typography variant="body2" color="text.secondary">Date</Typography>
                   <Typography variant="body1" fontWeight="medium">{getSelectedDateRange()}</Typography>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              <AccordionDetails sx={{ 
+                 px: 1, 
+                 pt: 0,
+                 mt:2,
+                 borderRadius:2,
+                 position: 'absolute',
+                 width: '100%',
+                 backgroundColor: 'white',
+                 boxShadow:4,
+                 zIndex: 5,
+               }}>
                 <List sx={{ width: '100%', p: 0 }}>
                   {DATE_RANGES.map((option) => (
                     <ListItem
                       key={option.value}
                       onClick={() => handleTimeRangeChange(option.value)}
                       sx={{
-                        py: 0.5,
                         px: 0,
                         cursor: 'pointer',
-                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                        borderBottom:'1px solid rgb(221,221,221)',
+                        background:'white',
+                        '&:hover': { backgroundColor: 'rgb(255, 255, 255)' },
                         display: 'flex',
                         justifyContent: 'space-between'
                       }}
@@ -614,27 +675,46 @@ const FilterDrawer = ({
               sx={{
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
-                borderBottom: '1px solid #e0e0e0'
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative',
+                border:expanded === 'impactLevel' ? '1px solid #e0e0e0' : '',
+                borderRadius:expanded === 'impactLevel' ? 2 : '',
+                py:expanded === 'impactLevel' ? 0: ''
               }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={{ px: 0 }}
+                sx={{ px: 2,backgroundColor: 'white',
+                  zIndex: 4,
+                  py:0,
+                  borderRadius:2,
+                borderBottom: '1px solid #e0e0e0',}}
               >
                 <Box sx={{ width: '100%' }}>
                   <Typography variant="body2" color="text.secondary">Impact Level</Typography>
                   <Typography variant="body1" fontWeight="medium">{getSelectedImpactLevel()}</Typography>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              <AccordionDetails sx={{ 
+                 px: 1, 
+                 pt: 0,
+                 mt:2,
+                 borderRadius:2,
+                 position: 'absolute',
+                 width: '100%',
+                 backgroundColor: 'white',
+                 boxShadow:4,
+                 zIndex: 5,
+              }}>
                 <List sx={{ width: '100%', p: 0 }}>
                   <ListItem
                     onClick={() => handleImpactLevelChange('')}
                     sx={{
-                      py: 0.5,
                       px: 0,
                       cursor: 'pointer',
-                      '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                      borderBottom:'1px solid rgb(221,221,221)',
+                      background:'white',
+                      '&:hover': { backgroundColor: 'rgb(255, 255, 255)' },
                       display: 'flex',
                       justifyContent: 'space-between'
                     }}
@@ -648,10 +728,11 @@ const FilterDrawer = ({
                       key={level.value}
                       onClick={() => handleImpactLevelChange(level.value)}
                       sx={{
-                        py: 0.5,
                         px: 0,
                         cursor: 'pointer',
-                        '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
+                        borderBottom:'1px solid rgb(221,221,221)',
+                        background:'white',
+                        '&:hover': { backgroundColor: 'rgb(255, 255, 255)' },
                         display: 'flex',
                         justifyContent: 'space-between'
                       }}
@@ -672,19 +753,37 @@ const FilterDrawer = ({
               sx={{
                 boxShadow: 'none',
                 '&:before': { display: 'none' },
-                borderBottom: '1px solid #e0e0e0'
+                borderBottom: '1px solid #e0e0e0',
+                position: 'relative',
+                border:expanded === 'sortBy' ? '1px solid #e0e0e0' : '',
+                borderRadius:expanded === 'sortBy' ? 2 : '',
+                py:expanded === 'sortBy' ? 0: ''
               }}
             >
               <AccordionSummary
                 expandIcon={<ExpandMoreIcon />}
-                sx={{ px: 0 }}
+                sx={{ px: 2,backgroundColor: 'white',
+                  zIndex: 4,
+                  py:0,
+                  borderRadius:2,
+                borderBottom: '1px solid #e0e0e0',}}
               >
                 <Box sx={{ width: '100%' }}>
                   <Typography variant="body2" color="text.secondary">Sort by</Typography>
                   <Typography variant="body1" fontWeight="medium">{getSelectedSortOption()}</Typography>
                 </Box>
               </AccordionSummary>
-              <AccordionDetails sx={{ px: 0, pt: 0 }}>
+              <AccordionDetails sx={{ 
+                px: 1, 
+                pt: 0,
+                mt:2,
+                borderRadius:2,
+                position: 'absolute',
+                width: '100%',
+                backgroundColor: 'white',
+                boxShadow:4,
+                zIndex: 5,
+              }}>
                 <List sx={{ width: '100%', p: 0 }}>
                   {SORT_OPTIONS.map((option) => (
                     <ListItem
@@ -707,7 +806,7 @@ const FilterDrawer = ({
                 </List>
               </AccordionDetails>
             </Accordion>
-          </>
+          </Box>
         )}
         {/* Action Buttons */}
         <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>

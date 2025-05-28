@@ -11,12 +11,13 @@ import {
   IconButton,
   List,
   ListItem,
-  ListItemIcon,
   ListItemText,
-  Collapse,
   useTheme,
   useMediaQuery,
   Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { 
   LocalizationProvider, 
@@ -24,8 +25,6 @@ import {
 } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import CloseIcon from '@mui/icons-material/Close';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAuth } from '@/context/AuthContext';
 import { startOfWeek, endOfWeek } from 'date-fns';
@@ -49,6 +48,30 @@ interface FilterModalProps {
   readonly?: boolean;
 }
 
+// Create a green circle with white tick icon component for selected items
+const SelectedIcon = () => (
+  <Box sx={{
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: 20,
+    height: 20,
+    borderRadius: '50%',
+    bgcolor: '#4caf50'
+  }}>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z" fill="white" />
+    </svg>
+  </Box>
+);
+
+// Create a custom expand icon component
+const ExpandMoreIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M7.41 8.59L12 13.17L16.59 8.59L18 10L12 16L6 10L7.41 8.59Z" fill="#616161" />
+  </svg>
+);
+
 const FilterModal: React.FC<FilterModalProps> = ({
   open,
   onClose,
@@ -60,7 +83,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     ...filterOptions,
     dateRangeType: filterOptions.dateRangeType || '',
   });
-  const [openSection, setOpenSection] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | false>(false);
   const { isSubscribed } = useAuth();
 
   // Update local state when props change
@@ -71,8 +94,10 @@ const FilterModal: React.FC<FilterModalProps> = ({
     });
   }, [filterOptions]);
 
-  const toggleSection = (section: string) => {
-    setOpenSection(openSection === section ? null : section);
+  const handleAccordionChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+    if (!readonly) {
+      setExpanded(isExpanded ? panel : false);
+    }
   };
 
   const handleStatusChange = (status: string) => {
@@ -140,9 +165,9 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const handleClearAll = () => {
     setFilters({
-      status: '',
-      team: '',
-      impactLevel: '',
+      status: 'new',
+      team: 'housekeeping',
+      impactLevel: 'high',
       dateRangeType: 'this_week',
       dateRange: {
         startDate: null,
@@ -156,8 +181,41 @@ const FilterModal: React.FC<FilterModalProps> = ({
     onClose();
   };
 
+  const getSelectedStatus = () => {
+    if (!filters.status) return 'All';
+    const statusMap: {[key: string]: string} = {
+      'new': 'New',
+      'in_progress': 'In Progress',
+      'handled': 'Resolved',
+      'dismissed': 'Dismissed'
+    };
+    return statusMap[filters.status] || filters.status;
+  };
+
+  const getSelectedTeam = () => {
+    if (!filters.team) return 'All';
+    const teamMap: {[key: string]: string} = {
+      'housekeeping': 'Housekeeping',
+      'frontdesk': 'Front Desk',
+      'unassigned': 'Unassigned'
+    };
+    return teamMap[filters.team] || filters.team;
+  };
+
+  const getSelectedImpactLevel = () => {
+    if (!filters.impactLevel) return 'All';
+    return filters.impactLevel.charAt(0).toUpperCase() + filters.impactLevel.slice(1);
+  };
+
+  const getSelectedDateRange = () => {
+    if (filters.dateRangeType === 'this_week') return 'This Week';
+    if (filters.dateRangeType === 'custom') return 'Custom Range';
+    return 'All';
+  };
+
   const renderStatusOptions = () => {
     const statusOptions = [
+      { value: '', label: 'All' },
       { value: 'new', label: 'New', color: '#2196f3' },
       { value: 'in_progress', label: 'In Progress', color: '#ff9800' },
       { value: 'handled', label: 'Resolved', color: '#4caf50' },
@@ -165,38 +223,40 @@ const FilterModal: React.FC<FilterModalProps> = ({
     ];
 
     return (
-      <List sx={{ py: 0 }}>
+      <List sx={{ width: '100%', p: 0 }}>
         {statusOptions.map((option) => (
           <ListItem 
             key={option.value}
             onClick={() => !readonly && handleStatusChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid rgb(226, 226, 226)',
+              px: 0,
               cursor: readonly ? 'default' : 'pointer',
-              bgcolor: filters.status === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               '&:hover': {
-                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.08)',
-              }
+                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
+              },
+              display: 'flex',
+              justifyContent: 'space-between'
             }}
           >
-            <ListItemIcon sx={{ minWidth: 36 }}>
-              <Box 
-                component="span" 
-                sx={{ 
-                  display: 'inline-block',
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  bgcolor: option.color,
-                  mr: 1
-                }} 
-              />
-            </ListItemIcon>
-            <ListItemText primary={option.label} />
-            {filters.status === option.value && (
-              <CheckCircleIcon color="success" fontSize="small" />
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              {option.color && (
+                <Box 
+                  component="span" 
+                  sx={{ 
+                    display: 'inline-block',
+                    width: 12,
+                    height: 12,
+                    borderRadius: '50%',
+                    bgcolor: option.color,
+                    mr: 1
+                  }} 
+                />
+              )}
+              <ListItemText primary={option.label} />
+            </Box>
+            {filters.status === option.value && <SelectedIcon />}
           </ListItem>
         ))}
       </List>
@@ -211,25 +271,25 @@ const FilterModal: React.FC<FilterModalProps> = ({
     ];
 
     return (
-      <List sx={{ py: 0 }}>
+      <List sx={{ width: '100%', p: 0 }}>
         {teamOptions.map((option) => (
           <ListItem 
             key={option.value}
             onClick={() => !readonly && handleTeamChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid rgb(226, 226, 226)',
+              px: 0,
               cursor: readonly ? 'default' : 'pointer',
-              bgcolor: filters.team === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               '&:hover': {
-                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.08)',
-              }
+                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
+              },
+              display: 'flex',
+              justifyContent: 'space-between'
             }}
           >
             <ListItemText primary={option.label} />
-            {filters.team === option.value && (
-              <CheckCircleIcon color="success" fontSize="small" />
-            )}
+            {filters.team === option.value && <SelectedIcon />}
           </ListItem>
         ))}
       </List>
@@ -238,31 +298,32 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const renderImpactLevelOptions = () => {
     const impactOptions = [
+      { value: '', label: 'All' },
       { value: 'low', label: 'Low' },
       { value: 'moderate', label: 'Moderate' },
       { value: 'high', label: 'High' },
     ];
 
     return (
-      <List sx={{ py: 0 }}>
+      <List sx={{ width: '100%', p: 0 }}>
         {impactOptions.map((option) => (
           <ListItem 
             key={option.value}
             onClick={() => !readonly && handleImpactLevelChange(option.value)}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid rgb(226, 226, 226)',
+              px: 0,
               cursor: readonly ? 'default' : 'pointer',
-              bgcolor: filters.impactLevel === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               '&:hover': {
-                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.08)',
-              }
+                bgcolor: readonly ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
+              },
+              display: 'flex',
+              justifyContent: 'space-between'
             }}
           >
             <ListItemText primary={option.label} />
-            {filters.impactLevel === option.value && (
-              <CheckCircleIcon color="success" fontSize="small" />
-            )}
+            {filters.impactLevel === option.value && <SelectedIcon />}
           </ListItem>
         ))}
       </List>
@@ -280,42 +341,40 @@ const FilterModal: React.FC<FilterModalProps> = ({
     ];
 
     return (
-      <List sx={{ py: 0 }}>
+      <List sx={{ width: '100%', p: 0 }}>
         {dateRangeOptions.map((option) => (
           <ListItem 
             key={option.value}
-            onClick={() => !readonly && !option.locked && handleDateRangeTypeChange(option.value as 'this_week' | 'custom')}
+            onClick={() => !readonly && !option.locked && handleDateRangeTypeChange(option.value as 'this_week' | 'custom' | '')}
             sx={{ 
               py: 1.5,
-              borderBottom: '1px solid rgb(226, 226, 226)',
+              px: 0,
               cursor: (readonly || option.locked) ? 'default' : 'pointer',
-              bgcolor: filters.dateRangeType === option.value ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+              borderBottom: '1px solid rgb(226, 226, 226)',
               '&:hover': {
-                bgcolor: (readonly || option.locked) ? 'transparent' : 'rgba(0, 0, 0, 0.08)',
-              }
+                bgcolor: (readonly || option.locked) ? 'transparent' : 'rgba(0, 0, 0, 0.04)',
+              },
+              display: 'flex',
+              justifyContent: 'space-between'
             }}
           >
-            <ListItemText 
-              primary={
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  {option.label}
-                  {option.locked && (
-                    <Tooltip title="Subscribe to unlock custom date range filtering">
-                      <LockOutlinedIcon sx={{ ml: 1, fontSize: 16, color: 'text.secondary' }} />
-                    </Tooltip>
-                  )}
-                </Box>
-              } 
-            />
-            {filters.dateRangeType === option.value && (
-              <CheckCircleIcon color="success" fontSize="small" />
-            )}
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <ListItemText 
+                primary={option.label}
+              /> 
+              {option.locked && (
+                <Tooltip title="Subscribe to unlock custom date range filtering">
+                  <LockOutlinedIcon sx={{ ml: 1, fontSize: 16, color: 'text.secondary' }} />
+                </Tooltip>
+              )}
+            </Box>
+            {filters.dateRangeType === option.value && <SelectedIcon />}
           </ListItem>
         ))}
         
         {/* Custom date inputs - only show if 'custom' is selected and user is subscribed */}
         {filters.dateRangeType === 'custom' && isSubscribed && (
-          <Box sx={{ p: 2, display: 'flex', gap: 2 }}>
+          <Box sx={{ py: 2, display: 'flex', gap: 2 }}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker
                 label="Start Date"
@@ -349,6 +408,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       </List>
     );
   };
+
   const useIsMobile = () => {
     const theme = useTheme();
     return useMediaQuery(theme.breakpoints.down('sm'));
@@ -396,146 +456,186 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers sx={{ px: 2, py: 1,border:'1px solid rgb(226, 226, 226)' , borderRadius:2 }}>
+      <DialogContent style={{padding: '0px' ,overflowY: 'auto',height: '300px', border: '1px solid #e0e0e0' , borderRadius: '10px', scrollbarWidth: 'none'}}>
         {/* Status Filter */}
-        <Box 
-          sx={{ 
-            py: 1, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'status' ? 'none' : '1px solid rgb(226, 226, 226)',
+        <Accordion
+          expanded={expanded === 'status'}
+          onChange={handleAccordionChange('status')}
+          sx={{
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+            borderBottom: '1px solid #e0e0e0',
+            position: 'relative',
+            border: expanded === 'status' ? '1px solid #e0e0e0' : '',
+            borderRadius: expanded === 'status' ? 2 : '',
+            py: expanded === 'status' ? 0 : ''
           }}
-          onClick={() => !readonly && toggleSection('status')}
         >
-          <Box>
-            <Typography fontWeight="bold" variant="subtitle1">
-              Status
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {filters.status ? filters.status.charAt(0).toUpperCase() + filters.status.slice(1).replace('_', ' ') : 'Any'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <KeyboardArrowDownIcon 
-              sx={{ 
-                transform: openSection === 'status' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-                opacity: readonly ? 0.5 : 1
-              }} 
-            />
-          </Box>
-        </Box>
-        <Collapse in={openSection === 'status'}>
-          {renderStatusOptions()}
-        </Collapse>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              px: 2, 
+              backgroundColor: 'white',
+              zIndex: 4,
+              py: 0,
+              borderRadius: 2,
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body2" color="text.secondary">Status</Typography>
+              <Typography variant="body1" fontWeight="medium">{getSelectedStatus()}</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ 
+            px: 2, 
+            pt: 0,
+            mt: 2,
+            borderRadius: 2,
+            position: 'absolute',
+            width: '100%',
+            backgroundColor: 'white',
+            boxShadow: 4,
+            zIndex: 5,
+          }}>
+            {renderStatusOptions()}
+          </AccordionDetails>
+        </Accordion>
 
         {/* Team Filter */}
-        <Box 
-          sx={{ 
-            py: 1, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'team' ? 'none' : '1px solid rgb(226, 226, 226)',
+        <Accordion
+          expanded={expanded === 'team'}
+          onChange={handleAccordionChange('team')}
+          sx={{
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+            borderBottom: '1px solid #e0e0e0',
+            position: 'relative',
+            border: expanded === 'team' ? '1px solid #e0e0e0' : '',
+            borderRadius: expanded === 'team' ? 2 : '',
+            py: expanded === 'team' ? 0 : ''
           }}
-          onClick={() => !readonly && toggleSection('team')}
         >
-          <Box>
-            <Typography fontWeight="bold" variant="subtitle1">
-              Team
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {filters.team ? filters.team.charAt(0).toUpperCase() + filters.team.slice(1) : 'Any'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <KeyboardArrowDownIcon 
-              sx={{ 
-                transform: openSection === 'team' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-                opacity: readonly ? 0.5 : 1
-              }} 
-            />
-          </Box>
-        </Box>
-        <Collapse in={openSection === 'team'}>
-          {renderTeamOptions()}
-        </Collapse>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              px: 2, 
+              backgroundColor: 'white',
+              zIndex: 4,
+              py: 0,
+              borderRadius: 2,
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body2" color="text.secondary">Team</Typography>
+              <Typography variant="body1" fontWeight="medium">{getSelectedTeam()}</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ 
+            px: 2, 
+            pt: 0,
+            mt: 2,
+            borderRadius: 2,
+            position: 'absolute',
+            width: '100%',
+            backgroundColor: 'white',
+            boxShadow: 4,
+            zIndex: 5,
+          }}>
+            {renderTeamOptions()}
+          </AccordionDetails>
+        </Accordion>
 
         {/* Impact Level Filter */}
-        <Box 
-          sx={{ 
-            py: 1, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'impact' ? 'none' : '1px solid rgb(226, 226, 226)',
+        <Accordion
+          expanded={expanded === 'impact'}
+          onChange={handleAccordionChange('impact')}
+          sx={{
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+            borderBottom: '1px solid #e0e0e0',
+            position: 'relative',
+            border: expanded === 'impact' ? '1px solid #e0e0e0' : '',
+            borderRadius: expanded === 'impact' ? 2 : '',
+            py: expanded === 'impact' ? 0 : ''
           }}
-          onClick={() => !readonly && toggleSection('impact')}
         >
-          <Box>
-            <Typography fontWeight="bold" variant="subtitle1">
-              Impact Level
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {filters.impactLevel ? filters.impactLevel.charAt(0).toUpperCase() + filters.impactLevel.slice(1) : 'Any'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <KeyboardArrowDownIcon 
-              sx={{ 
-                transform: openSection === 'impact' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-                opacity: readonly ? 0.5 : 1
-              }} 
-            />
-          </Box>
-        </Box>
-        <Collapse in={openSection === 'impact'}>
-          {renderImpactLevelOptions()}
-        </Collapse>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              px: 2, 
+              backgroundColor: 'white',
+              zIndex: 4,
+              py: 0,
+              borderRadius: 2,
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body2" color="text.secondary">Impact Level</Typography>
+              <Typography variant="body1" fontWeight="medium">{getSelectedImpactLevel()}</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ 
+            px: 2, 
+            pt: 0,
+            mt: 2,
+            borderRadius: 2,
+            position: 'absolute',
+            width: '100%',
+            backgroundColor: 'white',
+            boxShadow: 4,
+            zIndex: 5,
+          }}>
+            {renderImpactLevelOptions()}
+          </AccordionDetails>
+        </Accordion>
 
         {/* Date Range Filter */}
-        <Box 
-          sx={{ 
-            py: 1, 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'space-between',
-            cursor: readonly ? 'default' : 'pointer',
-            borderBottom: openSection === 'date' ? 'none' : '1px solid rgb(226, 226, 226)',
+        <Accordion
+          expanded={expanded === 'date'}
+          onChange={handleAccordionChange('date')}
+          sx={{
+            boxShadow: 'none',
+            '&:before': { display: 'none' },
+            borderBottom: '1px solid #e0e0e0',
+            position: 'relative',
+            border: expanded === 'date' ? '1px solid #e0e0e0' : '',
+            borderRadius: expanded === 'date' ? 2 : '',
+            py: expanded === 'date' ? 0 : ''
           }}
-          onClick={() => !readonly && toggleSection('date')}
         >
-          <Box>
-            <Typography fontWeight="bold" variant="subtitle1">
-              Date Range
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {filters.dateRangeType === 'this_week' 
-                ? 'This Week'
-                : filters.dateRangeType === 'custom' && (filters.dateRange.startDate || filters.dateRange.endDate)
-                  ? 'Custom Range'
-                  : 'Any'}
-            </Typography>
-          </Box>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <KeyboardArrowDownIcon 
-              sx={{ 
-                transform: openSection === 'date' ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: 'transform 0.3s',
-                opacity: readonly ? 0.5 : 1
-              }} 
-            />
-          </Box>
-        </Box>
-        <Collapse in={openSection === 'date'}>
-          {renderDateRangeOptions()}
-        </Collapse>
+          <AccordionSummary
+            expandIcon={<ExpandMoreIcon />}
+            sx={{ 
+              px: 2, 
+              backgroundColor: 'white',
+              zIndex: 4,
+              py: 0,
+              borderRadius: 2,
+              borderBottom: '1px solid #e0e0e0',
+            }}
+          >
+            <Box sx={{ width: '100%' }}>
+              <Typography variant="body2" color="text.secondary">Date Range</Typography>
+              <Typography variant="body1" fontWeight="medium">{getSelectedDateRange()}</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails sx={{ 
+            px: 2, 
+            pt: 0,
+            mt: 2,
+            borderRadius: 2,
+            position: 'absolute',
+            width: '100%',
+            backgroundColor: 'white',
+            boxShadow: 4,
+            zIndex: 5,
+          }}>
+            {renderDateRangeOptions()}
+          </AccordionDetails>
+        </Accordion>
       </DialogContent>
 
       <Box sx={{ p: 2, display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -548,7 +648,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
             color: 'white',
             '&:hover': { bgcolor: '#333' },
             py: 1,
-            borderRadius: 2
+            borderRadius: 5
           }}
           onClick={handleApplyFilters}
         >
@@ -556,14 +656,14 @@ const FilterModal: React.FC<FilterModalProps> = ({
         </Button>
         <Button
           fullWidth
-          variant="text"
+          variant="outlined"
           disabled={readonly}
           sx={{
-            color: 'black',
-            border: '1px solid rgb(226, 226, 226)',
-            '&:hover': { bgcolor: 'transparent' },
+            color: '#616161',
+            border: '1px solid #e0e0e0',
+            '&:hover': { borderColor: '#616161', backgroundColor: 'rgba(0,0,0,0.04)' },
             py: 1,
-            borderRadius: 2
+            borderRadius: 5
           }}
           onClick={handleClearAll}
         >
