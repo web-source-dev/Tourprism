@@ -358,13 +358,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               justifyContent: 'space-between'
             }}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <ListItemText 
                 primary={option.label}
               /> 
               {option.locked && (
                 <Tooltip title="Subscribe to unlock custom date range filtering">
-                  <LockOutlinedIcon sx={{ ml: 1, fontSize: 16, color: 'text.secondary' }} />
+                  <LockOutlinedIcon sx={{ fontSize: 16, color: '#FFD700' }} />
                 </Tooltip>
               )}
             </Box>
