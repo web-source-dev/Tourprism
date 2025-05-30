@@ -219,7 +219,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
 
         {/* Display Banner for authenticated users */}
 
-        <Container component="main" sx={{ flex: 1, py: 0, px: { xs: 2, sm: 3, md: 4 } }}>
+        <Container component="main" sx={{ flex: 1, py: 2, px: { xs: 2, sm: 3, md: 4 } }}>
 
           {children}
         </Container>

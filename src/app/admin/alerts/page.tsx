@@ -133,6 +133,9 @@ export default function AlertsManagement() {
     ? "You don't have permission to duplicate alerts"
     : "";
 
+  // Add a ref to track previous request params
+  const prevRequestParams = React.useRef<string>('');
+
   const fetchAlerts = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -220,10 +223,18 @@ export default function AlertsManagement() {
         params.sortOrder = order;
       }
       
-      console.log('Sending params to backend:', params);
+      // Check if params have changed to avoid duplicate requests
+      const paramsString = JSON.stringify(params);
+      if (paramsString === prevRequestParams.current && alerts?.length > 0) {
+        setLoading(false);
+        return; // Skip duplicate requests
+      }
       
-      const { alerts, totalCount } = await getAllAlertsAdmin(params);
-      setAlerts(alerts);
+      console.log('Sending params to backend:', params);
+      prevRequestParams.current = paramsString;
+      
+      const { alerts: fetchedAlerts, totalCount } = await getAllAlertsAdmin(params);
+      setAlerts(fetchedAlerts);
       setTotalCount(totalCount);
     } catch (error) {
       console.error('Error fetching alerts:', error);
@@ -236,17 +247,40 @@ export default function AlertsManagement() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, searchQuery, activeFilters]);
+  }, [page, rowsPerPage, searchQuery, activeFilters, alerts.length]);
 
+  // Use a ref to track if component is mounted
+  const isMounted = React.useRef(true);
+  
+  // Clean up on unmount
   useEffect(() => {
-    // This is to prevent an infinite update loop
-    // We need a stable dependency for fetchAlerts
+    // Initial data fetch
+    fetchAlerts();
+    
+    return () => {
+      isMounted.current = false;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Add separate effect for handling filter changes
+  useEffect(() => {
+    // Skip initial render
+    if (prevRequestParams.current === '') {
+      return;
+    }
+    
+    // Add a debounce to prevent too many API calls
     const handler = setTimeout(() => {
-      fetchAlerts();
-    }, 0);
+      if (isMounted.current) {
+        fetchAlerts();
+      }
+    }, 300); // 300ms debounce
     
     return () => clearTimeout(handler);
-  }, [fetchAlerts]);
+  // Include only necessary dependencies to prevent unnecessary re-renders
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, rowsPerPage, searchQuery, JSON.stringify(activeFilters)]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);

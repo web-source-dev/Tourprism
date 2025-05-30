@@ -129,10 +129,8 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
     return (
       <Box
         sx={{
-          bgcolor: 'white',
-          border: '1px solid #EAEAEA',
+          bgcolor: 'transparent',
           borderRadius: 2,
-          p: 3,
           mb: 2,
           display: 'flex',
           justifyContent: 'center',
@@ -148,11 +146,13 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
   return (
     <Box
       sx={{
-        bgcolor: 'white',
-        border: '1px solid #EAEAEA',
+        bgcolor: 'transparent',
         borderRadius: 2,
-        p: 3,
+        p: 1,
         mb: 2,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%'
       }}
     >
       {/* Progress circle */}
@@ -160,7 +160,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-around',
+          gap: 2,
           mb: 2,
         }}
       >
@@ -202,14 +202,14 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
           </Box>
         </Box>
 
-        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "18px", mb: 0.5 }}>
+        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: "16px", mb: 0.5 }}>
           Unlock Your Features
         </Typography>
       </Box>
 
       {/* Feature list */}
-      <Box sx={{ mb: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+      <Box sx={{ mb: 2, flex: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
           {featureStatus.accountCreated ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
@@ -221,7 +221,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
           )}
           <Typography variant="body2">Account Created</Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
           {featureStatus.personalizedContent ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
@@ -235,7 +235,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
             View personalized content
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
           {featureStatus.weeklyForecast ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
@@ -249,7 +249,7 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
             Get weekly forecast
           </Typography>
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1 }}>
           {featureStatus.teamMembers ? (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M0.833984 7.99998C0.833984 11.958 4.04265 15.1666 8.00065 15.1666C11.9587 15.1666 15.1673 11.958 15.1673 7.99998C15.1673 4.04198 11.9587 0.833313 8.00065 0.833313C4.04265 0.833313 0.833984 4.04198 0.833984 7.99998ZM11.118 5.50864C11.3893 5.75731 11.4073 6.1793 11.1587 6.45063L7.49199 10.4506C7.36933 10.5846 7.19665 10.6626 7.01532 10.6666C6.83332 10.6706 6.65798 10.6 6.52931 10.4713L4.86265 8.80467C4.60198 8.54467 4.60198 8.12196 4.86265 7.86196C5.12265 7.60129 5.54532 7.60129 5.80532 7.86196L6.97998 9.03598L10.176 5.54933C10.4246 5.278 10.8467 5.25997 11.118 5.50864Z" fill="#056CF2" />
@@ -277,6 +277,9 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
             bgcolor: '#0055DD',
           },
           boxShadow: 'none',
+          mt: 'auto',
+          position: 'sticky',
+          bottom: 0
         }}
       >
         Complete Profile

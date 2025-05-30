@@ -480,6 +480,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               py: 0,
               borderRadius: 2,
               borderBottom: '1px solid #e0e0e0',
+              minHeight: '64px',
+              height: '64px',
+              '& .MuiAccordionSummary-content': {
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center'
+              }
             }}
           >
             <Box sx={{ width: '100%' }}>
@@ -525,6 +532,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               py: 0,
               borderRadius: 2,
               borderBottom: '1px solid #e0e0e0',
+              minHeight: '64px',
+              height: '64px',
+              '& .MuiAccordionSummary-content': {
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center'
+              }
             }}
           >
             <Box sx={{ width: '100%' }}>
@@ -570,6 +584,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               py: 0,
               borderRadius: 2,
               borderBottom: '1px solid #e0e0e0',
+              minHeight: '64px',
+              height: '64px',
+              '& .MuiAccordionSummary-content': {
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center'
+              }
             }}
           >
             <Box sx={{ width: '100%' }}>
@@ -615,6 +636,13 @@ const FilterModal: React.FC<FilterModalProps> = ({
               py: 0,
               borderRadius: 2,
               borderBottom: '1px solid #e0e0e0',
+              minHeight: '64px',
+              height: '64px',
+              '& .MuiAccordionSummary-content': {
+                margin: '0',
+                display: 'flex',
+                alignItems: 'center'
+              }
             }}
           >
             <Box sx={{ width: '100%' }}>

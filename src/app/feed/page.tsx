@@ -1195,12 +1195,26 @@ export default function Feed() {
                 sm: 'repeat(2, 1fr)',
                 md: 'repeat(3, 1fr)'
               },
-              gap: 2,
-              mt: 2
+              gap: 0,
+              mt: 2,
+              borderBottom: 'none', // Remove bottom border from container
+              borderRight: 'none', // Remove right border from container
+              borderRadius: 2,
+              overflow: 'hidden'
             }}>
               {/* First position: Feature Card based on auth state */}
               {isAuthenticated && userProfile && (!userProfile.isProfileComplete) ? (
-                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
+                <Box sx={{ 
+                  gridColumn: { xs: '1', sm: '1', md: '1' }, 
+                  position: 'relative',
+                  borderBottom: '1px solid #E0E1E2',
+                  borderRight: { 
+                    xs: 'none', 
+                    sm: '1px solid #E0E1E2' 
+                  },
+                  borderTop: 'none',
+                  p: 2
+                }}>
                   <IconButton
                     onClick={() => handleDismissCard('unlock')}
                     sx={{
@@ -1230,7 +1244,18 @@ export default function Feed() {
                   />
                 </Box>
               ) : !isAuthenticated ? (
-                <Box sx={{ gridColumn: { xs: '1', sm: '1', md: '1' }, position: 'relative' }}>
+                <Box sx={{ 
+                  gridColumn: { xs: '1', sm: '1', md: '1' }, 
+                  position: 'relative',
+                  borderBottom: '1px solid #E0E1E2',
+                  borderRight: { 
+                    xs: 'none', 
+                    sm: '1px solid #E0E1E2' 
+                  },
+                  borderTop: 'none',
+                  pr: 2,
+                  pt: 2
+                }}>
                   <IconButton
                     onClick={() => handleDismissCard('access')}
                     sx={{
@@ -1261,12 +1286,22 @@ export default function Feed() {
                     sx={{
                       p: 2,
                       bgcolor: 'transparent',
-                      borderRadius: 2,
+                      borderRadius: 0,
                       boxShadow: 'none',
-                      border: '1px solid #E0E0E0',
                       height: '100%',
                       display: 'flex',
-                      flexDirection: 'column'
+                      flexDirection: 'column',
+                      borderTop: 'none',
+                      borderBottom: {
+                        xs: alerts.length === 1 ? 'none' : '1px solid #E0E1E2',
+                        sm: alerts.length <= 2 ? 'none' : '1px solid #E0E1E2',
+                        md: alerts.length <= 3 ? 'none' : '1px solid #E0E1E2'
+                      },
+                      borderRight: { 
+                        xs: 'none', 
+                        sm: alerts.length === 1 || alerts.length === 3 ? 'none' : '1px solid #E0E1E2',
+                        md: ((alerts.length % 3) === 1) ? 'none' : '1px solid #E0E1E2'
+                      }
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -1283,7 +1318,6 @@ export default function Feed() {
                           px: 1.5,
                           py: 0.5,
                           borderRadius: 2,
-                          border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
                           '&:hover': {
@@ -1328,7 +1362,8 @@ export default function Feed() {
                       <Typography variant="subtitle1" sx={{
                         fontWeight: 600,
                         fontSize: '16px',
-                        flex: 1
+                        flex: 1,
+                        letterSpacing: '-0.25px'
                       }}>
                         {alerts[0].title || ""}
                       </Typography>
@@ -1349,7 +1384,8 @@ export default function Feed() {
                     <Typography variant="body2" sx={{
                       mb: 1.5,
                       color: '#333',
-                      flex: 1
+                      flex: 1,
+                      fontSize: '14px',
                     }}>
                       {alerts[0].description || ""}
                       {alerts[0].recommendedAction && ` ${alerts[0].recommendedAction}`}
@@ -1377,7 +1413,8 @@ export default function Feed() {
                           display: 'inline-block',
                           fontSize: '14px',
                           borderRadius: 1,
-                          fontWeight: 600,
+                          fontWeight: 500,
+                          fontFamily: 'Poppins',
                         }}>
                           {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderate Impact' : `${alerts[0].risk} Impact`}
                         </Typography>
@@ -1395,21 +1432,45 @@ export default function Feed() {
 
                 if (index < startIndex) return null;
 
+                // Calculate position in grid for border logic
+                const position = index + (startIndex === 0 ? 1 : 0);
+                
+                // Calculate if this is in the last row based on different breakpoints
+                const totalItems = alerts.length - startIndex + (startIndex === 0 ? 1 : 0);
+                
+                // Calculate last row items for different breakpoints
+                const isLastRowMd = position >= totalItems - (totalItems % 3 || 3);
+                const isLastRowSm = position >= totalItems - (totalItems % 2 || 2);
+                const isLastRowXs = position === totalItems - 1;
+                
+                // Calculate if this is the last item in a row
+                const isLastInRowMd = (position + 1) % 3 === 0 || position === totalItems - 1;
+                const isLastInRowSm = (position + 1) % 2 === 0 || position === totalItems - 1;
+                
                 return (
                   <Paper
                     key={`alert-${alert._id}-${index}`}
                     sx={{
                       p: 2,
                       bgcolor: 'transparent',
-                      borderRadius: 2,
+                      borderRadius: 0,
                       boxShadow: 'none',
                       height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
-                      border: '1px solid #E0E0E0'
+                      borderTop: 'none',
+                      borderBottom: {
+                        xs: isLastRowXs ? 'none' : '1px solid #E0E1E2',
+                        sm: isLastRowSm ? 'none' : '1px solid #E0E1E2',
+                        md: isLastRowMd ? 'none' : '1px solid #E0E1E2'
+                      },
+                      borderRight: { 
+                        xs: 'none', 
+                        sm: isLastInRowSm ? 'none' : '1px solid #E0E1E2',
+                        md: isLastInRowMd ? 'none' : '1px solid #E0E1E2'
+                      }
                     }}
                   >
-
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Box
                         onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
@@ -1424,7 +1485,6 @@ export default function Feed() {
                           px: 1.5,
                           py: 0.5,
                           borderRadius: 2,
-                          border: '1px solid #E0E0E0',
                           bgcolor: 'transparent',
                           fontSize: '14px',
                           '&:hover': {
