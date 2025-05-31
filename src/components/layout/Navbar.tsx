@@ -46,7 +46,7 @@ const Navbar: React.FC<NavbarProps> = ({
     { text: 'Resources', path: '/resources' },
     { text: 'Pricing', path: '/pricing' }
   ];
-  
+
   const loginUserNavLinks = [
     { text: 'Feed', path: '/feed' },
     { text: 'Action Hub', path: '/action-hub' },
@@ -71,13 +71,14 @@ const Navbar: React.FC<NavbarProps> = ({
         sx={{
           justifyContent: 'space-between',
           minHeight: { xs: '40px', sm: '50px' },
-          display: isMobile ? 'flex' : ((isAuthenticated || isFeedPage) ? 'none' : 'flex'),
+          display: isMobile ? 'flex' : 'none',
         }}
       >
         {/* Left side of header */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {/* Mobile menu icon - only on mobile */}
           {isMobile && (
+            <>
             <IconButton
               color="inherit"
               aria-label="open drawer"
@@ -85,13 +86,18 @@ const Navbar: React.FC<NavbarProps> = ({
               onClick={handleDrawerToggle}
               sx={{ color: 'black', mx: 0.2 }}
             >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-<path d="M14 3.33329C14 2.9651 13.7015 2.66663 13.3333 2.66663H2.66667C2.29848 2.66663 2 2.9651 2 3.33329C2 3.70148 2.29848 3.99996 2.66667 3.99996L13.3333 3.99996C13.7015 3.99996 14 3.70148 14 3.33329Z" fill="#616161"/>
-<path d="M14 7.99996C14 7.63177 13.7015 7.33329 13.3333 7.33329L6.66667 7.33329C6.29848 7.33329 6 7.63177 6 7.99996C6 8.36815 6.29848 8.66663 6.66667 8.66663L13.3333 8.66663C13.7015 8.66663 14 8.36815 14 7.99996Z" fill="#616161"/>
-<path d="M13.3333 12C13.7015 12 14 12.2984 14 12.6666C14 13.0348 13.7015 13.3333 13.3333 13.3333L2.66667 13.3333C2.29848 13.3333 2 13.0348 2 12.6666C2 12.2984 2.29848 12 2.66667 12L13.3333 12Z" fill="#616161"/>
-</svg>
-
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 3.33329C14 2.9651 13.7015 2.66663 13.3333 2.66663H2.66667C2.29848 2.66663 2 2.9651 2 3.33329C2 3.70148 2.29848 3.99996 2.66667 3.99996L13.3333 3.99996C13.7015 3.99996 14 3.70148 14 3.33329Z" fill="#616161" />
+                <path d="M14 7.99996C14 7.63177 13.7015 7.33329 13.3333 7.33329L6.66667 7.33329C6.29848 7.33329 6 7.63177 6 7.99996C6 8.36815 6.29848 8.66663 6.66667 8.66663L13.3333 8.66663C13.7015 8.66663 14 8.36815 14 7.99996Z" fill="#616161" />
+                <path d="M13.3333 12C13.7015 12 14 12.2984 14 12.6666C14 13.0348 13.7015 13.3333 13.3333 13.3333L2.66667 13.3333C2.29848 13.3333 2 13.0348 2 12.6666C2 12.2984 2.29848 12 2.66667 12L13.3333 12Z" fill="#616161" />
+              </svg>
             </IconButton>
+            {!isAuthenticated && isFeedPage && (
+              <Typography variant="h6" sx={{ fontWeight: '600' }}>
+                Feed
+              </Typography>
+            )}
+            </>
           )}
 
           {/* Logo */}
@@ -115,9 +121,9 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Page Title and Icon for mobile */}
           {!isHomePage && (
-              <Typography variant="h6" sx={{ fontWeight: '600' }}>
-                {currentPageName}
-              </Typography>
+            <Typography variant="h6" sx={{ fontWeight: '600' }}>
+              {currentPageName}
+            </Typography>
           )}
         </Box>
 

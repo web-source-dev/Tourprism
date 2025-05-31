@@ -120,6 +120,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
       ), path: '/profile'
     },
     { text: 'Archive', icon: '', path: '/archive' },
+    
     { text: 'Logout', icon: '', path: '/' }
   ] : [
     { text: 'About', icon: '', path: '/about' },
@@ -167,6 +168,9 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
     }
     if (pathname.startsWith('/archive/')) {
       return menuItems.find(item => item.path === '/archive');
+    }
+    if (pathname.startsWith('/feed/')) {
+      return menuItems.find(item => item.path === '/feed');
     }
 
     return null;
