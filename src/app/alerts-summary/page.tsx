@@ -546,9 +546,14 @@ export default function DisruptionForecast() {
           )}
 
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-            <Typography variant="h5" component="h1" fontWeight="bold">
+           <Box>
+           <Typography variant="h6" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
               Reports
             </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Create custom disruption forecasts
+          </Typography>
+           </Box>
             <IconButton
               onClick={handleNavigateToSaved}
               sx={{
@@ -657,11 +662,6 @@ export default function DisruptionForecast() {
             <Typography variant="h6" fontWeight="bold" gutterBottom>
             </Typography>
           )} */}
-
-
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Create custom disruption forecasts
-          </Typography>
 
 
           <Divider sx={{ mb: 4 }} />

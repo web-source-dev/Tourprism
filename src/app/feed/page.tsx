@@ -1127,9 +1127,10 @@ export default function Feed() {
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 2,
+          borderBottom:'1px solid #E0E1E2',
         }}>
           <Box>
-            <Typography variant="h6" sx={{ fontWeight: 500 }}>
+            <Typography variant="h6" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
               Feed
             </Typography>
             <Typography variant="body2" sx={{ fontWeight: 400 }}>
@@ -1319,6 +1320,7 @@ export default function Feed() {
                           py: 0.5,
                           borderRadius: 2,
                           bgcolor: 'transparent',
+                          border: '1px solid #E0E1E2',
                           fontSize: '14px',
                           '&:hover': {
                             bgcolor: 'rgba(0, 0, 0, 0.04)'
@@ -1485,6 +1487,7 @@ export default function Feed() {
                           px: 1.5,
                           py: 0.5,
                           borderRadius: 2,
+                          border: '1px solid #E0E1E2',
                           bgcolor: 'transparent',
                           fontSize: '14px',
                           '&:hover': {

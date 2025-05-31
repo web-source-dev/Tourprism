@@ -119,6 +119,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
         </svg>
       ), path: '/profile'
     },
+    { text: 'Archive', icon: '', path: '/archive' },
     { text: 'Logout', icon: '', path: '/' }
   ] : [
     { text: 'About', icon: '', path: '/about' },
@@ -163,6 +164,9 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
     }
     if (pathname.startsWith('/alerts-summary/')) {
       return menuItems.find(item => item.path === '/alerts-summary');
+    }
+    if (pathname.startsWith('/archive/')) {
+      return menuItems.find(item => item.path === '/archive');
     }
 
     return null;
@@ -219,7 +223,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
 
         {/* Display Banner for authenticated users */}
 
-        <Container component="main" sx={{ flex: 1, py: 2, px: { xs: 2, sm: 3, md: 4 } }}>
+        <Container component="main" sx={{ flex: 1, py: { xs: 0, sm: 0, md: 2 }, px: { xs: 2, sm: 3, md: 4 } }}>
 
           {children}
         </Container>

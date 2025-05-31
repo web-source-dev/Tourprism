@@ -9,7 +9,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
 
@@ -33,10 +33,10 @@ const Navbar: React.FC<NavbarProps> = ({
   setNotificationDrawerOpen,
   unreadCount,
   isClient,
+  currentPageName,
 }) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 600px)');
 
   // Navigation links to show on desktop
@@ -60,8 +60,9 @@ const Navbar: React.FC<NavbarProps> = ({
       px: { xs: 0.5, sm: 0.5, md: 1 },
       py: 0,
       mx: { xs: 1, sm: 1, md: 3 },
-      my: 1.5,
-      bgcolor: pathname === '/feed' ? 'transparent' : '#fff',
+      mt: isMobile ? 1.5 : 1.5,
+      mb: isMobile ? 0 : 1.5,
+      bgcolor: 'transparent',
       borderRadius: '8px',
       boxShadow: 'none',
     }}>
@@ -74,17 +75,24 @@ const Navbar: React.FC<NavbarProps> = ({
         }}
       >
         {/* Left side of header */}
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {/* Mobile menu icon - only on mobile */}
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ display: { sm: 'none' }, color: 'black', mx: 0.2 }}
-          >
-            <i className="ri-menu-2-line" style={{ fontSize: '18px' }}></i> 
-          </IconButton>
+          {isMobile && (
+            <IconButton
+              color="inherit"
+              aria-label="open drawer"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ color: 'black', mx: 0.2 }}
+            >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14 3.33329C14 2.9651 13.7015 2.66663 13.3333 2.66663H2.66667C2.29848 2.66663 2 2.9651 2 3.33329C2 3.70148 2.29848 3.99996 2.66667 3.99996L13.3333 3.99996C13.7015 3.99996 14 3.70148 14 3.33329Z" fill="#616161"/>
+<path d="M14 7.99996C14 7.63177 13.7015 7.33329 13.3333 7.33329L6.66667 7.33329C6.29848 7.33329 6 7.63177 6 7.99996C6 8.36815 6.29848 8.66663 6.66667 8.66663L13.3333 8.66663C13.7015 8.66663 14 8.36815 14 7.99996Z" fill="#616161"/>
+<path d="M13.3333 12C13.7015 12 14 12.2984 14 12.6666C14 13.0348 13.7015 13.3333 13.3333 13.3333L2.66667 13.3333C2.29848 13.3333 2 13.0348 2 12.6666C2 12.2984 2.29848 12 2.66667 12L13.3333 12Z" fill="#616161"/>
+</svg>
+
+            </IconButton>
+          )}
 
           {/* Logo */}
           {!isAuthenticated && !isFeedPage && (
@@ -103,6 +111,13 @@ const Navbar: React.FC<NavbarProps> = ({
               <Image src="/tourprism.png" alt="tourprism" style={{ marginRight: isMobile ? '4px' : 0 }} width={20} height={32} />
               <Typography sx={{ fontSize: '18px', ml: 0.5, fontWeight: '550', color: 'black', display: { xs: 'none', md: 'block' } }}>tourprism</Typography>
             </Typography>
+          )}
+
+          {/* Page Title and Icon for mobile */}
+          {!isHomePage && (
+              <Typography variant="h6" sx={{ fontWeight: '600' }}>
+                {currentPageName}
+              </Typography>
           )}
         </Box>
 
