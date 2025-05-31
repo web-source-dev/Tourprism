@@ -920,7 +920,7 @@ export default function Feed() {
     setFilters({
       sortBy: 'newest',
       alertCategory: [],
-      timeRange: 0,
+      timeRange: 7,
       distance: 50,
       impactLevel: '',
       customDateFrom: new Date(),
