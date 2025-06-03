@@ -486,19 +486,6 @@ export default function ForecastDetail() {
     });
   };
 
-  // Get impact color based on severity
-  const getImpactColor = (impact: string) => {
-    switch (impact) {
-      case 'Severe':
-        return '#d32f2f';
-      case 'Moderate':
-        return '#f57c00';
-      case 'Minor':
-        return '#4caf50';
-      default:
-        return '#757575';
-    }
-  };
 
   if (loading) {
     return (

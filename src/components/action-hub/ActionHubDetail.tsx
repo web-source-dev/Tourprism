@@ -31,7 +31,6 @@ import {
 } from '@/services/action-hub';
 import { ActionHubItem, ActionLog } from '@/types';
 import {
-  ArrowBack,
   Check as CheckIcon,
 } from '@mui/icons-material';
 import { format } from 'date-fns';
