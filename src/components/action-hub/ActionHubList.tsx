@@ -332,7 +332,7 @@ const ActionHubList: React.FC = () => {
             {filteredAlerts.length === 0 ? (
               <Box sx={{ width: '100%', textAlign: 'center', py: 8 }}>
                 <Typography variant="h6" color="text.secondary">
-                  No alerts match your filter criteria
+                  No Alerts added in action hub
                 </Typography>
                 {isFiltered && (
                   <Button

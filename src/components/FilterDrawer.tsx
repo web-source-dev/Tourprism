@@ -769,7 +769,8 @@ const FilterDrawer = ({
                       cursor: 'pointer',
                       '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
                       display: 'flex',
-                      justifyContent: 'space-between'
+                      justifyContent: 'space-between',
+                borderBottom: '1px solid #e0e0e0',
                     }}
                     component="div"
                   >

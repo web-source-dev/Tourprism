@@ -14,9 +14,6 @@ import {
   Card,
   Badge,
 } from '@mui/material';
-import {
-  ArrowBack as ArrowBackIcon,
-} from '@mui/icons-material';
 import { format, parseISO } from 'date-fns';
 import { useToast } from '@/ui/toast';
 
@@ -233,9 +230,12 @@ export default function SavedForecasts() {
               sx={{ mr: 1, p: 0 }}
               aria-label="Back"
             >
-              <ArrowBackIcon />
+              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M2.70898 9.99971C2.70899 10.311 2.84703 10.5998 2.97775 10.8167C3.11881 11.0507 3.30852 11.2923 3.51664 11.5279C3.93413 12.0004 4.47887 12.5079 5.00751 12.967C5.53926 13.4287 6.06917 13.8539 6.46503 14.1629C6.66328 14.3176 6.82868 14.4438 6.94485 14.5316C7.00295 14.5755 7.04878 14.6098 7.0803 14.6333L7.11661 14.6602L7.12624 14.6674L7.12958 14.6698C7.4075 14.8746 7.79912 14.8155 8.00383 14.5376C8.20854 14.2597 8.14922 13.8684 7.87133 13.6637L7.86072 13.6559L7.82735 13.6311C7.79783 13.6091 7.75415 13.5764 7.69832 13.5342C7.58662 13.4498 7.42651 13.3276 7.23414 13.1775C6.84875 12.8767 6.33701 12.4659 5.8271 12.0231C5.31408 11.5776 4.81716 11.112 4.45341 10.7002C4.43041 10.6742 4.40814 10.6486 4.38662 10.6235L16.6673 10.6235C17.0125 10.6235 17.2923 10.3436 17.2923 9.99847C17.2923 9.65329 17.0125 9.37347 16.6673 9.37347L4.38873 9.37347C4.4096 9.34913 4.43116 9.32436 4.45341 9.29917C4.81716 8.88745 5.31408 8.42176 5.8271 7.97627C6.33701 7.53347 6.84875 7.12272 7.23414 6.82192C7.4265 6.67177 7.58662 6.54961 7.69832 6.46523C7.75415 6.42305 7.79783 6.39035 7.82735 6.36835L7.86072 6.34354L7.87133 6.3357C8.14921 6.13097 8.20854 5.73974 8.00383 5.46184C7.79911 5.18392 7.4075 5.12484 7.12958 5.32956L7.12624 5.33203L7.11661 5.33916L7.0803 5.36614C7.04878 5.38964 7.00295 5.42395 6.94485 5.46784C6.82868 5.5556 6.66328 5.6818 6.46502 5.83654C6.06917 6.14552 5.53926 6.5707 5.00751 7.03245C4.47887 7.49151 3.93413 7.99899 3.51664 8.47155C3.30852 8.70712 3.11881 8.94872 2.97775 9.18274C2.84782 9.39829 2.71064 9.68494 2.709 9.9941" fill="#212121" />
+              </svg>
+
             </IconButton>
-            <Typography variant="h6" component="h1" fontWeight="600" sx={{ fontSize: '18px',fontFamily: 'Poppins' }}>
+            <Typography variant="h6" component="h1" fontWeight="600" sx={{ fontSize: '18px', fontFamily: 'Poppins' }}>
               Saved Reports
             </Typography>
           </Box>
@@ -357,16 +357,16 @@ export default function SavedForecasts() {
                   border: '1px solid rgb(221,221,221)',
                 }}>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="body1" fontWeight="600" sx={{ fontSize: '16px',fontFamily: 'Poppins' }}>
+                    <Typography variant="body1" fontWeight="600" sx={{ fontSize: '16px', fontFamily: 'Poppins' }}>
                       {forecast.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px',fontWeight:500,fontFamily: 'Inter' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px', fontWeight: 500, fontFamily: 'Inter' }}>
                       {forecast.timeRange.startDate && forecast.timeRange.endDate ?
                         `${format(parseISO(forecast.timeRange.startDate), 'dd MMM')} - ${format(parseISO(forecast.timeRange.endDate), 'dd MMM, yyyy')}` :
                         'Date range not specified'
                       }
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ my: 1,fontSize: '14px',fontWeight:500,fontFamily: 'Inter' }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ my: 1, fontSize: '14px', fontWeight: 500, fontFamily: 'Inter' }}>
                       Saved {format(parseISO(forecast.createdAt), 'MMM dd, yyyy')}
                     </Typography>
                   </Box>
@@ -378,7 +378,7 @@ export default function SavedForecasts() {
                       onClick={() => handleViewSavedForecast(forecast._id)}
                       sx={{
                         borderRadius: 2,
-                        height:'40px',
+                        height: '40px',
                         textTransform: 'none',
                         color: 'black',
                         borderColor: '#e0e0e0',
