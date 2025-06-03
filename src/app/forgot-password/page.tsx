@@ -313,9 +313,9 @@ export default function ForgotPassword() {
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 3 }}>
             <Box
               component="img"
-              src="/t.png"
+              src="/tourprism.png"
               alt="Logo"
-              sx={{ height: 32, display: 'block' }}
+              sx={{ height: 32, display: 'block', borderRadius: 1 }}
             />
             <Typography variant="h5" sx={{ fontWeight: 600, color: '#000' }}>
               tourprism
@@ -346,9 +346,9 @@ export default function ForgotPassword() {
                   <Link href="/" passHref>
                     <Box
                       component="img"
-                      src="/t.png"
+                      src="/tourprism.png"
                       alt="Logo"
-                      sx={{ height: 28, cursor: 'pointer', display: 'block' }}
+                      sx={{ height: 28, cursor: 'pointer', display: 'block', borderRadius: 1 }}
                     />
                   </Link>
                   <Typography variant="h6" sx={{ fontWeight: 600, color: '#000', fontSize: '20px' }}>

@@ -30,11 +30,12 @@ export default function InviteLayout({
       >
         <Box 
           component="img"
-          src="/images/logo.png"
+          src="/tourprism.png"
           alt="TourPrism Logo"
           sx={{ 
             height: '50px',
-            maxWidth: '200px'
+            maxWidth: '200px',
+            borderRadius: 1
           }}
         />
       </Box>
