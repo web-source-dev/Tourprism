@@ -22,9 +22,10 @@ interface LayoutProps {
   children: ReactNode;
   isFooter?: boolean;
   onFilterOpen?: () => void;
+  isHeader?: boolean;
 }
 
-const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
+const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: LayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
@@ -191,7 +192,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
       )}
       <Box sx={{
         display: 'flex',
-        bgcolor: '#f5f5f5',
+        bgcolor: isHomePage ? '#f5f5f5' : '#ffffff',
         px: { xs: 0, md: 0 },
         flexDirection: 'column',
         minHeight: '100vh',
@@ -216,6 +217,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen }: LayoutProps) => {
           isClient={isClient}
           currentPageName={currentPageName}
           currentPageIcon={currentPageIcon}
+          isHeader={isHeader}
         />
         {/* Mobile Sidebar Component */}
         <MobileSidebar

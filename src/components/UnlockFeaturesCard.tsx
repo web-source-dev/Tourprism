@@ -147,11 +147,12 @@ const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
     <Box
       sx={{
         bgcolor: 'transparent',
-        borderRadius: 2,
-        p: 1,
+        borderRadius: 4,
+        p: 2,
         mb: 2,
         display: 'flex',
         flexDirection: 'column',
+        border: '1px solid #E0E1E2',
         height: '100%'
       }}
     >

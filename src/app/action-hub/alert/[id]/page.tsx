@@ -15,7 +15,7 @@ export default async function ActionHubAlertDetailPage({
   const { id } = await params
 
   return (
-    <Layout isFooter={false}>
+    <Layout isFooter={false} isHeader={false}>
       <Head>
         <title>Alert Details | Action Hub | Tourprism</title>
         <meta name="description" content="View and take action on flagged alerts." />

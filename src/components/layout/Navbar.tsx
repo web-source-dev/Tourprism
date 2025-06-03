@@ -23,6 +23,7 @@ interface NavbarProps {
   isClient: boolean;
   currentPageName: string;
   currentPageIcon: React.ReactNode;
+  isHeader: boolean;
 }
 
 const Navbar: React.FC<NavbarProps> = ({
@@ -34,6 +35,7 @@ const Navbar: React.FC<NavbarProps> = ({
   unreadCount,
   isClient,
   currentPageName,
+  isHeader
 }) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
@@ -65,13 +67,15 @@ const Navbar: React.FC<NavbarProps> = ({
       bgcolor: 'transparent',
       borderRadius: '8px',
       boxShadow: 'none',
+      display: isHeader ? 'block' : 'none'
     }}>
       <Toolbar
         disableGutters
         sx={{
           justifyContent: 'space-between',
           minHeight: { xs: '40px', sm: '50px' },
-          display: isMobile ? 'flex' : 'none',
+          display: isHomePage || isMobile ? 'flex' : 'none',
+
         }}
       >
         {/* Left side of header */}
@@ -114,7 +118,7 @@ const Navbar: React.FC<NavbarProps> = ({
                 textDecoration: 'none'
               }}
             >
-              <Image src="/tourprism.png" alt="tourprism" style={{ marginRight: isMobile ? '4px' : 0 }} width={20} height={32} />
+              <Image src="/t.png" alt="tourprism" style={{ marginRight: isMobile ? '4px' : 0 ,borderRadius: 6 }} width={32} height={32} />
               <Typography sx={{ fontSize: '18px', ml: 0.5, fontWeight: '550', color: 'black', display: { xs: 'none', md: 'block' } }}>tourprism</Typography>
             </Typography>
           )}

@@ -113,8 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, onLogo
       sx={{
         width: isCollapsed ? '80px' : '250px',
         height: '100vh',
-        bgcolor: '#fff',
-        borderRight: '1px solid #EBEBEC',
+        bgcolor: '#FAFAFB',
         transition: theme.transitions.create('width', {
           easing: theme.transitions.easing.easeInOut,
           duration: theme.transitions.duration.enteringScreen,
@@ -139,11 +138,11 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, onLogo
           left: isCollapsed ? theme.spacing(2.5) : 'auto',
           zIndex: 1201,
           border : '1px solid #EBEBEC',
-          bgcolor: '#fff',
+          bgcolor: '#FAFAFB',
           width: 40,
           height: 40,
           '&:hover': {
-            bgcolor: '#fff',
+            bgcolor: '#FAFAFB',
           },
           transition: theme.transitions.create(['right', 'left'], {
              easing: theme.transitions.easing.easeInOut,
@@ -177,7 +176,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, onLogo
                 bgcolor: isActive ? '#EBEBEC' : 'transparent',
                 borderRadius: '8px',
                 '&:hover': {
-                  bgcolor: '#F5F5F7',
+                  bgcolor: '#FAFAFB',
                   cursor: 'pointer',
                   borderRadius: '8px',
                   color: '#000',

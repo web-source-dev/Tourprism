@@ -226,7 +226,11 @@ const ActionHubList: React.FC = () => {
             mr: 1
           }}
         />
-        <Typography variant="body2" component="span">
+        <Typography variant="body2" component="span" sx={{
+          fontSize: '12px',
+          fontWeight: '600',
+          fontFamily: 'Poppins'
+        }}>
           {label}
         </Typography>
       </Box>
@@ -370,9 +374,10 @@ const ActionHubList: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         border: '1px solid #e0e0e0',
-                        borderRadius: 30,
+                        borderRadius: 2,
                         px: 1.5,
-                        py: 0.5
+                        py: 1,
+                        
                       }}>
                         {getStatusBadge(alert.status)}
                       </Box>
@@ -384,35 +389,35 @@ const ActionHubList: React.FC = () => {
                     </Box>
 
                     <CardContent sx={{ pt: 1, pb: '16px !important', px: 2, flexGrow: 1 }}>
-                      <Typography variant="h6" fontWeight="bold" gutterBottom>
+                      <Typography variant="h6" fontWeight="600" sx={{ fontSize: '16px', fontFamily: 'Poppins' }} gutterBottom>
                         {alert.title || 'Road Closures in 48h : Fringe Festival Protest'}
                       </Typography>
 
-                      <Typography variant="body2" sx={{ mb: 2 }}>
+                      <Typography variant="body2" sx={{ mb: 2, fontSize: '14px', fontFamily: 'Inter', fontWeight: 500 }}>
                         {alert.city || 'Princess Street, EH1'}
                       </Typography>
 
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '14px', fontFamily: 'Inter', fontWeight: 500 }}>
                         {alert.description || 'High risk for road closures due to festival activities taking place in the centre of the town. Notify guests to take alternative routes and inform them to request early check-ins to avoid delays'}
                       </Typography>
 
                       <Box sx={{ mb: 1 }}>
-                        <Typography component="div" sx={{ display: 'flex' }}>
-                          <Typography variant="body2" component="span" sx={{ width: 90 }}>
+                        <Typography component="div" sx={{ display: 'flex', color: '#757575', fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
+                          <Typography variant="body2" component="span" sx={{ width: 50, fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
                             Start
                           </Typography>
-                          <Typography variant="body2" component="span">
+                          <Typography variant="body2" component="span" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
                             {alert.expectedStart ?
                               format(new Date(alert.expectedStart), 'dd MMM h:mma') :
                               '06 May 9:00AM'}
                           </Typography>
                         </Typography>
 
-                        <Typography component="div" sx={{ display: 'flex' }}>
-                          <Typography variant="body2" component="span" sx={{ width: 90 }}>
+                        <Typography component="div" sx={{ display: 'flex', color: '#757575', fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
+                          <Typography variant="body2" component="span" sx={{ width: 50, fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
                             End
                           </Typography>
-                          <Typography variant="body2" component="span">
+                          <Typography variant="body2" component="span" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
                             {alert.expectedEnd ?
                               format(new Date(alert.expectedEnd), 'dd MMM h:mma') :
                               '06 May 9:00AM'}
@@ -421,7 +426,7 @@ const ActionHubList: React.FC = () => {
                       </Box>
 
                       <Box sx={{ mb: 3 }}>
-                        <Typography variant="body2">
+                        <Typography variant="body2" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
                           {alert.impact || 'Moderated'} Impact
                         </Typography>
                       </Box>
@@ -442,9 +447,11 @@ const ActionHubList: React.FC = () => {
                                 boxShadow: 'none',
                               },
                               textTransform: 'none',
-                              fontWeight: 'medium',
                               py: 1,
                               mt: 'auto',
+                              fontSize: '14px',
+                              fontFamily: 'Poppins',
+                              fontWeight: 600,
                               '&.Mui-disabled': {
                                 bgcolor: '#f5f5f5',
                                 color: 'rgba(0, 0, 0, 0.26)'

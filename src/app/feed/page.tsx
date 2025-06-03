@@ -1208,13 +1208,12 @@ export default function Feed() {
                 <Box sx={{ 
                   gridColumn: { xs: '1', sm: '1', md: '1' }, 
                   position: 'relative',
-                  borderBottom: '1px solid #E0E1E2',
                   borderRight: { 
                     xs: 'none', 
                     sm: '1px solid #E0E1E2' 
                   },
                   borderTop: 'none',
-                  p: 2
+                  p: 1
                 }}>
                   <IconButton
                     onClick={() => handleDismissCard('unlock')}
@@ -1334,7 +1333,7 @@ export default function Feed() {
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path fillRule="evenodd" clipRule="evenodd" d="M6.99968 0.833374C4.02913 0.833374 1.61827 3.22772 1.61825 6.18468C1.61818 6.87247 1.57193 7.39159 1.25481 7.85817C1.21072 7.9221 1.15222 8.00217 1.0883 8.08966C0.977267 8.24164 0.849859 8.41603 0.753231 8.56704C0.582689 8.83357 0.416071 9.15498 0.358792 9.5295C0.171916 10.7514 1.03338 11.5425 1.89131 11.897C2.44899 12.1274 3.04588 12.3153 3.6675 12.4606C3.6634 12.5298 3.6701 12.6008 3.68887 12.6714C4.07359 14.1191 5.42024 15.1669 6.99984 15.1669C8.57944 15.1669 9.92609 14.1191 10.3108 12.6714C10.3296 12.6008 10.3363 12.5298 10.3322 12.4606C10.9537 12.3152 11.5505 12.1273 12.108 11.897C12.966 11.5425 13.8274 10.7514 13.6406 9.5295C13.5833 9.15499 13.4167 8.83357 13.2461 8.56704C13.1495 8.41604 13.0221 8.2417 12.9111 8.08972C12.8472 8.00224 12.7887 7.92215 12.7446 7.85822C12.4274 7.39162 12.3812 6.87256 12.3811 6.18473C12.3811 3.22774 9.97023 0.833374 6.99968 0.833374ZM8.87123 12.7193C7.63997 12.8714 6.35974 12.8714 5.12847 12.7193C5.4664 13.3728 6.17059 13.8335 6.99984 13.8335C7.82911 13.8335 8.53331 13.3727 8.87123 12.7193Z" fill="#0066FF" />
                             </svg>
-                            <Typography variant="body2">Following</Typography>
+                            <Typography variant="body2" sx={{ fontWeight:'600' }}>Following</Typography>
                           </>
                         ) : (
                           <>
@@ -1343,7 +1342,7 @@ export default function Feed() {
                               <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
                             </svg>
 
-                            <Typography variant="body2">Follow</Typography>
+                            <Typography variant="body2" sx={{ fontWeight:'600' }}>Follow</Typography>
                           </>
                         )}
                       </Box>
@@ -1502,7 +1501,7 @@ export default function Feed() {
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                               <path fillRule="evenodd" clipRule="evenodd" d="M6.99968 0.833374C4.02913 0.833374 1.61827 3.22772 1.61825 6.18468C1.61818 6.87247 1.57193 7.39159 1.25481 7.85817C1.21072 7.9221 1.15222 8.00217 1.0883 8.08966C0.977267 8.24164 0.849859 8.41603 0.753231 8.56704C0.582689 8.83357 0.416071 9.15498 0.358792 9.5295C0.171916 10.7514 1.03338 11.5425 1.89131 11.897C2.44899 12.1274 3.04588 12.3153 3.6675 12.4606C3.6634 12.5298 3.6701 12.6008 3.68887 12.6714C4.07359 14.1191 5.42024 15.1669 6.99984 15.1669C8.57944 15.1669 9.92609 14.1191 10.3108 12.6714C10.3296 12.6008 10.3363 12.5298 10.3322 12.4606C10.9537 12.3152 11.5505 12.1273 12.108 11.897C12.966 11.5425 13.8274 10.7514 13.6406 9.5295C13.5833 9.15499 13.4167 8.83357 13.2461 8.56704C13.1495 8.41604 13.0221 8.2417 12.9111 8.08972C12.8472 8.00224 12.7887 7.92215 12.7446 7.85822C12.4274 7.39162 12.3812 6.87256 12.3811 6.18473C12.3811 3.22774 9.97023 0.833374 6.99968 0.833374ZM8.87123 12.7193C7.63997 12.8714 6.35974 12.8714 5.12847 12.7193C5.4664 13.3728 6.17059 13.8335 6.99984 13.8335C7.82911 13.8335 8.53331 13.3727 8.87123 12.7193Z" fill="#0066FF" />
                             </svg>
-                            <Typography variant="body2">Following</Typography>
+                            <Typography variant="body2" sx={{fontWeight:'540'}}>Following</Typography>
                           </>
                         ) : (
                           <>
@@ -1511,7 +1510,7 @@ export default function Feed() {
                               <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
                             </svg>
 
-                            <Typography variant="body2">Follow</Typography>
+                            <Typography variant="body2" sx={{fontWeight:'540'}}>Follow</Typography>
                           </>
                         )}
                       </Box>
@@ -1531,7 +1530,8 @@ export default function Feed() {
                       <Typography variant="subtitle1" sx={{
                         fontWeight: 600,
                         fontSize: '16px',
-                        flex: 1
+                        flex: 1,
+                        fontFamily: 'Poppins'
                       }}>
                         {alert.title || ""}
                       </Typography>
@@ -1543,7 +1543,8 @@ export default function Feed() {
                       sx={{
                         color: '#616161',
                         fontSize: '14px',
-                        mb: 1
+                        mb: 1,
+                        fontFamily: 'Poppins'
                       }}
                     >
                       {alert.city || "Edinburgh"}
@@ -1553,7 +1554,8 @@ export default function Feed() {
                     <Typography variant="body2" sx={{
                       mb: 1.5,
                       color: '#333',
-                      flex: 1
+                      flex: 1,
+                      fontFamily: 'Inter'
                     }}>
                       {alert.description || ""}
                       {alert.recommendedAction && ` ${alert.recommendedAction}`}
@@ -1564,12 +1566,12 @@ export default function Feed() {
                       {/* Start and End Time */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                         <Box>
-                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400, fontFamily: 'Poppins' }}>
                             Start: {alert.expectedStart ? formatDateForDisplay(alert.expectedStart) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
                         <Box>
-                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
+                          <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400, fontFamily: 'Poppins' }}>
                             End: {alert.expectedEnd ? formatDateForDisplay(alert.expectedEnd) : "06 May 9:00AM"}
                           </Typography>
                         </Box>
@@ -1577,11 +1579,12 @@ export default function Feed() {
 
                       {/* Impact Level */}
                       <Box sx={{ mt: 1 }}>
-                        <Typography variant="body2" sx={{
+                          <Typography variant="body2" sx={{
                           display: 'inline-block',
                           fontSize: '14px',
                           borderRadius: 1,
                           fontWeight: 600,
+                          fontFamily: 'Poppins'
                         }}>
                           {alert.risk === 'Medium' || !alert.risk ? 'Moderate Impact' : `${alert.risk} Impact`}
                         </Typography>

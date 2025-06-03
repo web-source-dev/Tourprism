@@ -177,7 +177,7 @@ export default function SavedForecasts() {
 
   if (viewingReport) {
     return (
-      <Layout isFooter={false}>
+      <Layout isFooter={false} isHeader={false}>
         <Box
           sx={{
             display: 'flex',
@@ -201,7 +201,7 @@ export default function SavedForecasts() {
 
   if (loading && allForecasts.length === 0) {
     return (
-      <Layout isFooter={false}>
+      <Layout isFooter={false} isHeader={false}>
         <Box
           sx={{
             display: 'flex',
@@ -217,8 +217,8 @@ export default function SavedForecasts() {
   }
 
   return (
-    <Layout isFooter={false}>
-      <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 3 }, py: 2 }}>
+    <Layout isFooter={false} isHeader={false}>
+      <Container maxWidth="lg" sx={{ px: { xs: 1, sm: 2, md: 3 }, py: 2 }}>
         {/* Header with back button and title */}
         <Box sx={{
           display: 'flex',
@@ -235,7 +235,7 @@ export default function SavedForecasts() {
             >
               <ArrowBackIcon />
             </IconButton>
-            <Typography variant="h6" component="h1" fontWeight="500">
+            <Typography variant="h6" component="h1" fontWeight="600" sx={{ fontSize: '18px',fontFamily: 'Poppins' }}>
               Saved Reports
             </Typography>
           </Box>
@@ -357,16 +357,16 @@ export default function SavedForecasts() {
                   border: '1px solid rgb(221,221,221)',
                 }}>
                   <Box sx={{ mb: 1 }}>
-                    <Typography variant="body1" fontWeight="bold" gutterBottom>
+                    <Typography variant="body1" fontWeight="600" sx={{ fontSize: '16px',fontFamily: 'Poppins' }}>
                       {forecast.title}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ fontSize: '14px',fontWeight:500,fontFamily: 'Inter' }}>
                       {forecast.timeRange.startDate && forecast.timeRange.endDate ?
                         `${format(parseISO(forecast.timeRange.startDate), 'dd MMM')} - ${format(parseISO(forecast.timeRange.endDate), 'dd MMM, yyyy')}` :
                         'Date range not specified'
                       }
                     </Typography>
-                    <Typography variant="body2" color="text.secondary" sx={{ my: 1 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ my: 1,fontSize: '14px',fontWeight:500,fontFamily: 'Inter' }}>
                       Saved {format(parseISO(forecast.createdAt), 'MMM dd, yyyy')}
                     </Typography>
                   </Box>
