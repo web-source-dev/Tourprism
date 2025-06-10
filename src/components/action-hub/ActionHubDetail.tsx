@@ -519,7 +519,7 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
               {alertData.city || 'Princess Street, EH1'}
             </Typography>
 
-            <Typography variant="body1" sx={{ mb: 3, color: 'text.primary', lineHeight: 1.6, fontSize: '14px', fontFamily: 'Inter', fontWeight: 500 }}>
+            <Typography variant="body1" sx={{ mb: 3, color: '#000000', lineHeight: 1.6, fontSize: '14px', fontFamily: 'Inter', fontWeight: 500 }}>
               {alertData.description || 'High risk for road closures due to festival activities taking place in the centre of the town. Notify guests to take alternative routes and inform them to request early check-ins to avoid delays'}
             </Typography>
           </Box>
@@ -551,7 +551,11 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
           </Box>
 
           {/* Impact Level */}
-          <Typography variant="body1" fontWeight="600" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>Moderated Impact</Typography>
+          <Typography variant="body1" fontWeight="600" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
+            {alertData.impact === 'Minor' ? 'Low' : 
+             alertData.impact === 'Severe' ? 'High' : 
+             alertData.impact || 'Moderate'} Impact
+          </Typography>
 
         </Box>
       </Box>

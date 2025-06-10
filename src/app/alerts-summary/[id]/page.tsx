@@ -660,7 +660,7 @@ export default function ForecastDetail() {
                               </Typography>
                             </Box>
 
-                            <Typography variant="body2" sx={{ mb: 2, fontSize: '14px', color: '#000', fontFamily: 'Inter, sans-serif' }}>
+                            <Typography variant="body2" sx={{ mb: 2, fontSize: '14px', color: '#000000', fontFamily: 'Inter, sans-serif' }}>
                               {alert.description}
                             </Typography>
 
@@ -696,7 +696,9 @@ export default function ForecastDetail() {
                             </Box>
 
                             <Typography variant="body1" fontWeight="500" mt={2} color="text.primary" sx={{ fontSize: '14px', fontFamily: 'Poppins, sans-serif' }}>
-                              {alert.impact} Impact
+                              {alert.impact === 'Minor' ? 'Low' : 
+                               alert.impact === 'Severe' ? 'High' : 
+                               alert.impact || 'Moderate'} Impact
                             </Typography>
                           </Box>
                         </Paper>
@@ -777,7 +779,7 @@ export default function ForecastDetail() {
                             )}
                           </Box>
 
-                          <Typography variant="body2" sx={{ mb: 2 }}>
+                          <Typography variant="body2" sx={{ mb: 2, color: '#000000' }}>
                             {alert.description}
                           </Typography>
 

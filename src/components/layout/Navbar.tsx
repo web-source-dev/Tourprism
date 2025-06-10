@@ -52,8 +52,8 @@ const Navbar: React.FC<NavbarProps> = ({
   const loginUserNavLinks = [
     { text: 'Feed', path: '/feed' },
     { text: 'Action Hub', path: '/action-hub' },
-    { text: 'Insights', path: '/insights' },
-    { text: 'Subscription', path: '/subscription' },
+    // { text: 'Insights', path: '/insights' },
+    // { text: 'Subscription', path: '/subscription' },
     { text: 'Settings', path: '/settings' }
   ];
 

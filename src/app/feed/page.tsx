@@ -116,7 +116,7 @@ export default function Feed() {
     alertCategory: [],
     timeRange: 7,
     distance: 50,
-    impactLevel: '',
+    impactLevel: [],
     customDateFrom: new Date(),
     customDateTo: new Date(),
   });
@@ -228,7 +228,7 @@ export default function Feed() {
           params.alertCategory = filters.alertCategory;
         }
 
-        if (filters.impactLevel) {
+        if (filters.impactLevel && filters.impactLevel.length > 0) {
           params.impact = filters.impactLevel;
         }
 
@@ -309,7 +309,7 @@ export default function Feed() {
           params.alertCategory = filters.alertCategory;
         }
 
-        if (filters.impactLevel) {
+        if (filters.impactLevel && filters.impactLevel.length > 0) {
           params.impact = filters.impactLevel;
         }
 
@@ -922,7 +922,7 @@ export default function Feed() {
       alertCategory: [],
       timeRange: 7,
       distance: 50,
-      impactLevel: '',
+      impactLevel: [],
       customDateFrom: new Date(),
       customDateTo: new Date(),
     });
@@ -1247,7 +1247,7 @@ export default function Feed() {
                 <Box sx={{
                   gridColumn: { xs: '1', sm: '1', md: '1' },
                   position: 'relative',
-                  borderBottom: '1px solid #E0E1E2',
+                  borderBottom: {sx:'' , md:'1px solid #E0E1E2'},
                   borderRight: {
                     xs: 'none',
                     sm: '1px solid #E0E1E2'
@@ -1384,7 +1384,7 @@ export default function Feed() {
                     {/* Alert Content */}
                     <Typography variant="body2" sx={{
                       mb: 1.5,
-                      color: '#333',
+                      color: '#000000',
                       flex: 1,
                       fontSize: '14px',
                     }}>
@@ -1573,7 +1573,7 @@ export default function Feed() {
                   {/* Alert Content */}
                   <Typography variant="body2" sx={{
                     mb: 1.5,
-                    color: '#333',
+                    color: '#000000',
                     flex: 1,
                     fontFamily: 'Inter'
                   }}>

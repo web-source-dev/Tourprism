@@ -96,7 +96,7 @@ const FilterDrawer = ({
   filters = {
     timeRange: 7, // Default to 'This Week'
     alertCategory: [], // Default to 'All'
-    impactLevel: '', // Default to 'All'
+    impactLevel: [], // Default to 'All'
     sortBy: 'latest', // Default to 'Latest First'
     distance: 50
   },
@@ -149,8 +149,20 @@ const FilterDrawer = ({
   };
 
   const handleImpactLevelChange = (impactLevel: string) => {
-    // Toggle the selected impact level
-    const updatedImpact = filters.impactLevel === impactLevel ? '' : impactLevel;
+    if (impactLevel === '') {
+      // If 'All' is selected, clear the array
+      onFilterChange({
+        ...filters,
+        impactLevel: []
+      });
+      return;
+    }
+    
+    // Toggle the selected impact level in the array
+    const updatedImpact = filters.impactLevel?.includes(impactLevel)
+      ? filters.impactLevel.filter(level => level !== impactLevel)
+      : [...(filters.impactLevel || []), impactLevel];
+      
     onFilterChange({
       ...filters,
       impactLevel: updatedImpact
@@ -202,9 +214,12 @@ const FilterDrawer = ({
 
   // Helper function to get selected impact level label
   const getSelectedImpactLevel = () => {
-    if (!filters.impactLevel) return 'All';
-    const impactLevel = IMPACT_LEVELS.find(level => level.value === filters.impactLevel);
-    return impactLevel ? impactLevel.label : 'All';
+    if (!filters.impactLevel || filters.impactLevel.length === 0) return 'All';
+    if (filters.impactLevel.length === 1) {
+      const impactLevel = IMPACT_LEVELS.find(level => level.value === filters.impactLevel?.[0]);
+      return impactLevel ? impactLevel.label : 'All';
+    }
+    return `${filters.impactLevel.length} selected`;
   };
 
   // Helper function to get selected sort label
@@ -469,16 +484,9 @@ const FilterDrawer = ({
           ) : (
             <Box sx={{ cursor: "pointer", px: 2, py: 1.3, borderBottom: '1px solid #e0e0e0', ...globalStyles }} display="flex" alignItems='center' justifyContent="space-between" onClick={() => handlePremium()}>
               <Box display="flex" flexDirection="column">
+              <Typography variant="body1" fontWeight="600" sx={{ fontFamily: 'Poppins, sans-serif', color: '#000000' }}>Location</Typography>
                 <Typography
-                  variant="body2"
-                  fontWeight="400"
-                  sx={{ fontFamily: 'Poppins, sans-serif', color: '#757575' }}
-                >
-                  Location
-                </Typography>
-                <Typography
-                  variant="body1"
-                  sx={{ mt: '2px',color:'#757575', fontWeight: 'medium', ...globalStyles }}
+                  variant="body2" fontWeight="400" sx={{ fontFamily: 'Poppins, sans-serif', color: '#757575' }}
                 >
                   Edinburgh
                 </Typography>
@@ -677,7 +685,7 @@ const FilterDrawer = ({
                   component="div"
                 >
                   <ListItemText primary="All" sx={globalStyles} />
-                  {filters.impactLevel === '' && <SelectedIcon />}
+                  {(!filters.impactLevel || filters.impactLevel.length === 0) && <SelectedIcon />}
                 </ListItem>
                 {IMPACT_LEVELS.map((level) => (
                   <ListItem
@@ -695,7 +703,7 @@ const FilterDrawer = ({
                     component="div"
                   >
                     <ListItemText primary={level.label} sx={globalStyles} />
-                    {filters.impactLevel === level.value && <SelectedIcon />}
+                    {filters.impactLevel?.includes(level.value) && <SelectedIcon />}
                   </ListItem>
                 ))}
               </List>

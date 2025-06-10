@@ -133,7 +133,7 @@ export interface FilterOptions {
   alertCategory: string[];
   timeRange: number;
   distance: number;
-  impactLevel?: string;
+  impactLevel?: string[];
   customDateFrom?: Date | null;
   customDateTo?: Date | null;
 }

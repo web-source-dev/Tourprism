@@ -120,7 +120,7 @@ export default function DisruptionForecast() {
   const [location, setLocation] = useState<SummaryLocation | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(new Date());
   const [endDate, setEndDate] = useState<Date | null>(addDays(new Date(), 7));
-  const [impact, setImpact] = useState('All');
+  const [impact, setImpact] = useState<string[]>(['All']);
 
   // Weekly forecast date range (for display)
   const { isCollaboratorViewer, isSubscribed } = useAuth();
@@ -298,6 +298,11 @@ export default function DisruptionForecast() {
         ? []
         : [...alertCategory];
 
+      // Prepare impact levels based on selection
+      const impactLevels = impact.includes('All') || impact.length === 0
+        ? undefined
+        : impact;
+
       // Prepare dates
       let effectiveStartDate = startDate;
       let effectiveEndDate = endDate;
@@ -320,7 +325,7 @@ export default function DisruptionForecast() {
         includeDuplicates: false,
         generatePDF: true,
         autoSave: true, // Auto-save enabled
-        impact: impact === 'All' ? undefined : impact,
+        impact: impactLevels,
       };
 
       setGeneratingForecast(true);
@@ -894,18 +899,38 @@ export default function DisruptionForecast() {
                 <Select
                   labelId="impact-label"
                   id="impact"
-                  value={impact || 'All'}
-                  onChange={(e) => setImpact(e.target.value)}
+                  value={impact}
+                  onChange={(e) => {
+                    const value = e.target.value as string[];
+                    // If "All" is selected, clear other selections
+                    if (value.includes('All') && !impact.includes('All')) {
+                      setImpact(['All']);
+                    }
+                    // If other items are selected while "All" is already selected, remove "All"
+                    else if (value.includes('All') && value.length > 1) {
+                      setImpact(value.filter(v => v !== 'All'));
+                    }
+                    // Otherwise use the selection as is
+                    else {
+                      setImpact(value);
+                    }
+                  }}
                   disabled={isViewOnly()}
+                  multiple
                   displayEmpty
                   IconComponent={CustomDropdownIcon}
-                  renderValue={(selected) => {
-                    if (selected === "") {
+                  renderValue={(selected: string[]) => {
+                    if (selected.length === 0) {
                       return <>Select</>;
                     }
-                    // Find the matching label for the selected value
-                    const selectedLevel = IMPACT_LEVELS.find(level => level.value === selected);
-                    return selectedLevel ? selectedLevel.label : selected;
+                    if (selected.includes('All')) {
+                      return 'All';
+                    }
+                    // Map the values to their labels
+                    return selected.map(value => {
+                      const level = IMPACT_LEVELS.find(level => level.value === value);
+                      return level ? level.label : value;
+                    }).join(', ');
                   }}
                   sx={{
                     borderRadius: 2,
@@ -915,7 +940,7 @@ export default function DisruptionForecast() {
                   {IMPACT_LEVELS.map((level) => (
                     <MenuItem key={level.value} value={level.value} sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       {level.label}
-                      {impact === level.value && <SelectedTickIcon />}
+                      {impact.includes(level.value) && <SelectedTickIcon />}
                     </MenuItem>
                   ))}
                 </Select>

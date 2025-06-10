@@ -222,7 +222,9 @@ export default function AlertViewDialog({ open, onClose, alertId }: AlertViewDia
                     <Typography variant="body2" color="text.secondary">
                       Impact: 
                       <Chip
-                        label={alert.impact}
+                        label={alert.impact === 'Minor' ? 'Low' : 
+                              alert.impact === 'Severe' ? 'High' : 
+                              alert.impact}
                         size="small"
                         sx={{
                           ml: 0.5,

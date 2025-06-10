@@ -397,7 +397,7 @@ const ActionHubList: React.FC = () => {
                         {alert.city || 'Princess Street, EH1'}
                       </Typography>
 
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2, fontSize: '14px', fontFamily: 'Inter', fontWeight: 500 }}>
+                      <Typography variant="body2" color="#000000" sx={{ mb: 2, fontSize: '14px', fontFamily: 'Inter', fontWeight: 400 }}>
                         {alert.description || 'High risk for road closures due to festival activities taking place in the centre of the town. Notify guests to take alternative routes and inform them to request early check-ins to avoid delays'}
                       </Typography>
 
@@ -427,7 +427,9 @@ const ActionHubList: React.FC = () => {
 
                       <Box sx={{ mb: 3 }}>
                         <Typography variant="body2" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
-                          {alert.impact || 'Moderated'} Impact
+                          {alert.impact === 'Minor' ? 'Low' : 
+                           alert.impact === 'Severe' ? 'High' : 
+                           alert.impact || 'Moderate'} Impact
                         </Typography>
                       </Box>
 

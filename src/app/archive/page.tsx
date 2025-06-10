@@ -87,7 +87,7 @@ function ArchiveContent() {
     alertCategory: [], // Changed from incidentTypes to alertCategory
     timeRange: 0,
     distance: 50,
-    impactLevel: '',
+    impactLevel: [],
     customDateFrom: new Date(),
     customDateTo: new Date(),
   });
@@ -167,8 +167,8 @@ function ArchiveContent() {
       }
       
       // Add impact level filter if selected
-      if (filters.impactLevel) {
-        params.impactLevel = filters.impactLevel;
+      if (filters.impactLevel && filters.impactLevel.length > 0) {
+        params.impactLevel = filters.impactLevel.join(',');
       }
       
       // Add sort parameters
@@ -415,7 +415,7 @@ function ArchiveContent() {
       alertCategory: [], // Changed from incidentTypes to alertCategory
       timeRange: 0,
       distance: 50,
-      impactLevel: '',
+      impactLevel: [],
       customDateFrom: new Date(),
       customDateTo: new Date(),
     });
@@ -594,7 +594,7 @@ function ArchiveContent() {
                     {/* Alert Content */}
                     <Typography variant="body2" sx={{
                       mb: 1.5,
-                      color: '#333',
+                      color: '#000000',
                       flex: 1,
                       fontSize: '14px',
                       //show only 3 lines
@@ -635,7 +635,9 @@ function ArchiveContent() {
                           borderRadius: 1,
                           fontWeight: 500,
                         }}>
-                          {alert.impact || 'Moderate'} Impact
+                          {alert.impact === 'Minor' ? 'Low' : 
+                           alert.impact === 'Severe' ? 'High' : 
+                           alert.impact || 'Moderate'} Impact
                         </Typography>
                       </Box>
                     </Box>

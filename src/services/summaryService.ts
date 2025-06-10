@@ -16,7 +16,7 @@ export interface SummaryParameters {
   locations?: SummaryLocation[];
   alertTypes?: string[];
   alertCategory?: string;
-  impact?: string;
+  impact?: string | string[];
   includeDuplicates?: boolean;
 }
 
@@ -54,7 +54,7 @@ export interface GenerateSummaryRequest {
   locations?: SummaryLocation[];
   alertTypes?: string[];
   alertCategory?: string;
-  impact?: string;
+  impact?: string | string[];
   includeDuplicates?: boolean;
   generatePDF?: boolean;
   autoSave?: boolean;
@@ -97,7 +97,7 @@ export interface ForecastResponse {
     location?: string;
     locations?: SummaryLocation[];
     alertCategory?: string;
-    impact?: string;
+    impact?: string | string[];
     alerts: unknown[];
     htmlContent: string;
     pdfUrl?: string;
@@ -133,7 +133,10 @@ export const generateSummary = async (data: GenerateSummaryRequest): Promise<Gen
       alertTypes: data.alertTypes || [],
       // We're now primarily using alertTypes array, so alertCategory is less important
       alertCategory: data.alertCategory === 'All' ? undefined : data.alertCategory,
-      impact: data.impact === 'All' ? undefined : data.impact,
+      // Handle impact which can be string or string[]
+      impact: Array.isArray(data.impact) 
+        ? (data.impact.includes('All') ? undefined : data.impact) 
+        : (data.impact === 'All' ? undefined : data.impact),
       generatePDF: true,
       autoSave: data.autoSave === true
     };
@@ -258,7 +261,7 @@ export const getUpcomingForecasts = async (
   days: number = 7, 
   location?: string, 
   alertCategories?: string | string[], 
-  impact?: string, 
+  impact?: string | string[], 
   generatePdfOnLoad: boolean = false
 ): Promise<ForecastResponse> => {
   try {
@@ -283,7 +286,22 @@ export const getUpcomingForecasts = async (
       }
     }
     
-    if (impact && impact !== 'All') params.append('impact', impact);
+    // Handle impact parameter that can be string or string array
+    if (impact) {
+      if (Array.isArray(impact)) {
+        // Skip if it contains 'All' or is empty
+        if (!impact.includes('All') && impact.length > 0) {
+          impact.forEach(impactLevel => {
+            params.append('impact', impactLevel);
+          });
+        }
+      } 
+      // If it's a string and not 'All', append it
+      else if (impact !== 'All') {
+        params.append('impact', impact);
+      }
+    }
+    
     if (!generatePdfOnLoad) params.append('skipPdfGeneration', 'true');
     
     const query = params.toString();
@@ -363,7 +381,7 @@ export const generateClientPdf = async (alerts: AlertItem[], options: {
   endDate?: string | Date;
   location?: string;
   alertCategory?: string;
-  impact?: string;
+  impact?: string | string[];
 }): Promise<Blob> => {
   try {
     const doc = new jsPDF();
@@ -548,7 +566,7 @@ export const downloadPdf = async (pdfUrl: string | null, filename: string = 'for
   endDate?: string | Date;
   location?: string;
   alertCategory?: string;
-  impact?: string;
+  impact?: string | string[];
 }): Promise<boolean> => {
   try {
     // If we have alerts and options, generate PDF on the client side
