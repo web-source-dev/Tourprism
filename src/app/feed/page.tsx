@@ -907,9 +907,33 @@ export default function Feed() {
     setFilters(newFilters);
   };
 
-  const handleApplyFilters = () => {
+  const handleApplyFilters = (selectedCity?: string) => {
     setIsFilterDrawerOpen(false);
-    if (city && coords) {
+    
+    // If a city is passed from FilterDrawer, use it
+    if (selectedCity) {
+      // Default coordinates for predefined cities
+      const cityCoordinates: Record<string, {latitude: number, longitude: number}> = {
+        'Edinburgh': { latitude: 55.9533, longitude: -3.1883 },
+        'Glasgow': { latitude: 55.8642, longitude: -4.2518 },
+        'Stirling': { latitude: 56.1165, longitude: -3.9369 },
+        'Manchester': { latitude: 53.4808, longitude: -2.2426 },
+        'London': { latitude: 51.5074, longitude: -0.1278 },
+      };
+      
+      // Use coordinates if available, otherwise just use city name
+      if (cityCoordinates[selectedCity]) {
+        setCity(selectedCity);
+        setCoords(cityCoordinates[selectedCity]);
+        fetchLocationAlerts(selectedCity, cityCoordinates[selectedCity]);
+      } else {
+        setCity(selectedCity);
+        setCoords(null);
+        fetchLocationAlerts(selectedCity);
+      }
+    } 
+    // If no city is passed, use current city and coords
+    else if (city && coords) {
       fetchLocationAlerts(city, coords);
     } else if (city) {
       fetchLocationAlerts(city);

@@ -14,7 +14,10 @@ import {
 } from '@mui/material';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
-
+// Add global styles for Poppins font
+const globalStyles = {
+    fontFamily: 'Poppins, sans-serif',
+  };
 export interface FilterOptions {
     reportType: string;
     location: string;
@@ -161,8 +164,8 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                         }}
                     >
                         <Box sx={{ width: '100%' }}>
-                            <Typography variant="body2" color="text.secondary">Report Type</Typography>
-                            <Typography variant="body1" fontWeight="medium">{getSelectedOption('reportType')}</Typography>
+                            <Typography variant="body1" fontWeight="600" sx={{ fontFamily: 'Poppins, sans-serif', color: '#000000' }}>Report Type</Typography>
+                            <Typography variant="body2" fontWeight="400" sx={{mt:0.5,color: '#757575', ...globalStyles }}>{getSelectedOption('reportType')}</Typography>
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ 
@@ -278,8 +281,8 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                         }}
                     >
                         <Box sx={{ width: '100%' }}>
-                            <Typography variant="body2" color="text.secondary">Location</Typography>
-                            <Typography variant="body1" fontWeight="medium">{getSelectedOption('location')}</Typography>
+                            <Typography variant="body1" fontWeight="600" sx={{ fontFamily: 'Poppins, sans-serif', color: '#000000' }}>Location</Typography>
+                            <Typography variant="body2" fontWeight="400" sx={{mt:0.5,color: '#757575', ...globalStyles }}>{getSelectedOption('location')}</Typography>
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ 
@@ -368,8 +371,8 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                         }}
                     >
                         <Box sx={{ width: '100%' }}>
-                            <Typography variant="body2" color="text.secondary">Date Created</Typography>
-                            <Typography variant="body1" fontWeight="medium">
+                            <Typography variant="body1" fontWeight="600" sx={{ fontFamily: 'Poppins, sans-serif', color: '#000000' }}>Date Created</Typography>
+                            <Typography variant="body2" fontWeight="400" sx={{mt:0.5,color: '#757575', ...globalStyles }}>
                                 {filters.dateCreated === 'Custom' && (filters.customDateStart || filters.customDateEnd)
                                     ? `${filters.customDateStart || 'Start'} to ${filters.customDateEnd || 'End'}`
                                     : getSelectedOption('dateCreated')}
@@ -519,8 +522,8 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                         }}
                     >
                         <Box sx={{ width: '100%' }}>
-                            <Typography variant="body2" color="text.secondary">Delivery Method</Typography>
-                            <Typography variant="body1" fontWeight="medium">{getSelectedOption('deliveryMethod')}</Typography>
+                            <Typography variant="body1" fontWeight="600" sx={{ fontFamily: 'Poppins, sans-serif', color: '#000000' }}>Delivery Method</Typography>
+                            <Typography variant="body2" fontWeight="400" sx={{mt:0.5,color: '#757575', ...globalStyles }}>{getSelectedOption('deliveryMethod')}</Typography>
                         </Box>
                     </AccordionSummary>
                     <AccordionDetails sx={{ 
