@@ -96,11 +96,6 @@ const Navbar: React.FC<NavbarProps> = ({
                 <path d="M13.3333 12C13.7015 12 14 12.2984 14 12.6666C14 13.0348 13.7015 13.3333 13.3333 13.3333L2.66667 13.3333C2.29848 13.3333 2 13.0348 2 12.6666C2 12.2984 2.29848 12 2.66667 12L13.3333 12Z" fill="#616161" />
               </svg>
             </IconButton>
-            {!isAuthenticated && isFeedPage && (
-              <Typography variant="h6" sx={{ fontWeight: '600' }}>
-                Feed
-              </Typography>
-            )}
             </>
           )}
 

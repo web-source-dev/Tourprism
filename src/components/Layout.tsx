@@ -124,6 +124,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
     
     { text: 'Logout', icon: '', path: '/' }
   ] : [
+    { text: 'Feed', icon: '', path: '/feed' },
     // { text: 'About', icon: '', path: '/about' },
     // { text: 'Feature', icon: '', path: '/feature' },
     // { text: 'Resources', icon: '', path: '/resources' },
