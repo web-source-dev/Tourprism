@@ -43,11 +43,10 @@ import Layout from '@/components/Layout';
 const ALERT_CATEGORIES = [
   { value: "All", label: "All" },
   { value: "Industrial Action", label: "Industrial Action" },
-  { value: "Transport", label: "Transport" },
-  { value: "Civil Unrest", label: "Civil Unrest" },
-  { value: "Health", label: "Health" },
-  { value: "General Safety", label: "General Safety" },
-  { value: "Natural Disaster", label: "Natural Disaster" }
+  { value: "Extreme Weather", label: "Extreme Weather" },
+  { value: "Infrastructure Failures", label: "Infrastructure Failures" },
+  { value: "Public Safety Incidents", label: "Public Safety Incidents" },
+  { value: "Festivals and Events", label: "Festivals and Events" },
 ];
 
 // This can be removed or commented out as we're using direct categories now

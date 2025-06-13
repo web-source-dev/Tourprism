@@ -52,6 +52,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FileCopyIcon from '@mui/icons-material/FileCopy';
 import ArchiveIcon from '@mui/icons-material/Archive';
+import { formatStandardDateTime } from '@/utils/dateFormat';
 
 // Define a more specific type for filters
 interface FilterOptions {
@@ -491,24 +492,12 @@ export default function AlertsManagement() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    if (!dateString) return 'N/A';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   // Helper function to format date range
   const formatDateRange = (startDate?: string, endDate?: string) => {
     if (!startDate && !endDate) return 'N/A';
-    if (startDate && !endDate) return `From ${formatDate(startDate)}`;
-    if (!startDate && endDate) return `Until ${formatDate(endDate)}`;
-    return `${formatDate(startDate || '')} - ${formatDate(endDate || '')}`;
+    if (startDate && !endDate) return `From ${formatStandardDateTime(startDate)}`;
+    if (!startDate && endDate) return `Until ${formatStandardDateTime(endDate)}`;
+    return `${formatStandardDateTime(startDate || '')} - ${formatStandardDateTime(endDate || '')}`;
   };
 
   // Mobile card view for alerts
@@ -579,7 +568,7 @@ export default function AlertsManagement() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Last updated:</Typography>
                   <Typography variant="body2">
-                    {formatDate(alert.updated || alert.updatedAt)}
+                    {formatStandardDateTime(alert.updated || alert.updatedAt)}
                   </Typography>
                 </Box>
               </Box>
@@ -800,7 +789,7 @@ export default function AlertsManagement() {
                   </TableCell>
                   <TableCell sx={{ minWidth: 150 }}>
                     <Typography variant="body2">
-                      {formatDate(alert.updated || alert.updatedAt)}
+                      {formatStandardDateTime(alert.updated || alert.updatedAt)}
                     </Typography>
                     {alert.updatedBy && (
                       <Typography variant="caption" color="text.secondary">

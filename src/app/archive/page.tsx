@@ -13,6 +13,7 @@ import FilterDrawer from '@/components/FilterDrawer';
 import { Socket, io } from 'socket.io-client';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/ui/toast';
+import { formatStandardDateTime } from '@/utils/dateFormat';
 
 // Define a specific interface for the API parameters
 interface ArchiveAlertParams {
@@ -54,19 +55,6 @@ const formatRelativeTime = (dateString: string) => {
     // More than a day
     return `${Math.floor(diffInSeconds / 86400)}d`;
   }
-};
-
-// Format date for display
-const formatDateForDisplay = (dateString: string) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
 };
 
 // Create a client component that uses the useSearchParams hook
@@ -611,20 +599,25 @@ function ArchiveContent() {
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                       {/* Start and End Time */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        {alert.expectedStart && (
-                          <Box>
-                            <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
-                              Started: {formatDateForDisplay(alert.expectedStart)}
-                            </Typography>
-                          </Box>
-                        )}
-                        {alert.expectedEnd && (
-                          <Box>
-                            <Typography variant="body2" sx={{ fontSize: '14px', color: '#757575', fontWeight: 400 }}>
-                              Ended: {formatDateForDisplay(alert.expectedEnd)}
-                            </Typography>
-                          </Box>
-                        )}
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          {alert.expectedStart ? formatStandardDateTime(alert.expectedStart) : '06 May 9:00AM'}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          End:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          {alert.expectedEnd ? formatStandardDateTime(alert.expectedEnd) : '06 May 9:00AM'}
+                        </Typography>
                       </Box>
 
                       {/* Impact Level */}

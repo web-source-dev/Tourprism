@@ -28,24 +28,14 @@ import { io, Socket } from 'socket.io-client';
 import { useToast } from '@/ui/toast';
 import GetAccessCard from '@/components/GetAccessCard';
 import UnlockFeaturesCard from '@/components/UnlockFeaturesCard';
+import { formatStandardDateTime } from '@/utils/dateFormat';
 
 // Extend the existing User interface with the new properties
 interface ExtendedUser extends User {
   isProfileComplete?: boolean;
   profileCompletionPercentage?: number;
 }
-// Function to format date in "Month Day, Time" format
-const formatDateForDisplay = (dateString: string) => {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
-  });
-};
+
 
 // Add this function after the formatDateForDisplay function
 const formatRelativeTime = (dateString: string) => {
@@ -78,13 +68,14 @@ const sortAlertsByFilter = (alerts: AlertType[], sortBy: string) => {
   return [...alerts].sort((a, b) => {
     if (sortBy === 'latest') {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    } else if (sortBy === 'oldest') {
-      return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-    } else if (sortBy === 'most_follows') {
-      return (b.numberOfFollows || 0) - (a.numberOfFollows || 0);
-    } else if (sortBy === 'most_severe') {
-      const impactOrder = { 'Severe': 3, 'Moderate': 2, 'Minor': 1 };
-      return (impactOrder[b.impact as keyof typeof impactOrder] || 0) - (impactOrder[a.impact as keyof typeof impactOrder] || 0);
+    } else if (sortBy === 'highest_impact') {
+      const impactOrder = { 'Severe': 3, 'High': 3, 'Moderate': 2, 'Medium': 2, 'Minor': 1, 'Low': 1 };
+      const impactA = impactOrder[a.impact as keyof typeof impactOrder] || 0;
+      const impactB = impactOrder[b.impact as keyof typeof impactOrder] || 0;
+      
+ 
+      
+      return impactB - impactA;
     }
     // Default to latest
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -115,7 +106,7 @@ export default function Feed() {
     sortBy: 'latest',
     alertCategory: [],
     timeRange: 7,
-    distance: 50,
+    distance: 20,
     impactLevel: [],
     customDateFrom: new Date(),
     customDateTo: new Date(),
@@ -204,11 +195,11 @@ export default function Feed() {
       for (const region of operatingRegions) {
         const params: Record<string, unknown> = {
           page: 1,
-          limit: 10,
+          limit: isAuthenticated ? 10 : 15, // <-- Set limit based on auth
           sortBy: filters.sortBy,
           latitude: region.latitude,
           longitude: region.longitude,
-          distance: filters.distance || 50
+          distance: filters.distance || 20
         };
 
         if (filters.timeRange > 0) {
@@ -260,7 +251,7 @@ export default function Feed() {
     } finally {
       setLoading(false);
     }
-  }, [userProfile, filters]);
+  }, [userProfile, filters ,isAuthenticated]);
 
   // Define the fetchLocationAlerts function with useCallback to avoid recreation on each render
   const fetchLocationAlerts = useCallback(async (cityName: string = "Edinburgh", coordinates: { latitude: number; longitude: number } | null = null) => {
@@ -289,7 +280,7 @@ export default function Feed() {
       if (!skipDefaultLocation) {
         const params: Record<string, unknown> = {
           page: 1,
-          limit: isAuthenticated ? 10 : 15,
+          limit: isAuthenticated ? 10 : 15, // <-- Set limit based on auth
           sortBy: filters.sortBy,
         };
         if (filters.timeRange > 0) {
@@ -333,66 +324,66 @@ export default function Feed() {
         if (locationBasedAlerts.length < response.alerts.length) {
           console.warn(`Filtered out ${response.alerts.length - locationBasedAlerts.length} duplicate alert(s) in initial load`);
         }
+        const backendTotalCount = response.totalCount;
+
+        // STEP 1: Organize alerts into their respective categories
+        // Get followed alerts from both sources
+        const followedAlerts = [
+          ...operatingRegionsResults.filter(alert => alert.isFollowing),
+          ...locationBasedAlerts.filter(alert => alert.isFollowing)
+        ];
+
+        // Get non-followed operating region alerts
+        const nonFollowedOperatingRegionAlerts = operatingRegionsResults.filter(alert => !alert.isFollowing);
+
+        // Get normal location alerts (not followed, not from operating regions)
+        const normalAlerts = locationBasedAlerts.filter(alert => !alert.isFollowing);
+
+        // STEP 2: Sort each category internally according to the filter criteria
+        const sortedFollowedAlerts = sortAlertsByFilter(followedAlerts, filters.sortBy);
+        const sortedOperatingRegionAlerts = sortAlertsByFilter(nonFollowedOperatingRegionAlerts, filters.sortBy);
+        const sortedNormalAlerts = sortAlertsByFilter(normalAlerts, filters.sortBy);
+
+        // STEP 3: Combine all categories in the correct order while removing duplicates
+        const sortedAllAlerts: AlertType[] = [];
+        const addedIds = new Set<string>();
+
+        // Add followed alerts first (highest priority)
+        sortedFollowedAlerts.forEach(alert => {
+          if (!addedIds.has(alert._id)) {
+            sortedAllAlerts.push(alert);
+            addedIds.add(alert._id);
+          }
+        });
+
+        // Add operating region alerts second (medium priority)
+        sortedOperatingRegionAlerts.forEach(alert => {
+          if (!addedIds.has(alert._id)) {
+            sortedAllAlerts.push(alert);
+            addedIds.add(alert._id);
+          }
+        });
+
+        // Add normal alerts last (lowest priority)
+        sortedNormalAlerts.forEach(alert => {
+          if (!addedIds.has(alert._id)) {
+            sortedAllAlerts.push(alert);
+            addedIds.add(alert._id);
+          }
+        });
+
+        // Apply the limit for non-authenticated users
+        if (!isAuthenticated) {
+          setAlerts(sortedAllAlerts.slice(0, 15));
+        } else {
+          setAlerts(sortedAllAlerts);
+        }
+
+        // Use backend totalCount for correct pagination
+        setTotalCount(backendTotalCount || totalCount || 0);
+        setHasMore(isAuthenticated && sortedAllAlerts.length < (backendTotalCount || totalCount || 0));
+        setPage(1);
       }
-
-      // STEP 1: Organize alerts into their respective categories
-      // Get followed alerts from both sources
-      const followedAlerts = [
-        ...operatingRegionsResults.filter(alert => alert.isFollowing),
-        ...locationBasedAlerts.filter(alert => alert.isFollowing)
-      ];
-
-      // Get non-followed operating region alerts
-      const nonFollowedOperatingRegionAlerts = operatingRegionsResults.filter(alert => !alert.isFollowing);
-
-      // Get normal location alerts (not followed, not from operating regions)
-      const normalAlerts = locationBasedAlerts.filter(alert => !alert.isFollowing);
-
-      // STEP 2: Sort each category internally according to the filter criteria
-      const sortedFollowedAlerts = sortAlertsByFilter(followedAlerts, filters.sortBy);
-      const sortedOperatingRegionAlerts = sortAlertsByFilter(nonFollowedOperatingRegionAlerts, filters.sortBy);
-      const sortedNormalAlerts = sortAlertsByFilter(normalAlerts, filters.sortBy);
-
-      // STEP 3: Combine all categories in the correct order while removing duplicates
-      const sortedAllAlerts: AlertType[] = [];
-      const addedIds = new Set<string>();
-
-      // Add followed alerts first (highest priority)
-      sortedFollowedAlerts.forEach(alert => {
-        if (!addedIds.has(alert._id)) {
-          sortedAllAlerts.push(alert);
-          addedIds.add(alert._id);
-        }
-      });
-
-      // Add operating region alerts second (medium priority)
-      sortedOperatingRegionAlerts.forEach(alert => {
-        if (!addedIds.has(alert._id)) {
-          sortedAllAlerts.push(alert);
-          addedIds.add(alert._id);
-        }
-      });
-
-      // Add normal alerts last (lowest priority)
-      sortedNormalAlerts.forEach(alert => {
-        if (!addedIds.has(alert._id)) {
-          sortedAllAlerts.push(alert);
-          addedIds.add(alert._id);
-        }
-      });
-
-      // Apply the limit for non-authenticated users
-      if (!isAuthenticated) {
-        setAlerts(sortedAllAlerts.slice(0, 15));
-      } else {
-        setAlerts(sortedAllAlerts);
-      }
-
-      // Set total count to include both sets for pagination
-      const totalRegularAlerts = skipDefaultLocation ? 0 : locationBasedAlerts.length;
-      setTotalCount(operatingRegionsResults.length + totalRegularAlerts);
-      setHasMore(isAuthenticated && sortedAllAlerts.length < (operatingRegionsResults.length + totalRegularAlerts));
-      setPage(1);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       showToast('Failed to fetch alerts', 'error');
@@ -402,7 +393,7 @@ export default function Feed() {
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, showToast]);
+  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, showToast, totalCount]);
 
   // Socket.io connection setup
   useEffect(() => {
@@ -836,7 +827,7 @@ export default function Feed() {
       if (!skipDefaultLocation) {
         const params: Record<string, unknown> = {
           page: nextPage,
-          limit: 10,
+          limit: 10, // <-- Always 10 for authenticated users
           sortBy: filters.sortBy,
         };
 
@@ -909,18 +900,18 @@ export default function Feed() {
 
   const handleApplyFilters = (selectedCity?: string) => {
     setIsFilterDrawerOpen(false);
-    
+
     // If a city is passed from FilterDrawer, use it
     if (selectedCity) {
       // Default coordinates for predefined cities
-      const cityCoordinates: Record<string, {latitude: number, longitude: number}> = {
+      const cityCoordinates: Record<string, { latitude: number, longitude: number }> = {
         'Edinburgh': { latitude: 55.9533, longitude: -3.1883 },
         'Glasgow': { latitude: 55.8642, longitude: -4.2518 },
         'Stirling': { latitude: 56.1165, longitude: -3.9369 },
         'Manchester': { latitude: 53.4808, longitude: -2.2426 },
         'London': { latitude: 51.5074, longitude: -0.1278 },
       };
-      
+
       // Use coordinates if available, otherwise just use city name
       if (cityCoordinates[selectedCity]) {
         setCity(selectedCity);
@@ -931,7 +922,7 @@ export default function Feed() {
         setCoords(null);
         fetchLocationAlerts(selectedCity);
       }
-    } 
+    }
     // If no city is passed, use current city and coords
     else if (city && coords) {
       fetchLocationAlerts(city, coords);
@@ -942,10 +933,10 @@ export default function Feed() {
 
   const handleClearFilters = () => {
     setFilters({
-      sortBy: 'newest',
+      sortBy: 'latest',
       alertCategory: [],
       timeRange: 7,
-      distance: 50,
+      distance: 20,
       impactLevel: [],
       customDateFrom: new Date(),
       customDateTo: new Date(),
@@ -1151,14 +1142,26 @@ export default function Feed() {
           justifyContent: 'space-between',
           alignItems: 'center',
           mb: 2,
+          pb: {xs: 0, md: 2},
           borderBottom: '1px solid #E0E1E2',
         }}>
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
               Feed
             </Typography>
-            <Typography variant="body2" sx={{ fontWeight: 400 }}>
-              View upcoming travel disruptions
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                fontWeight: 400,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 0.5,
+                cursor: 'pointer'
+              }}
+            >
+              Viewing alerts for • <span onClick={() => setIsFilterDrawerOpen(true)} style={{ color: '#2A63B9', fontWeight: 600 }}>
+                {city || "Edinburgh"}
+              </span>
             </Typography>
           </Box>
           <IconButton
@@ -1174,7 +1177,7 @@ export default function Feed() {
             <svg width="34" height="34" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="0.5" y="0.5" width="33" height="33" rx="7.5" fill="white" />
               <rect x="0.5" y="0.5" width="33" height="33" rx="7.5" stroke="#E0E1E2" />
-              <path fill-rule="evenodd" clip-rule="evenodd" d="M12.6366 9.68752C12.6496 9.68752 12.6626 9.68752 12.6757 9.68752L21.3634 9.68752C21.9413 9.68749 22.4319 9.68747 22.819 9.74024C23.2287 9.7961 23.6205 9.9222 23.9204 10.2523C24.2229 10.5854 24.3057 10.9867 24.3121 11.397C24.318 11.7801 24.2568 12.2561 24.1853 12.811L24.1801 12.8514C24.1549 13.0478 24.117 13.2377 24.038 13.4278C23.9578 13.6209 23.8474 13.7853 23.7098 13.9488C22.975 14.8217 21.6091 16.3992 19.6861 17.8358C19.655 17.859 19.6157 17.9141 19.6082 17.9968C19.4214 20.0615 19.257 21.1539 19.1385 21.7868C19.0102 22.4711 18.4882 22.9448 18.0381 23.2709C17.8026 23.4416 17.5525 23.5953 17.3299 23.7308C17.312 23.7417 17.2944 23.7524 17.277 23.763C17.0689 23.8895 16.8921 23.997 16.7443 24.1016C16.3389 24.3882 15.8712 24.3681 15.5137 24.1598C15.1764 23.9633 14.939 23.6049 14.891 23.1995C14.7856 22.3097 14.5946 20.5677 14.3838 17.992C14.3771 17.9093 14.3641 17.8854 14.3631 17.8834C14.3623 17.882 14.3604 17.8785 14.3541 17.8716C14.3471 17.8638 14.333 17.8501 14.3063 17.8301C12.3871 16.3953 11.0239 14.8205 10.2901 13.9487C10.1531 13.7859 10.0394 13.6254 9.95834 13.4302C9.87898 13.2391 9.84514 13.0482 9.81983 12.8514C9.81809 12.8379 9.81636 12.8244 9.81463 12.811C9.74322 12.2561 9.68197 11.7801 9.6879 11.397C9.69425 10.9867 9.77706 10.5854 10.0796 10.2523C10.3795 9.9222 10.7713 9.7961 11.181 9.74024C11.5681 9.68747 12.0587 9.68749 12.6366 9.68752ZM11.333 10.8549C11.0449 10.8942 10.9581 10.9584 10.9123 11.0088C10.8691 11.0563 10.817 11.14 10.8128 11.4144C10.8082 11.7066 10.8576 12.1011 10.9356 12.7079C10.9573 12.8765 10.9763 12.9482 10.9973 12.9987C11.0166 13.0452 11.0508 13.1054 11.1509 13.2243C11.8696 14.0782 13.1663 15.5732 14.9799 16.9291C15.1256 17.038 15.2593 17.1729 15.356 17.3545C15.4513 17.5334 15.4903 17.7195 15.5051 17.9002C15.7147 20.4619 15.9044 22.1903 16.0082 23.0672C16.0113 23.094 16.0211 23.1203 16.0361 23.1433C16.0514 23.1668 16.0684 23.181 16.08 23.1878C16.0815 23.1886 16.0828 23.1893 16.0839 23.1899C16.0866 23.1884 16.0902 23.1862 16.0947 23.183C16.2763 23.0546 16.4871 22.9265 16.686 22.8057C16.7058 22.7936 16.7255 22.7817 16.745 22.7698C16.9691 22.6334 17.1835 22.5009 17.378 22.3599C17.7881 22.0628 17.9893 21.8113 18.0327 21.5796C18.1426 20.9932 18.3029 19.9386 18.4878 17.8954C18.5217 17.521 18.7055 17.1641 19.0128 16.9345C20.83 15.5769 22.1294 14.0793 22.8491 13.2243C22.9364 13.1206 22.9752 13.0537 22.9991 12.9962C23.0242 12.9358 23.0453 12.8558 23.0643 12.7079C23.1424 12.1011 23.1917 11.7066 23.1872 11.4144C23.183 11.14 23.1308 11.0563 23.0877 11.0088C23.0419 10.9584 22.9551 10.8942 22.667 10.8549C22.365 10.8138 21.952 10.8125 21.3242 10.8125H12.6757C12.0479 10.8125 11.635 10.8138 11.333 10.8549ZM16.078 23.1925C16.078 23.1924 16.0784 23.1923 16.0791 23.1921L16.078 23.1925Z" fill="black" />
+              <path fillRule="evenodd" clipRule="evenodd" d="M12.6366 9.68752C12.6496 9.68752 12.6626 9.68752 12.6757 9.68752L21.3634 9.68752C21.9413 9.68749 22.4319 9.68747 22.819 9.74024C23.2287 9.7961 23.6205 9.9222 23.9204 10.2523C24.2229 10.5854 24.3057 10.9867 24.3121 11.397C24.318 11.7801 24.2568 12.2561 24.1853 12.811L24.1801 12.8514C24.1549 13.0478 24.117 13.2377 24.038 13.4278C23.9578 13.6209 23.8474 13.7853 23.7098 13.9488C22.975 14.8217 21.6091 16.3992 19.6861 17.8358C19.655 17.859 19.6157 17.9141 19.6082 17.9968C19.4214 20.0615 19.257 21.1539 19.1385 21.7868C19.0102 22.4711 18.4882 22.9448 18.0381 23.2709C17.8026 23.4416 17.5525 23.5953 17.3299 23.7308C17.312 23.7417 17.2944 23.7524 17.277 23.763C17.0689 23.8895 16.8921 23.997 16.7443 24.1016C16.3389 24.3882 15.8712 24.3681 15.5137 24.1598C15.1764 23.9633 14.939 23.6049 14.891 23.1995C14.7856 22.3097 14.5946 20.5677 14.3838 17.992C14.3771 17.9093 14.3641 17.8854 14.3631 17.8834C14.3623 17.882 14.3604 17.8785 14.3541 17.8716C14.3471 17.8638 14.333 17.8501 14.3063 17.8301C12.3871 16.3953 11.0239 14.8205 10.2901 13.9487C10.1531 13.7859 10.0394 13.6254 9.95834 13.4302C9.87898 13.2391 9.84514 13.0482 9.81983 12.8514C9.81809 12.8379 9.81636 12.8244 9.81463 12.811C9.74322 12.2561 9.68197 11.7801 9.6879 11.397C9.69425 10.9867 9.77706 10.5854 10.0796 10.2523C10.3795 9.9222 10.7713 9.7961 11.181 9.74024C11.5681 9.68747 12.0587 9.68749 12.6366 9.68752ZM11.333 10.8549C11.0449 10.8942 10.9581 10.9584 10.9123 11.0088C10.8691 11.0563 10.817 11.14 10.8128 11.4144C10.8082 11.7066 10.8576 12.1011 10.9356 12.7079C10.9573 12.8765 10.9763 12.9482 10.9973 12.9987C11.0166 13.0452 11.0508 13.1054 11.1509 13.2243C11.8696 14.0782 13.1663 15.5732 14.9799 16.9291C15.1256 17.038 15.2593 17.1729 15.356 17.3545C15.4513 17.5334 15.4903 17.7195 15.5051 17.9002C15.7147 20.4619 15.9044 22.1903 16.0082 23.0672C16.0113 23.094 16.0211 23.1203 16.0361 23.1433C16.0514 23.1668 16.0684 23.181 16.08 23.1878C16.0815 23.1886 16.0828 23.1893 16.0839 23.1899C16.0866 23.1884 16.0902 23.1862 16.0947 23.183C16.2763 23.0546 16.4871 22.9265 16.686 22.8057C16.7058 22.7936 16.7255 22.7817 16.745 22.7698C16.9691 22.6334 17.1835 22.5009 17.378 22.3599C17.7881 22.0628 17.9893 21.8113 18.0327 21.5796C18.1426 20.9932 18.3029 19.9386 18.4878 17.8954C18.5217 17.521 18.7055 17.1641 19.0128 16.9345C20.83 15.5769 22.1294 14.0793 22.8491 13.2243C22.9364 13.1206 22.9752 13.0537 22.9991 12.9962C23.0242 12.9358 23.0453 12.8558 23.0643 12.7079C23.1424 12.1011 23.1917 11.7066 23.1872 11.4144C23.183 11.14 23.1308 11.0563 23.0877 11.0088C23.0419 10.9584 22.9551 10.8942 22.667 10.8549C22.365 10.8138 21.952 10.8125 21.3242 10.8125H12.6757C12.0479 10.8125 11.635 10.8138 11.333 10.8549ZM16.078 23.1925C16.078 23.1924 16.0784 23.1923 16.0791 23.1921L16.078 23.1925Z" fill="black" />
             </svg>
 
           </IconButton>
@@ -1271,7 +1274,7 @@ export default function Feed() {
                 <Box sx={{
                   gridColumn: { xs: '1', sm: '1', md: '1' },
                   position: 'relative',
-                  borderBottom: {sx:'' , md:'1px solid #E0E1E2'},
+                  borderBottom: { sx: '', md: '1px solid #E0E1E2' },
                   borderRight: {
                     xs: 'none',
                     sm: '1px solid #E0E1E2'
@@ -1362,7 +1365,7 @@ export default function Feed() {
                         ) : (
                           <>
                             <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                              <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
+                              <path fillRule="evenodd" clipRule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
                               <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
                             </svg>
 
@@ -1435,7 +1438,7 @@ export default function Feed() {
                           variant="body2"
                           sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
                         >
-                          {alerts[0].expectedStart ? formatDateForDisplay(alerts[0].expectedStart) : '06 May 9:00AM'}
+                          {alerts[0].expectedStart ? formatStandardDateTime(alerts[0].expectedStart) : '06 May 9:00AM'}
                         </Typography>
 
                         <Typography
@@ -1448,247 +1451,259 @@ export default function Feed() {
                           variant="body2"
                           sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
                         >
-                          {alerts[0].expectedEnd ? formatDateForDisplay(alerts[0].expectedEnd) : '06 May 9:00AM'}
+                          {alerts[0].expectedEnd ? formatStandardDateTime(alerts[0].expectedEnd) : '06 May 9:00AM'}
                         </Typography>
                       </Box>
 
-                    {/* Impact Level */}
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{
-                        display: 'inline-block',
-                        fontSize: '14px',
-                        borderRadius: 1,
-                        fontWeight: 500,
-                        fontFamily: 'Poppins',
-                      }}>
-                        {alerts[0].risk === 'Medium' || !alerts[0].risk ? 'Moderate Impact' : `${alerts[0].risk} Impact`}
-                      </Typography>
+                      {/* Impact Level */}
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" sx={{
+                          display: 'inline-block',
+                          fontSize: '14px',
+                          borderRadius: 1,
+                          fontWeight: 500,
+                          fontFamily: 'Poppins',
+                        }}>
+                          {alerts[0].impact === 'Severe' || !alerts[0].impact
+                            ? 'High Impact'
+                            : alerts[0].impact === 'Moderate'
+                              ? 'Moderate Impact'
+                              : alerts[0].impact === 'Minor'
+                                ? 'Low Impact'
+                                : `${alerts[0].impact} Impact`}
+                        </Typography>
+                      </Box>
                     </Box>
-                  </Box>
                   </Paper>
-            )
+                )
               )}
 
-            {/* Render rest of the alerts - starting from index 0 or 1 depending on the first position */}
-            {alerts.map((alert: AlertType, index: number) => {
-              // Skip rendering if this alert would have been in the first position
-              // and we're already showing a card or if we've already rendered it
-              const startIndex = ((isAuthenticated && userProfile && !userProfile.isProfileComplete && showUnlockFeaturesCard) || (!isAuthenticated && showGetAccessCard)) ? 0 : 1;
+              {/* Render rest of the alerts - starting from index 0 or 1 depending on the first position */}
+              {alerts.map((alert: AlertType, index: number) => {
+                // Skip rendering if this alert would have been in the first position
+                // and we're already showing a card or if we've already rendered it
+                const startIndex = ((isAuthenticated && userProfile && !userProfile.isProfileComplete && showUnlockFeaturesCard) || (!isAuthenticated && showGetAccessCard)) ? 0 : 1;
 
-              if (index < startIndex) return null;
+                if (index < startIndex) return null;
 
-              // Calculate position in grid for border logic
-              const position = index + (startIndex === 0 ? 1 : 0);
+                // Calculate position in grid for border logic
+                const position = index + (startIndex === 0 ? 1 : 0);
 
-              // Calculate if this is in the last row based on different breakpoints
-              const totalItems = alerts.length - startIndex + (startIndex === 0 ? 1 : 0);
+                // Calculate if this is in the last row based on different breakpoints
+                const totalItems = alerts.length - startIndex + (startIndex === 0 ? 1 : 0);
 
-              // Calculate last row items for different breakpoints
-              const isLastRowMd = position >= totalItems - (totalItems % 3 || 3);
-              const isLastRowSm = position >= totalItems - (totalItems % 2 || 2);
-              const isLastRowXs = position === totalItems - 1;
+                // Calculate last row items for different breakpoints
+                const isLastRowMd = position >= totalItems - (totalItems % 3 || 3);
+                const isLastRowSm = position >= totalItems - (totalItems % 2 || 2);
+                const isLastRowXs = position === totalItems - 1;
 
-              // Calculate if this is the last item in a row
-              const isLastInRowMd = (position + 1) % 3 === 0 || position === totalItems - 1;
-              const isLastInRowSm = (position + 1) % 2 === 0 || position === totalItems - 1;
+                // Calculate if this is the last item in a row
+                const isLastInRowMd = (position + 1) % 3 === 0 || position === totalItems - 1;
+                const isLastInRowSm = (position + 1) % 2 === 0 || position === totalItems - 1;
 
-              return (
-                <Paper
-                  key={`alert-${alert._id}-${index}`}
+                return (
+                  <Paper
+                    key={`alert-${alert._id}-${index}`}
+                    sx={{
+                      p: 2,
+                      bgcolor: 'transparent',
+                      borderRadius: 0,
+                      boxShadow: 'none',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      borderTop: 'none',
+                      borderBottom: {
+                        xs: isLastRowXs ? 'none' : '1px solid #E0E1E2',
+                        sm: isLastRowSm ? 'none' : '1px solid #E0E1E2',
+                        md: isLastRowMd ? 'none' : '1px solid #E0E1E2'
+                      },
+                      borderRight: {
+                        xs: 'none',
+                        sm: isLastInRowSm ? 'none' : '1px solid #E0E1E2',
+                        md: isLastInRowMd ? 'none' : '1px solid #E0E1E2'
+                      }
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Box
+                        onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          cursor: 'pointer',
+                          color: '#0066FF',
+                          fontWeight: 500,
+                          opacity: isViewOnly() ? 0.5 : 1,
+                          px: 1.5,
+                          py: 0.5,
+                          borderRadius: 2,
+                          border: '1px solid #E0E1E2',
+                          bgcolor: 'transparent',
+                          fontSize: '14px',
+                          '&:hover': {
+                            bgcolor: 'rgba(0, 0, 0, 0.04)'
+                          },
+                          mb: 1,
+                          whiteSpace: 'nowrap'
+                        }}
+                      >
+                        {alert.isFollowing ? (
+                          <>
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path fillRule="evenodd" clipRule="evenodd" d="M6.99968 0.833374C4.02913 0.833374 1.61827 3.22772 1.61825 6.18468C1.61818 6.87247 1.57193 7.39159 1.25481 7.85817C1.21072 7.9221 1.15222 8.00217 1.0883 8.08966C0.977267 8.24164 0.849859 8.41603 0.753231 8.56704C0.582689 8.83357 0.416071 9.15498 0.358792 9.5295C0.171916 10.7514 1.03338 11.5425 1.89131 11.897C2.44899 12.1274 3.04588 12.3153 3.6675 12.4606C3.6634 12.5298 3.6701 12.6008 3.68887 12.6714C4.07359 14.1191 5.42024 15.1669 6.99984 15.1669C8.57944 15.1669 9.92609 14.1191 10.3108 12.6714C10.3296 12.6008 10.3363 12.5298 10.3322 12.4606C10.9537 12.3152 11.5505 12.1273 12.108 11.897C12.966 11.5425 13.8274 10.7514 13.6406 9.5295C13.5833 9.15499 13.4167 8.83357 13.2461 8.56704C13.1495 8.41604 13.0221 8.2417 12.9111 8.08972C12.8472 8.00224 12.7887 7.92215 12.7446 7.85822C12.4274 7.39162 12.3812 6.87256 12.3811 6.18473C12.3811 3.22774 9.97023 0.833374 6.99968 0.833374ZM8.87123 12.7193C7.63997 12.8714 6.35974 12.8714 5.12847 12.7193C5.4664 13.3728 6.17059 13.8335 6.99984 13.8335C7.82911 13.8335 8.53331 13.3727 8.87123 12.7193Z" fill="#0066FF" />
+                            </svg>
+                            <Typography variant="body2" sx={{ fontWeight: '540' }}>Following</Typography>
+                          </>
+                        ) : (
+                          <>
+                            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <path fillRule="evenodd" clipRule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
+                              <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
+                            </svg>
+
+                            <Typography variant="body2" sx={{ fontWeight: '540' }}>Follow</Typography>
+                          </>
+                        )}
+                      </Box>
+                      <Box>
+                        <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
+                          {formatRelativeTime(alert.createdAt)}
+                        </Typography>
+                      </Box>
+                    </Box>
+                    {/* Alert Header with Follow Button */}
+                    <Box sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      mb: 1.5
+                    }}>
+                      <Typography variant="subtitle1" sx={{
+                        fontWeight: 600,
+                        fontSize: '16px',
+                        flex: 1,
+                        fontFamily: 'Poppins'
+                      }}>
+                        {alert.title || ""}
+                      </Typography>
+
+                    </Box>
+
+                    {/* Location & Time info */}
+                    <Typography variant="body2"
+                      sx={{
+                        color: '#616161',
+                        fontSize: '14px',
+                        mb: 1,
+                        fontFamily: 'Poppins'
+                      }}
+                    >
+                      {alert.city || "Edinburgh"}
+                    </Typography>
+
+                    {/* Alert Content */}
+                    <Typography variant="body2" sx={{
+                      mb: 1.5,
+                      color: '#000000',
+                      flex: 1,
+                      fontFamily: 'Inter'
+                    }}>
+                      {alert.description || ""}
+                      {alert.recommendedAction && ` ${alert.recommendedAction}`}
+                    </Typography>
+
+                    {/* Alert Details */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      {/* Start and End Time */}
+                      <Box
+                        sx={{
+                          display: 'grid',
+                          gridTemplateColumns: '50px 1fr',
+                          rowGap: 1,
+                        }}
+                      >
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          Start:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          {alert.expectedStart ? formatStandardDateTime(alert.expectedStart) : '06 May 9:00AM'}
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          End:
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
+                        >
+                          {alert.expectedEnd ? formatStandardDateTime(alert.expectedEnd) : '06 May 9:00AM'}
+                        </Typography>
+                      </Box>
+
+
+                      {/* Impact Level */}
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="body2" sx={{
+                          display: 'inline-block',
+                          fontSize: '14px',
+                          borderRadius: 1,
+                          fontWeight: 600,
+                          fontFamily: 'Poppins'
+                        }}>
+                          {alert.impact === 'Severe' || !alert.impact
+                            ? 'High Impact'
+                            : alert.impact === 'Moderate'
+                              ? 'Moderate Impact'
+                              : alert.impact === 'Minor'
+                                ? 'Low Impact'
+                                : `${alert.impact} Impact`}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Paper>
+                );
+              })}
+            </Box>
+
+            {hasMore && isAuthenticated && (
+              <Box sx={{ textAlign: 'center', mt: 4 }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleLoadMore}
+                  disabled={loading}
+                  startIcon={loading && <CircularProgress size={20} />}
                   sx={{
-                    p: 2,
-                    bgcolor: 'transparent',
-                    borderRadius: 0,
-                    boxShadow: 'none',
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    borderTop: 'none',
-                    borderBottom: {
-                      xs: isLastRowXs ? 'none' : '1px solid #E0E1E2',
-                      sm: isLastRowSm ? 'none' : '1px solid #E0E1E2',
-                      md: isLastRowMd ? 'none' : '1px solid #E0E1E2'
-                    },
-                    borderRight: {
-                      xs: 'none',
-                      sm: isLastInRowSm ? 'none' : '1px solid #E0E1E2',
-                      md: isLastInRowMd ? 'none' : '1px solid #E0E1E2'
+                    borderColor: '#e0e0e0',
+                    color: '#333',
+                    borderRadius: 50,
+                    px: 10,
+                    py: 1,
+                    '&:hover': {
+                      borderColor: '#bdbdbd',
+                      backgroundColor: 'rgba(0,0,0,0.02)'
                     }
                   }}
                 >
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <Box
-                      onClick={() => isViewOnly() ? null : handleFollowUpdate(alert._id || '')}
-                      sx={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 0.5,
-                        cursor: 'pointer',
-                        color: '#0066FF',
-                        fontWeight: 500,
-                        opacity: isViewOnly() ? 0.5 : 1,
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 2,
-                        border: '1px solid #E0E1E2',
-                        bgcolor: 'transparent',
-                        fontSize: '14px',
-                        '&:hover': {
-                          bgcolor: 'rgba(0, 0, 0, 0.04)'
-                        },
-                        mb: 1,
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      {alert.isFollowing ? (
-                        <>
-                          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fillRule="evenodd" clipRule="evenodd" d="M6.99968 0.833374C4.02913 0.833374 1.61827 3.22772 1.61825 6.18468C1.61818 6.87247 1.57193 7.39159 1.25481 7.85817C1.21072 7.9221 1.15222 8.00217 1.0883 8.08966C0.977267 8.24164 0.849859 8.41603 0.753231 8.56704C0.582689 8.83357 0.416071 9.15498 0.358792 9.5295C0.171916 10.7514 1.03338 11.5425 1.89131 11.897C2.44899 12.1274 3.04588 12.3153 3.6675 12.4606C3.6634 12.5298 3.6701 12.6008 3.68887 12.6714C4.07359 14.1191 5.42024 15.1669 6.99984 15.1669C8.57944 15.1669 9.92609 14.1191 10.3108 12.6714C10.3296 12.6008 10.3363 12.5298 10.3322 12.4606C10.9537 12.3152 11.5505 12.1273 12.108 11.897C12.966 11.5425 13.8274 10.7514 13.6406 9.5295C13.5833 9.15499 13.4167 8.83357 13.2461 8.56704C13.1495 8.41604 13.0221 8.2417 12.9111 8.08972C12.8472 8.00224 12.7887 7.92215 12.7446 7.85822C12.4274 7.39162 12.3812 6.87256 12.3811 6.18473C12.3811 3.22774 9.97023 0.833374 6.99968 0.833374ZM8.87123 12.7193C7.63997 12.8714 6.35974 12.8714 5.12847 12.7193C5.4664 13.3728 6.17059 13.8335 6.99984 13.8335C7.82911 13.8335 8.53331 13.3727 8.87123 12.7193Z" fill="#0066FF" />
-                          </svg>
-                          <Typography variant="body2" sx={{ fontWeight: '540' }}>Following</Typography>
-                        </>
-                      ) : (
-                        <>
-                          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path fill-rule="evenodd" clip-rule="evenodd" d="M9 0.9375C5.59019 0.9375 2.79388 3.6162 2.79385 6.95951C2.79378 7.72987 2.74049 8.30447 2.37919 8.82178C2.31298 8.91524 2.24287 9.00823 2.16609 9.11006L2.10463 9.19169C2.00612 9.32281 1.89986 9.46656 1.80043 9.61777C1.60342 9.91739 1.4088 10.2817 1.34177 10.7082C1.12258 12.1028 2.13374 12.9933 3.11421 13.3876C6.59593 14.7875 11.4041 14.7875 14.8858 13.3876C15.8663 12.9933 16.8774 12.1028 16.6582 10.7082C16.5912 10.2817 16.3966 9.91739 16.1996 9.61777C16.1002 9.46656 15.9939 9.32281 15.8954 9.19169L15.834 9.11013C15.7572 9.00835 15.687 8.91523 15.6208 8.82182C15.2595 8.30449 15.2062 7.72996 15.2062 6.95956C15.2062 3.61623 12.4098 0.9375 9 0.9375ZM3.91885 6.95956C3.91885 4.27243 6.17603 2.0625 9 2.0625C11.824 2.0625 14.0812 4.27243 14.0812 6.95956C14.0812 7.74899 14.1213 8.64087 14.6999 9.46793L14.7017 9.47057C14.779 9.57963 14.8624 9.69021 14.9406 9.79393L14.9959 9.8674C15.0923 9.99576 15.1807 10.1159 15.2596 10.2359C15.4192 10.4786 15.5159 10.6857 15.5469 10.8829C15.6467 11.5178 15.2317 12.0359 14.4661 12.3438C11.2537 13.6354 6.7463 13.6354 3.53389 12.3438C2.76827 12.0359 2.35333 11.5178 2.45312 10.8829C2.48411 10.6857 2.58084 10.4786 2.74043 10.2359C2.81931 10.1159 2.90766 9.99576 3.00409 9.8674L3.05944 9.79391C3.13766 9.6902 3.22106 9.57961 3.29827 9.47057L3.30013 9.46793C3.87869 8.64087 3.91878 7.74899 3.91885 6.95956Z" fill="#056CF2" />
-                            <path d="M7.09677 15.3067C6.85195 15.1155 6.49845 15.1589 6.30722 15.4038C6.11598 15.6486 6.15943 16.0021 6.40425 16.1933C7.10253 16.7387 8.01355 17.0625 9.00051 17.0625C9.98747 17.0625 10.8985 16.7387 11.5968 16.1933C11.8416 16.0021 11.885 15.6486 11.6938 15.4038C11.5026 15.1589 11.1491 15.1155 10.9043 15.3067C10.4083 15.6941 9.74235 15.9375 9.00051 15.9375C8.25867 15.9375 7.5927 15.6941 7.09677 15.3067Z" fill="#056CF2" />
-                          </svg>
-
-                          <Typography variant="body2" sx={{ fontWeight: '540' }}>Follow</Typography>
-                        </>
-                      )}
-                    </Box>
-                    <Box>
-                      <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
-                        {formatRelativeTime(alert.createdAt)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                  {/* Alert Header with Follow Button */}
-                  <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    mb: 1.5
-                  }}>
-                    <Typography variant="subtitle1" sx={{
-                      fontWeight: 600,
-                      fontSize: '16px',
-                      flex: 1,
-                      fontFamily: 'Poppins'
-                    }}>
-                      {alert.title || ""}
-                    </Typography>
-
-                  </Box>
-
-                  {/* Location & Time info */}
-                  <Typography variant="body2"
-                    sx={{
-                      color: '#616161',
-                      fontSize: '14px',
-                      mb: 1,
-                      fontFamily: 'Poppins'
-                    }}
-                  >
-                    {alert.city || "Edinburgh"}
-                  </Typography>
-
-                  {/* Alert Content */}
-                  <Typography variant="body2" sx={{
-                    mb: 1.5,
-                    color: '#000000',
-                    flex: 1,
-                    fontFamily: 'Inter'
-                  }}>
-                    {alert.description || ""}
-                    {alert.recommendedAction && ` ${alert.recommendedAction}`}
-                  </Typography>
-
-                  {/* Alert Details */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                    {/* Start and End Time */}
-                    <Box
-                      sx={{
-                        display: 'grid',
-                        gridTemplateColumns: '50px 1fr',
-                        rowGap: 1,
-                      }}
-                    >
-                      <Typography
-                        variant="body2"
-                        sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
-                      >
-                        Start:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
-                      >
-                        {alert.expectedStart ? formatDateForDisplay(alert.expectedStart) : '06 May 9:00AM'}
-                      </Typography>
-
-                      <Typography
-                        variant="body2"
-                        sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
-                      >
-                        End:
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{ fontSize: '14px', color: '#757575', fontWeight: 500, fontFamily: 'Poppins' }}
-                      >
-                        {alert.expectedEnd ? formatDateForDisplay(alert.expectedEnd) : '06 May 9:00AM'}
-                      </Typography>
-                    </Box>
-
-
-                    {/* Impact Level */}
-                    <Box sx={{ mt: 1 }}>
-                      <Typography variant="body2" sx={{
-                        display: 'inline-block',
-                        fontSize: '14px',
-                        borderRadius: 1,
-                        fontWeight: 600,
-                        fontFamily: 'Poppins'
-                      }}>
-                        {alert.risk === 'Medium' || !alert.risk ? 'Moderate Impact' : `${alert.risk} Impact`}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              );
-            })}
-          </Box>
-
-        {hasMore && isAuthenticated && (
-          <Box sx={{ textAlign: 'center', mt: 4 }}>
-            <Button
-              variant="outlined"
-              onClick={handleLoadMore}
-              disabled={loading}
-              startIcon={loading && <CircularProgress size={20} />}
-              sx={{
-                borderColor: '#e0e0e0',
-                color: '#333',
-                borderRadius: 50,
-                px: 10,
-                py: 1,
-                '&:hover': {
-                  borderColor: '#bdbdbd',
-                  backgroundColor: 'rgba(0,0,0,0.02)'
-                }
-              }}
-            >
-              {loading ? 'Loading...' : 'Load More'}
-            </Button>
-          </Box>
+                  {loading ? 'Loading...' : 'Load More'}
+                </Button>
+              </Box>
+            )}
+          </>
         )}
-      </>
-        )}
-    </Container>
+      </Container>
 
-      {/* Remaining components (FilterDrawer, Dialog, etc.) */ }
+      {/* Remaining components (FilterDrawer, Dialog, etc.) */}
       <FilterDrawer
         open={isFilterDrawerOpen}
         onClose={() => setIsFilterDrawerOpen(false)}
