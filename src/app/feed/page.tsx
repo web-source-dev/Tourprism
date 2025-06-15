@@ -675,24 +675,21 @@ export default function Feed() {
     fetchLocationAlerts('Edinburgh', edinburghCoords);
   }, [fetchLocationAlerts])
 
+  // Load saved city from localStorage on mount
   useEffect(() => {
-    // Check if we have stored location
-    const storedCity = localStorage.getItem('selectedCity');
-    const storedLat = localStorage.getItem('selectedLat');
-    const storedLng = localStorage.getItem('selectedLng');
+    const savedCity = localStorage.getItem('selectedCity');
+    const savedLat = localStorage.getItem('selectedLat');
+    const savedLng = localStorage.getItem('selectedLng');
 
-    if (storedCity && storedLat && storedLng) {
-      // Use stored location if available
-      setCity(storedCity);
+    if (savedCity && savedLat && savedLng) {
+      setCity(savedCity);
       setCoords({
-        latitude: parseFloat(storedLat),
-        longitude: parseFloat(storedLng)
+        latitude: parseFloat(savedLat),
+        longitude: parseFloat(savedLng)
       });
       setLocationConfirmed(true);
-    } else {
-      handleSelectEdinburgh();
     }
-  }, [handleSelectEdinburgh]);
+  }, []);
 
   useEffect(() => {
     if (locationConfirmed && city && coords && profileLoaded) {
@@ -916,10 +913,15 @@ export default function Feed() {
       if (cityCoordinates[selectedCity]) {
         setCity(selectedCity);
         setCoords(cityCoordinates[selectedCity]);
+        // Store the selected city in localStorage
+        localStorage.setItem('selectedCity', selectedCity);
+        localStorage.setItem('selectedLat', cityCoordinates[selectedCity].latitude.toString());
+        localStorage.setItem('selectedLng', cityCoordinates[selectedCity].longitude.toString());
         fetchLocationAlerts(selectedCity, cityCoordinates[selectedCity]);
       } else {
         setCity(selectedCity);
         setCoords(null);
+        localStorage.setItem('selectedCity', selectedCity);
         fetchLocationAlerts(selectedCity);
       }
     }
@@ -961,18 +963,21 @@ export default function Feed() {
   };
 
   const handleResetLocation = useCallback(() => {
-    localStorage.removeItem('selectedCity');
-    localStorage.removeItem('selectedLat');
-    localStorage.removeItem('selectedLng');
-    localStorage.removeItem('locationAccuracy');
+    // Only reset if we're explicitly resetting to Edinburgh
+    if (city === 'Edinburgh') {
+      localStorage.removeItem('selectedCity');
+      localStorage.removeItem('selectedLat');
+      localStorage.removeItem('selectedLng');
+      localStorage.removeItem('locationAccuracy');
 
-    setCity('Edinburgh');
-    setCoords({ latitude: 55.9533, longitude: -3.1883 });
-    setLocationAccuracy(null);
-    setLocationConfirmed(true);
+      setCity('Edinburgh');
+      setCoords({ latitude: 55.9533, longitude: -3.1883 });
+      setLocationAccuracy(null);
+      setLocationConfirmed(true);
 
-    fetchLocationAlerts('Edinburgh', { latitude: 55.9533, longitude: -3.1883 });
-  }, [fetchLocationAlerts]);
+      fetchLocationAlerts('Edinburgh', { latitude: 55.9533, longitude: -3.1883 });
+    }
+  }, [fetchLocationAlerts, city]);
 
   // Function to format remainingTime from countdown
 
