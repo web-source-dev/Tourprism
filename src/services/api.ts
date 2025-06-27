@@ -53,7 +53,7 @@ interface CustomAxiosError<T = unknown> extends Error {
 import { User, Alert, Notification } from '../types';
 import Cookies from 'js-cookie';
 
-const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tourprism-backend.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tourprism-api.onrender.com';
 
 // Cast axios to our custom type that avoids using 'any'
 const api = axios.create({

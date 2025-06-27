@@ -42,7 +42,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { text: 'Alerts Management', icon: 'ri-notification-4-line', path: '/admin/alerts' },
     { text: 'User Management', icon: 'ri-user-settings-line', path: '/admin/users' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
-    { text: 'Email Analytics', icon: 'ri-mail-line', path: '/admin/email-analytics' },
     { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
   ];
 
