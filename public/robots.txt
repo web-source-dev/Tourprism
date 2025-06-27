@@ -3,8 +3,8 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://alerts.tourprism.com
+Host: https://tourprism.com
 
 # Sitemaps
-Sitemap: https://alerts.tourprism.com/sitemap.xml
-Sitemap: https://alerts.tourprism.com/server-sitemap.xml
+Sitemap: https://tourprism.com/sitemap.xml
+Sitemap: https://tourprism.com/server-sitemap.xml

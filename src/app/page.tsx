@@ -8,6 +8,8 @@ import Layout from '@/components/Layout';
 import Image from 'next/image';
 
 import { motion } from 'framer-motion';
+import SubscribeBanner from '@/components/SubscribeBanner';
+
 export default function Home() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
@@ -777,6 +779,12 @@ export default function Home() {
           </Box>
 
         </Box>
+
+        <Divider sx={{ my: 8 }} />
+
+        {/* Add Subscribe Banner just above the footer */}
+        <SubscribeBanner />
+       
 
 
       </Container>

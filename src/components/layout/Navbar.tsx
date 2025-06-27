@@ -9,7 +9,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '../../context/AuthContext';
 import Image from 'next/image';
 
@@ -39,7 +39,9 @@ const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const { isAuthenticated } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 600px)');
+  const isSubscriptionPage = pathname === '/subscription';
 
   // Navigation links to show on desktop
   const navLinks = [
@@ -74,7 +76,7 @@ const Navbar: React.FC<NavbarProps> = ({
         sx={{
           justifyContent: 'space-between',
           minHeight: { xs: '40px', sm: '50px' },
-          display: isHomePage || isMobile ? 'flex' : 'none',
+          display: isHomePage || isMobile || isSubscriptionPage ? 'flex' : 'none',
 
         }}
       >
@@ -128,7 +130,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Desktop navigation - center of header */}
         <Box sx={{
-          display: { xs: 'none', sm: (isAuthenticated || !isHomePage) ? 'none' : 'flex' },
+          display: { xs: 'none', sm: (isAuthenticated || (!isHomePage && !isSubscriptionPage) || !isHeader) ? 'none' : 'flex' },
           position: 'absolute',
           left: '50%',
           transform: 'translateX(-50%)',

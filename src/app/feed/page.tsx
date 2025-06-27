@@ -15,6 +15,8 @@ import {
   DialogActions,
   Container,
   IconButton,
+  Chip,
+  Tooltip,
 } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import Layout from '@/components/Layout';
@@ -29,6 +31,7 @@ import { useToast } from '@/ui/toast';
 import GetAccessCard from '@/components/GetAccessCard';
 import UnlockFeaturesCard from '@/components/UnlockFeaturesCard';
 import { formatStandardDateTime } from '@/utils/dateFormat';
+import ImpactScorePopup from '@/components/ImpactScorePopup';
 
 // Extend the existing User interface with the new properties
 interface ExtendedUser extends User {
@@ -45,46 +48,179 @@ const formatRelativeTime = (dateString: string) => {
   const now = new Date();
 
   // Get time difference in seconds
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInSeconds = Math.floor((date.getTime() - now.getTime()) / 1000);
+  const isInFuture = diffInSeconds > 0;
+  const absDiff = Math.abs(diffInSeconds);
 
-  if (diffInSeconds < 60) {
+  // Format based on how far in the future/past
+  if (absDiff < 60) {
     // Less than a minute
-    return `${diffInSeconds}s`;
-  } else if (diffInSeconds < 3600) {
+    return isInFuture ? `${absDiff}s` : `${absDiff}s ago`;
+  } else if (absDiff < 3600) {
     // Less than an hour
-    return `${Math.floor(diffInSeconds / 60)}m`;
-  } else if (diffInSeconds < 86400) {
+    const mins = Math.floor(absDiff / 60);
+    return isInFuture ? `${mins}m` : `${mins}m ago`;
+  } else if (absDiff < 86400) {
     // Less than a day
-    return `${Math.floor(diffInSeconds / 3600)}h`;
+    const hours = Math.floor(absDiff / 3600);
+    return isInFuture ? `${hours}h` : `${hours}h ago`;
+  } else if (absDiff < 2592000) {
+    // Less than 30 days
+    const days = Math.floor(absDiff / 86400);
+    return isInFuture ? `${days}d` : `${days}d ago`;
   } else {
-    // More than a day
-    return `${Math.floor(diffInSeconds / 86400)}d`;
+    const days = Math.floor(absDiff / 86400);
+    return isInFuture ? `${days}d` : `${days}d ago`;
   }
 };
 
-// Add this before the fetchOperatingRegionAlerts function as a shared helper function
-// Helper function to sort alerts by the selected sort criteria
+// Add this function after the formatRelativeTime function and before the sortAlertsByFilter function
+
+// Calculate impact score for each alert based on multiple factors
+const calculateImpactScore = (alert: AlertType): number => {
+  const now = new Date();
+  
+  // Check if alert has ended - exclude from results
+  const endDate = alert.expectedEnd ? new Date(alert.expectedEnd) : null;
+  if (endDate && endDate < now) {
+    return -1; // Negative score for expired alerts
+  }
+  
+  let score = 0;
+  
+  // 1. Urgency (x4) - Based on time until start
+  let urgencyScore = 0;
+  const startDate = alert.expectedStart ? new Date(alert.expectedStart) : null;
+  
+  if (startDate) {
+    const hoursToStart = (startDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    if (startDate <= now) {
+      // Already started
+      urgencyScore = 0;
+    } else if (hoursToStart <= 24) {
+      urgencyScore = 3; // <= 24 hours
+    } else if (hoursToStart <= 72) {
+      urgencyScore = 2; // 1-3 days
+    } else if (hoursToStart <= 168) {
+      urgencyScore = 1; // 4-7 days
+    } else {
+      urgencyScore = 0; // > 7 days
+    }
+  } else {
+    // No start date, treat as medium urgency
+    urgencyScore = 1;
+  }
+  score += urgencyScore;
+  
+  // 2. Duration (x3) - Based on event duration
+  let durationScore = 0;
+  if (startDate && endDate) {
+    const durationInDays = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24);
+    
+    if (durationInDays > 3) {
+      durationScore = 3;
+    } else if (durationInDays >= 2) {
+      durationScore = 2;
+    } else {
+      durationScore = 1;
+    }
+  } else {
+    // Default duration score if dates not available
+    durationScore = 1;
+  }
+  score += durationScore;
+  
+  // 3. Severity (x2) - Based on impact level
+  let severityScore = 0;
+  const impact = alert.impact || '';
+  
+  // Using string check to avoid type errors
+  if (impact.includes('Severe') || impact.includes('High')) {
+    severityScore = 3;
+  } else if (impact.includes('Moderate') || impact.includes('Medium')) {
+    severityScore = 2;
+  } else {
+    severityScore = 1; // Minor, Low, or undefined
+  }
+  score += severityScore;
+  
+  // 4. Recency (x1) - Based on when alert was posted
+  let recencyScore = 0;
+  const createdAt = new Date(alert.createdAt);
+  const daysFromCreation = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+  
+  if (daysFromCreation <= 1) {
+    recencyScore = 3; // Posted <= 24h
+  } else if (daysFromCreation <= 3) {
+    recencyScore = 2; // 2-3 days ago
+  } else {
+    recencyScore = 1; // > 3 days ago
+  }
+  score += recencyScore;
+  
+  return score;
+};
+
+// Replace the existing sortAlertsByFilter function with this updated version
 const sortAlertsByFilter = (alerts: AlertType[], sortBy: string) => {
-  return [...alerts].sort((a, b) => {
-    if (sortBy === 'latest') {
+  if (sortBy === 'impact_score') {
+    // First filter out expired alerts
+    return [...alerts]
+      .filter(alert => {
+        const endDate = alert.expectedEnd ? new Date(alert.expectedEnd) : null;
+        const now = new Date();
+        return !endDate || endDate >= now;
+      })
+      .sort((a, b) => {
+        // First compare by impact score
+        const scoreA = calculateImpactScore(a);
+        const scoreB = calculateImpactScore(b);
+        
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA; // Higher score first
+        }
+        
+        // If scores are equal, sort by start date (ascending)
+        const startDateA = a.expectedStart ? new Date(a.expectedStart).getTime() : Infinity;
+        const startDateB = b.expectedStart ? new Date(b.expectedStart).getTime() : Infinity;
+        
+        if (startDateA !== startDateB) {
+          return startDateA - startDateB;
+        }
+        
+        // If start dates are equal, sort by posted time (descending)
+        const createdAtA = new Date(a.createdAt).getTime();
+        const createdAtB = new Date(b.createdAt).getTime();
+        return createdAtB - createdAtA;
+      });
+  } else if (sortBy === 'latest') {
+    return [...alerts].sort((a, b) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    } else if (sortBy === 'highest_impact') {
-      const impactOrder = { 'Severe': 3, 'High': 3, 'Moderate': 2, 'Medium': 2, 'Minor': 1, 'Low': 1 };
+    });
+  } else if (sortBy === 'highest_impact') {
+    const impactOrder = { 'Severe': 3, 'High': 3, 'Moderate': 2, 'Medium': 2, 'Minor': 1, 'Low': 1 };
+    return [...alerts].sort((a, b) => {
       const impactA = impactOrder[a.impact as keyof typeof impactOrder] || 0;
       const impactB = impactOrder[b.impact as keyof typeof impactOrder] || 0;
       
- 
+      // If impact is the same, sort by creation date
+      if (impactB === impactA) {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
       
       return impactB - impactA;
-    }
-    // Default to latest
+    });
+  }
+  // Default to latest
+  return [...alerts].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 };
 
 export default function Feed() {
   const router = useRouter();
-  const { isAuthenticated, isCollaboratorViewer } = useAuth();
+  const { isAuthenticated, isCollaboratorViewer ,isAdmin } = useAuth();
   const [alerts, setAlerts] = useState<AlertType[]>([]);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -103,7 +239,7 @@ export default function Feed() {
   const [profileLoaded, setProfileLoaded] = useState(false);
   const [operatingRegionAlerts, setOperatingRegionAlerts] = useState<AlertType[]>([]);
   const [filters, setFilters] = useState<FilterOptions>({
-    sortBy: 'latest',
+    sortBy: 'impact_score',
     alertCategory: [],
     timeRange: 7,
     distance: 20,
@@ -114,6 +250,7 @@ export default function Feed() {
   // Add state variables for tracking card visibility
   const [showUnlockFeaturesCard, setShowUnlockFeaturesCard] = useState(true);
   const [showGetAccessCard, setShowGetAccessCard] = useState(true);
+  const [selectedAlert, setSelectedAlert] = useState<AlertType | null>(null);
 
   const { showToast } = useToast();
 
@@ -235,12 +372,32 @@ export default function Feed() {
 
       // Sort alerts with priority for followed alerts and then by filter criteria
       combinedAlerts.sort((a, b) => {
-        // First priority: followed alerts go to the top
-        if (a.isFollowing && !b.isFollowing) return -1;
-        if (!a.isFollowing && b.isFollowing) return 1;
+        if (filters.sortBy === 'impact_score') {
+          // Get scores
+          const scoreA = calculateImpactScore(a);
+          const scoreB = calculateImpactScore(b);
+          
+          // If scores differ, sort by score
+          if (scoreA !== scoreB) {
+            return scoreB - scoreA; // Higher score first
+          }
+          
+          // If scores are the same, followed alerts take precedence
+          if (a.isFollowing && !b.isFollowing) return -1;
+          if (!a.isFollowing && b.isFollowing) return 1;
+          
+          // For alerts with same score and follow status, sort by start date
+          const startDateA = a.expectedStart ? new Date(a.expectedStart).getTime() : Infinity;
+          const startDateB = b.expectedStart ? new Date(b.expectedStart).getTime() : Infinity;
+          return startDateA - startDateB;
+        } else {
+          // First priority: followed alerts go to the top
+          if (a.isFollowing && !b.isFollowing) return -1;
+          if (!a.isFollowing && b.isFollowing) return 1;
 
-        // Second priority: maintain the sort order within each group using the shared sorting function
-        return sortAlertsByFilter([a, b], filters.sortBy)[0] === a ? -1 : 1;
+          // Second priority: maintain the sort order within each group using the shared sorting function
+          return sortAlertsByFilter([a, b], filters.sortBy)[0] === a ? -1 : 1;
+        }
       });
 
       setOperatingRegionAlerts(combinedAlerts);
@@ -256,6 +413,19 @@ export default function Feed() {
   // Define the fetchLocationAlerts function with useCallback to avoid recreation on each render
   const fetchLocationAlerts = useCallback(async (cityName: string = "Edinburgh", coordinates: { latitude: number; longitude: number } | null = null) => {
     setLoading(true);
+    
+    // Set a timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      console.log('Fetch alerts timeout reached, stopping loading state');
+      setLoading(false);
+      // If we have no alerts, show at least default ones for Edinburgh
+      if (alerts.length === 0) {
+        console.log('No alerts loaded, setting default city to Edinburgh');
+        setCity('Edinburgh');
+        setCoords({ latitude: 55.9533, longitude: -3.1883 });
+      }
+    }, 10000); // 10 second timeout
+    
     try {
       // Check if we have operating regions
       const operatingRegions = userProfile?.company?.MainOperatingRegions ?? [];
@@ -348,29 +518,62 @@ export default function Feed() {
         const sortedAllAlerts: AlertType[] = [];
         const addedIds = new Set<string>();
 
-        // Add followed alerts first (highest priority)
-        sortedFollowedAlerts.forEach(alert => {
-          if (!addedIds.has(alert._id)) {
-            sortedAllAlerts.push(alert);
-            addedIds.add(alert._id);
-          }
-        });
+        // Modified approach: If sorting by impact_score, merge all alerts and sort by score
+        if (filters.sortBy === 'impact_score') {
+          // Combine all alerts
+          const allAlerts = [...followedAlerts, ...nonFollowedOperatingRegionAlerts, ...normalAlerts];
+          
+          // Sort by impact score, but give a small boost to followed alerts with same score
+          const scoredAlerts = allAlerts
+            .filter(alert => {
+              const endDate = alert.expectedEnd ? new Date(alert.expectedEnd) : null;
+              const now = new Date();
+              return !endDate || endDate >= now;
+            })
+            .map(alert => {
+              let score = calculateImpactScore(alert);
+              // Give a tiny boost to followed alerts with the same score (0.1)
+              if (alert.isFollowing) score += 0.1;
+              // Give a smaller boost to operating region alerts (0.05)
+              const isOperatingRegion = operatingRegionAlerts.some(a => a._id === alert._id);
+              if (isOperatingRegion && !alert.isFollowing) score += 0.05;
+              return { alert, score };
+            })
+            .sort((a, b) => b.score - a.score); // Sort by score descending
+          
+          // Extract alerts and respect uniqueness
+          scoredAlerts.forEach(({ alert }) => {
+            if (!addedIds.has(alert._id)) {
+              sortedAllAlerts.push(alert);
+              addedIds.add(alert._id);
+            }
+          });
+        } else {
+          // Original approach for other sort criteria
+          // Add followed alerts first (highest priority)
+          sortedFollowedAlerts.forEach(alert => {
+            if (!addedIds.has(alert._id)) {
+              sortedAllAlerts.push(alert);
+              addedIds.add(alert._id);
+            }
+          });
 
-        // Add operating region alerts second (medium priority)
-        sortedOperatingRegionAlerts.forEach(alert => {
-          if (!addedIds.has(alert._id)) {
-            sortedAllAlerts.push(alert);
-            addedIds.add(alert._id);
-          }
-        });
+          // Add operating region alerts second (medium priority)
+          sortedOperatingRegionAlerts.forEach(alert => {
+            if (!addedIds.has(alert._id)) {
+              sortedAllAlerts.push(alert);
+              addedIds.add(alert._id);
+            }
+          });
 
-        // Add normal alerts last (lowest priority)
-        sortedNormalAlerts.forEach(alert => {
-          if (!addedIds.has(alert._id)) {
-            sortedAllAlerts.push(alert);
-            addedIds.add(alert._id);
-          }
-        });
+          // Add normal alerts last (lowest priority)
+          sortedNormalAlerts.forEach(alert => {
+            if (!addedIds.has(alert._id)) {
+              sortedAllAlerts.push(alert);
+              addedIds.add(alert._id);
+            }
+          });
+        }
 
         // Apply the limit for non-authenticated users
         if (!isAuthenticated) {
@@ -384,16 +587,22 @@ export default function Feed() {
         setHasMore(isAuthenticated && sortedAllAlerts.length < (backendTotalCount || totalCount || 0));
         setPage(1);
       }
+      
+      // Clear the timeout since we completed successfully
+      clearTimeout(timeoutId);
     } catch (error) {
       console.error('Error fetching alerts:', error);
       showToast('Failed to fetch alerts', 'error');
       setAlerts([]);
       setTotalCount(0);
       setHasMore(false);
+      
+      // Clear the timeout since we handled the error
+      clearTimeout(timeoutId);
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, showToast, totalCount]);
+  }, [isAuthenticated, filters, userProfile, fetchOperatingRegionAlerts, showToast, totalCount, alerts.length]);
 
   // Socket.io connection setup
   useEffect(() => {
@@ -688,14 +897,26 @@ export default function Feed() {
         longitude: parseFloat(savedLng)
       });
       setLocationConfirmed(true);
+    } else {
+      // If no saved location, use Edinburgh as default
+      handleSelectEdinburgh();
     }
-  }, []);
+  }, [handleSelectEdinburgh]);
 
   useEffect(() => {
-    if (locationConfirmed && city && coords && profileLoaded) {
+    // Only fetch alerts when we have all the necessary data
+    if (locationConfirmed && city && coords) {
+      console.log('Fetching alerts with city:', city, 'coords:', coords, 'profileLoaded:', profileLoaded);
       fetchLocationAlerts(city, coords);
+    } else if (locationConfirmed && !city && !coords) {
+      // If we have confirmed location but no city or coords, use Edinburgh as default
+      console.log('No city or coords available, using Edinburgh as default');
+      const edinburghCoords = { latitude: 55.9533, longitude: -3.1883 };
+      setCity('Edinburgh');
+      setCoords(edinburghCoords);
+      fetchLocationAlerts('Edinburgh', edinburghCoords);
     }
-  }, [city, coords, locationConfirmed, isAuthenticated, fetchLocationAlerts, profileLoaded]);
+  }, [city, coords, locationConfirmed, fetchLocationAlerts]);
 
   const handleFollowUpdate = async (alertId: string) => {
     if (!isAuthenticated) {
@@ -870,7 +1091,44 @@ export default function Feed() {
         }
 
         // Add new alerts to our existing list
-        setAlerts(prevAlerts => [...prevAlerts, ...newUniqueAlerts]);
+        if (filters.sortBy === 'impact_score') {
+          // Get all alerts (existing + new)
+          const allAlerts = [...alerts, ...newUniqueAlerts];
+          
+          // Apply the same impact score sorting logic
+          const scoredAlerts = allAlerts
+            .filter(alert => {
+              const endDate = alert.expectedEnd ? new Date(alert.expectedEnd) : null;
+              const now = new Date();
+              return !endDate || endDate >= now;
+            })
+            .map(alert => {
+              let score = calculateImpactScore(alert);
+              // Give a tiny boost to followed alerts with the same score
+              if (alert.isFollowing) score += 0.1;
+              // Give a smaller boost to operating region alerts
+              const isOperatingRegion = operatingRegionAlerts.some(a => a._id === alert._id);
+              if (isOperatingRegion && !alert.isFollowing) score += 0.05;
+              return { alert, score };
+            })
+            .sort((a, b) => b.score - a.score); // Sort by score descending
+          
+          // Extract sorted alerts
+          const uniqueAlerts: AlertType[] = [];
+          const seenIds = new Set<string>();
+          
+          scoredAlerts.forEach(({ alert }) => {
+            if (!seenIds.has(alert._id)) {
+              uniqueAlerts.push(alert);
+              seenIds.add(alert._id);
+            }
+          });
+          
+          setAlerts(uniqueAlerts);
+        } else {
+          // For other sort options, just append new alerts
+          setAlerts(prevAlerts => [...prevAlerts, ...newUniqueAlerts]);
+        }
 
         // Calculate hasMore accounting for operating region alerts and already loaded alerts
         const operatingRegionCount = hasOperatingRegions ? operatingRegionAlerts.length : 0;
@@ -935,7 +1193,7 @@ export default function Feed() {
 
   const handleClearFilters = () => {
     setFilters({
-      sortBy: 'latest',
+      sortBy: 'impact_score',
       alertCategory: [],
       timeRange: 7,
       distance: 20,
@@ -1172,9 +1430,9 @@ export default function Feed() {
           <IconButton
             onClick={() => setIsFilterDrawerOpen(true)}
             sx={{
-              bgcolor: '#f5f5f5',
+              bgcolor: 'transparent',
               '&:hover': {
-                bgcolor: '#e0e0e0'
+                bgcolor: 'transparent'
               },
             }}
             aria-label="open filter"
@@ -1286,7 +1544,8 @@ export default function Feed() {
                   },
                   borderTop: 'none',
                   pr: 2,
-                  pt: 2
+                  pt: 2,
+                  display: { xs: 'none', sm: 'block' } // Hide on mobile, show on tablet and up
                 }}>
                   <IconButton
                     onClick={() => handleDismissCard('access')}
@@ -1380,7 +1639,7 @@ export default function Feed() {
                       </Box>
                       <Box>
                         <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
-                          {formatRelativeTime(alerts[0].createdAt)}
+                          {formatRelativeTime(alerts[0].expectedEnd?.toString() || '')}
                         </Typography>
                       </Box>
                     </Box>
@@ -1466,8 +1725,8 @@ export default function Feed() {
                           display: 'inline-block',
                           fontSize: '14px',
                           borderRadius: 1,
-                          fontWeight: 500,
-                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          fontFamily: 'Poppins'
                         }}>
                           {alerts[0].impact === 'Severe' || !alerts[0].impact
                             ? 'High Impact'
@@ -1477,6 +1736,27 @@ export default function Feed() {
                                 ? 'Low Impact'
                                 : `${alerts[0].impact} Impact`}
                         </Typography>
+                        
+                        {/* Impact Score (for testing) */}
+                        <Box sx={{ display: isAdmin ? 'flex' : 'none', alignItems: 'center', gap: 1, mt: 1 }}>
+                          <Tooltip title="Alert impact score (higher scores appear first)">
+                            <Chip 
+                              label={`Score: ${calculateImpactScore(alerts[0]).toFixed(1)}`} 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                              sx={{ borderRadius: 1 }}
+                            />
+                          </Tooltip>
+                          <Button 
+                            variant="text" 
+                            size="small"
+                            onClick={() => setSelectedAlert(alerts[0])}
+                            sx={{ fontSize: '12px', p: 0.5 }}
+                          >
+                            View Score Details
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
                   </Paper>
@@ -1574,7 +1854,7 @@ export default function Feed() {
                       </Box>
                       <Box>
                         <Typography variant="body2" sx={{ color: '#757575', fontSize: '14px' }}>
-                          {formatRelativeTime(alert.createdAt)}
+                          {formatRelativeTime(alert.expectedEnd?.toString() || '')}
                         </Typography>
                       </Box>
                     </Box>
@@ -1674,12 +1954,69 @@ export default function Feed() {
                                 ? 'Low Impact'
                                 : `${alert.impact} Impact`}
                         </Typography>
+
+                        {/* Impact Score (for testing) */}
+                        <Box sx={{ display: isAdmin ? 'flex' : 'none', alignItems: 'center', gap: 1, mt: 1 }}>
+                          <Tooltip title="Alert impact score (higher scores appear first)">
+                            <Chip 
+                              label={`Score: ${calculateImpactScore(alert).toFixed(1)}`} 
+                              size="small" 
+                              color="primary" 
+                              variant="outlined"
+                              sx={{ borderRadius: 1 }}
+                            />
+                          </Tooltip>
+                          <Button 
+                            variant="text" 
+                            size="small"
+                            onClick={() => setSelectedAlert(alert)}
+                            sx={{ fontSize: '12px', p: 0.5 }}
+                          >
+                            View Score Details
+                          </Button>
+                        </Box>
                       </Box>
                     </Box>
                   </Paper>
                 );
               })}
             </Box>
+
+            {/* Mobile GetAccessCard - Display at the end of feed only on mobile */}
+            {!isAuthenticated && showGetAccessCard && (
+              <Box sx={{
+                display: { xs: 'block', sm: 'none' }, // Only show on mobile (xs)
+                position: 'relative',
+                mt: 2,
+                mb: 4,
+                borderRadius: 2,
+                overflow: 'hidden',
+                borderTop: '1px solid #E0E1E2',
+                pt: 2
+              }}>
+                <IconButton
+                  onClick={() => handleDismissCard('access')}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    zIndex: 1,
+                    bgcolor: 'rgba(255, 255, 255, 0.3)',
+                    width: 24,
+                    height: 24,
+                    display: 'none',
+                    '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.5)' },
+                    color: 'white'
+                  }}
+                  aria-label="dismiss card"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M18 6L6 18M6 6L18 18" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </IconButton>
+                <GetAccessCard onClick={handleLogin} />
+              </Box>
+            )}
 
             {hasMore && isAuthenticated && (
               <Box sx={{ textAlign: 'center', mt: 4 }}>
@@ -1786,6 +2123,14 @@ export default function Feed() {
           </Box>
         </DialogContent>
       </Dialog>
+
+      {selectedAlert && (
+        <ImpactScorePopup
+          open={!!selectedAlert}
+          alert={selectedAlert}
+          onClose={() => setSelectedAlert(null)}
+        />
+      )}
     </Layout >
   );
 }

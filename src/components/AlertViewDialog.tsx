@@ -320,8 +320,8 @@ export default function AlertViewDialog({ open, onClose, alertId }: AlertViewDia
                           Timeframe
                         </Typography>
                         <Typography variant="body1">
-                          {alert.expectedStart ? formatDate(alert.expectedStart) : 'Not specified'} 
-                          {alert.expectedEnd ? ` - ${formatDate(alert.expectedEnd)}` : ''}
+                          {alert.expectedStart ? formatDate(alert.expectedStart as string) : 'Not specified'} 
+                          {alert.expectedEnd ? ` - ${formatDate(alert.expectedEnd as string)}` : ''}
                         </Typography>
                       </Box>
                       

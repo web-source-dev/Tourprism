@@ -31,6 +31,7 @@ import ProfileModal from '@/components/admin/users/modals/ProfileModal';
 import ChangeRoleModal from '@/components/admin/users/modals/ChangeRoleModal';
 import RestrictUserModal from '@/components/admin/users/modals/RestrictUserModal';
 import DeleteUserModal from '@/components/admin/users/modals/DeleteUserModal';
+import UserActivityModal from '@/components/admin/users/modals/UserActivityModal';
 
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -55,6 +56,7 @@ export default function UsersManagement() {
   const [roleModalOpen, setRoleModalOpen] = useState<boolean>(false);
   const [restrictModalOpen, setRestrictModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
+  const [activityModalOpen, setActivityModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalAction, setModalAction] = useState<'restrict' | 'enable'>('restrict');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -120,6 +122,11 @@ export default function UsersManagement() {
   const handleViewProfile = (user: User) => {
     setSelectedUser(user);
     setProfileModalOpen(true);
+  };
+
+  const handleViewActivity = (user: User) => {
+    setSelectedUser(user);
+    setActivityModalOpen(true);
   };
 
   const handleChangeRole = (user: User) => {
@@ -277,6 +284,7 @@ export default function UsersManagement() {
                     key={user._id}
                     user={user}
                     onViewProfile={handleViewProfile}
+                    onViewActivity={handleViewActivity}
                     onChangeRole={canManageUsers ? handleChangeRole : () => {}}
                     onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
                     onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
@@ -294,6 +302,7 @@ export default function UsersManagement() {
               <UserTable
                 users={users}
                 onViewProfile={handleViewProfile}
+                onViewActivity={handleViewActivity}
                 onChangeRole={canManageUsers ? handleChangeRole : () => {}}
                 onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
                 onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
@@ -343,6 +352,12 @@ export default function UsersManagement() {
         user={selectedUser}
         onConfirm={confirmDeleteUser}
         loading={actionLoading}
+      />
+      
+      <UserActivityModal
+        open={activityModalOpen}
+        onClose={() => setActivityModalOpen(false)}
+        user={selectedUser}
       />
 
       {/* Snackbar for notifications */}

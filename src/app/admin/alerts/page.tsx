@@ -561,10 +561,10 @@ export default function AlertsManagement() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Timeframe:</Typography>
                   <Typography variant="body2" sx={{ maxWidth: '170px', textAlign: 'right' }}>
-                    {formatDateRange(alert.expectedStart, alert.expectedEnd)}
+                    {formatDateRange(alert.expectedStart as string, alert.expectedEnd as string)}
                   </Typography>
                 </Box>
-                
+                  
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                   <Typography variant="body2" color="text.secondary">Last updated:</Typography>
                   <Typography variant="body2">
@@ -747,7 +747,7 @@ export default function AlertsManagement() {
                     />
                   </TableCell>
                   <TableCell sx={{ minWidth: 200 }}>
-                    {formatDateRange(alert.expectedStart, alert.expectedEnd)}
+                    {formatDateRange(alert.expectedStart as string, alert.expectedEnd as string)}
                   </TableCell>
                   <TableCell>
                     {alert.alertCategory || 'General'}

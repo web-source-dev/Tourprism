@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -56,7 +56,8 @@ const INCIDENT_TYPES = [
 ];
 
 const SORT_OPTIONS = [
-  { value: 'latest', label: 'Latest First', default: true },
+  { value: 'impact_score', label: 'Smart Ranking', default: true },
+  { value: 'latest', label: 'Latest First' },
   { value: 'highest_impact', label: 'Highest Impact' }
 ];
 
@@ -197,8 +198,9 @@ const FilterDrawer = ({
   };
 
   const handleApplyFiltersClick = () => {
-    console.log('Applying filters:', filters);
+    console.log('Applying filters:', filters, 'with city:', selectedCity);
     onApplyFilters(selectedCity);
+    onClose();
   };
 
   const handleClearFiltersClick = () => {
@@ -256,10 +258,19 @@ const FilterDrawer = ({
       onResetLocation();
     }
     setCity(cityValue);
+    // Apply filters immediately when city changes
+    onApplyFilters(cityValue);
   };
 
   // State to track selected city
   const [selectedCity, setCity] = useState(currentCity || 'Edinburgh');
+
+  // Update selectedCity when currentCity prop changes
+  useEffect(() => {
+    if (currentCity) {
+      setCity(currentCity);
+    }
+  }, [currentCity]);
 
   return (
 

@@ -21,7 +21,8 @@ import {
   PersonOutline as PersonIcon,
   Block as BlockIcon,
   Delete as DeleteIcon,
-  AdminPanelSettings as AdminIcon
+  AdminPanelSettings as AdminIcon,
+  History as HistoryIcon
 } from '@mui/icons-material';
 import { User } from '@/types';
 
@@ -31,6 +32,7 @@ interface UserTableProps {
   onChangeRole: (user: User) => void;
   onRestrictUser: (user: User) => void;
   onDeleteUser: (user: User) => void;
+  onViewActivity: (user: User) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({
@@ -38,7 +40,8 @@ const UserTable: React.FC<UserTableProps> = ({
   onViewProfile,
   onChangeRole,
   onRestrictUser,
-  onDeleteUser
+  onDeleteUser,
+  onViewActivity
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
@@ -202,6 +205,15 @@ const UserTable: React.FC<UserTableProps> = ({
             >
               <PersonIcon fontSize="small" sx={{ mr: 1 }} />
               View Profile
+            </MenuItem>
+            <MenuItem
+              onClick={() => {
+                onViewActivity(selectedUser);
+                handleCloseMenu();
+              }}
+            >
+              <HistoryIcon fontSize="small" sx={{ mr: 1 }} />
+              View Activity
             </MenuItem>
             <MenuItem
               onClick={() => {

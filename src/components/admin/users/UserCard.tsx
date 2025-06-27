@@ -20,7 +20,8 @@ import {
   Block as BlockIcon,
   Delete as DeleteIcon,
   AdminPanelSettings as AdminIcon,
-  Person as PersonIcon
+  Person as PersonIcon,
+  History as HistoryIcon
 } from '@mui/icons-material';
 import { User } from '@/types';
 
@@ -30,6 +31,7 @@ interface UserCardProps {
   onChangeRole: (user: User) => void;
   onRestrictUser: (user: User) => void;
   onDeleteUser: (user: User) => void;
+  onViewActivity: (user: User) => void;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ 
@@ -37,7 +39,8 @@ const UserCard: React.FC<UserCardProps> = ({
   onViewProfile, 
   onChangeRole, 
   onRestrictUser, 
-  onDeleteUser 
+  onDeleteUser,
+  onViewActivity
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -177,6 +180,15 @@ const UserCard: React.FC<UserCardProps> = ({
             </MenuItem>
             <MenuItem 
               onClick={() => {
+                onViewActivity(user);
+                handleClose();
+              }}
+            >
+              <HistoryIcon fontSize="small" sx={{ mr: 1 }} />
+              View Activity
+            </MenuItem>
+            <MenuItem 
+              onClick={() => {
                 onChangeRole(user);
                 handleClose();
               }}
@@ -271,8 +283,8 @@ const UserCard: React.FC<UserCardProps> = ({
           </Box>
         </Stack>
         
-        {/* View profile button */}
-        <Box sx={{ mt: 2 }}>
+        {/* Action buttons */}
+        <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           <Button
             variant="outlined"
             fullWidth
@@ -280,7 +292,17 @@ const UserCard: React.FC<UserCardProps> = ({
             startIcon={<PersonIcon />}
             onClick={() => onViewProfile(user)}
           >
-            View Full Profile
+            Profile
+          </Button>
+          <Button
+            variant="outlined"
+            fullWidth
+            size="small"
+            startIcon={<HistoryIcon />}
+            onClick={() => onViewActivity(user)}
+            color="secondary"
+          >
+            Activity
           </Button>
         </Box>
       </CardContent>

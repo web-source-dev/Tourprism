@@ -184,7 +184,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
 
   return (
     <>
-      {!isMobile && !isHomePage && (
+      {!isMobile && !isHomePage && pathname !== '/subscription' && (
         <Sidebar
           isCollapsed={isCollapsed}
           onToggleCollapse={handleToggleCollapse}
@@ -199,8 +199,8 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
         minHeight: '100vh',
         p: 0,
         m: 0,
-        marginLeft: { md: isHomePage ? 0 : (isCollapsed ? '80px' : '250px') },
-        width: { md: isHomePage ? '100%' : `calc(100% - ${isCollapsed ? '80px' : '250px'})` },
+        marginLeft: { md: isHomePage || pathname === '/subscription' ? 0 : (isCollapsed ? '80px' : '250px') },
+        width: { md: isHomePage || pathname === '/subscription' ? '100%' : `calc(100% - ${isCollapsed ? '80px' : '250px'})` },
         transition: theme.transitions.create(['margin-left', 'width'], {
           easing: theme.transitions.easing.easeInOut,
           duration: theme.transitions.duration.enteringScreen,
@@ -236,7 +236,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
         </Container>
 
         {/* Footer Component */}
-        {isFooter && pathname !== '/feed' && pathname !== '/post-alert' && (
+        {isFooter && pathname !== '/feed' && pathname !== '/post-alert'&& (
           <Footer />
         )}
 

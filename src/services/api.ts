@@ -927,4 +927,68 @@ export const acceptInvitation = async (data: { token: string; email: string; pas
   }
 };
 
-export { api }; 
+export { api };
+
+// Define log filters type
+export interface LogFilters {
+  action?: string;
+  userId?: string;
+  userEmail?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+// Get all logs with filtering
+export const getAllLogs = async (filters: LogFilters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+    
+    const response = await api.get(`/api/logs?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching logs:', error);
+    throw error;
+  }
+};
+
+// Get logs for a specific user
+export const getUserLogs = async (userId: string, filters: LogFilters = {}) => {
+  try {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        queryParams.append(key, value.toString());
+      }
+    });
+    
+    const response = await api.get(`/api/logs/user/${userId}?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching user logs:', error);
+    throw error;
+  }
+};
+
+// Get summary of activity
+export const getActivitySummary = async (startDate?: string, endDate?: string) => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (startDate) queryParams.append('startDate', startDate);
+    if (endDate) queryParams.append('endDate', endDate);
+    
+    const response = await api.get(`/api/logs/summary?${queryParams.toString()}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching activity summary:', error);
+    throw error;
+  }
+}; 

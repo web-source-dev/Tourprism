@@ -200,7 +200,7 @@ export default function EditAlertPage() {
     setError(null);
     try {
       const alertData = await getAlertById(alertId);
-      setAlert(alertData);
+      setAlert(alertData as ExtendedAlert);
 
       // Initialize impact locations from existing data if available
       const impactLocations = alertData.impactLocations || [];
@@ -219,7 +219,7 @@ export default function EditAlertPage() {
           : alertData.targetAudience ? [alertData.targetAudience] : []
       };
 
-      setFormValues(formattedData);
+      setFormValues(formattedData as Partial<ExtendedAlert>);
 
       // Set available alert types based on category
       if (alertData.alertCategory) {

@@ -100,8 +100,8 @@ export interface Alert {
   createdAt: string;
   updatedAt: string;
   updated?: string;
-  expectedStart?: string;
-  expectedEnd?: string;
+  expectedStart?: string | Date;
+  expectedEnd?: string | Date;
   
   // ActionHub properties that may be included in list views
   actionHubCreatedAt?: string;
@@ -129,7 +129,7 @@ export interface Notification {
 }
 
 export interface FilterOptions {
-  sortBy: string;
+  sortBy: 'impact_score' | 'latest' | 'highest_impact' | string;
   alertCategory: string[];
   timeRange: number;
   distance: number;
