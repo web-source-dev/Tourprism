@@ -377,7 +377,7 @@ export const getUserAlerts = async (): Promise<Alert[]> => {
   }
 };
 
-interface FetchAlertsParams {
+export interface FetchAlertsParams {
   city?: string;
   latitude?: number;
   longitude?: number;
@@ -822,10 +822,10 @@ export const updatePreferences = async (data: {
 };
 
 // Update subscription status
-export const updateSubscriptionStatus = async (isSubscribed: boolean): Promise<User> => {
+export const updateSubscriptionStatus = async (isPremium: boolean): Promise<User> => {
   try {
-    console.log('Updating subscription status to:', isSubscribed);
-    const response = await api.put<User>('/profile/subscription', { isSubscribed });
+    console.log('Updating subscription status to:', isPremium);
+    const response = await api.put<User>('/profile/subscription', { isPremium });
     console.log('Subscription update response:', response.data);
     return response.data;
   } catch (error) {
@@ -990,5 +990,110 @@ export const getActivitySummary = async (startDate?: string, endDate?: string) =
   } catch (error) {
     console.error('Error fetching activity summary:', error);
     throw error;
+  }
+}; 
+
+export interface Subscriber {
+  _id: string;
+  name?: string;
+  email: string;
+  location?: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    placeId: string;
+  }[];
+  sector?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastWeeklyForecastReceived?: string;
+}
+
+export interface SubscriberFilters extends Record<string, unknown> {
+  search?: string;
+  sector?: string;
+  isActive?: boolean;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+}
+
+export const getAllSubscribers = async (params: SubscriberFilters = {}): Promise<{ subscribers: Subscriber[], totalCount: number }> => {
+  try {
+    const response = await api.get<{ subscribers: Subscriber[], totalCount: number }>('/api/admin/subscribers', { params });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+export const addUserToSubscribers = async (userId: string, sector?: string, location?: any[]): Promise<{ success: boolean; subscriber: Subscriber }> => {
+  try {
+    const response = await api.post<{ success: boolean; subscriber: Subscriber }>('/api/admin/subscribers/add-user', { userId, sector, location });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+export const removeSubscriber = async (subscriberId: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.delete<{ success: boolean }>(`/api/admin/subscribers/${subscriberId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+export const updateSubscriberStatus = async (subscriberId: string, isActive: boolean): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.put<{ success: boolean }>(`/api/admin/subscribers/${subscriberId}/status`, { isActive });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+export const updateSubscriberStatusByEmail = async (email: string, isActive: boolean): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.put<{ success: boolean }>(`/api/subscribers/status/${email}`, { isActive });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+export const getSubscriberById = async (subscriberId: string): Promise<{ subscriber: Subscriber }> => {
+  try {
+    const response = await api.get<{ subscriber: Subscriber }>(`/api/admin/subscribers/${subscriberId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+}; 
+
+export interface BusinessInfoData {
+  companySize: string;
+  customerTypes: string[];
+  otherCustomerType?: string;
+  targetMarkets: string[];
+  otherTargetMarket?: string;
+  bookingWindows: string[];
+  peakSeasons: string[];
+  disruptionTypes: string[];
+  otherDisruptionType?: string;
+  disruptionFrequency: string;
+}
+
+export const updateBusinessInfo = async (data: BusinessInfoData): Promise<User> => {
+  try {
+    const response = await api.put<User>('/profile/business-info', data);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
   }
 }; 

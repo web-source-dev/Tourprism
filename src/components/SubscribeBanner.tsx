@@ -8,10 +8,10 @@ const SubscribeBanner = () => {
   return (
     <Box
       sx={{
-        bgcolor: '#1565c0',
+        bgcolor: '#056CF2',
         color: 'white',
         borderRadius: 3,
-        p: { xs: 3, md: 4 },
+        p: { xs: 2, md: 2 },
         textAlign: 'center',
         maxWidth: { xs: '100%', sm: 500 },
         mx: 'auto',
@@ -20,12 +20,11 @@ const SubscribeBanner = () => {
       }}
     >
       <Typography 
-        variant="h6" 
+        variant="h2" 
         sx={{ 
-          fontWeight: 600, 
+          fontWeight: 500, 
           mb: 1, 
-          fontSize: { xs: '24px', md: '28px' },
-          lineHeight: 1.3,
+          fontSize: { xs: '20px', md: '24px' },
         }}
       >
         What&apos;s disrupting your business this week?
@@ -34,7 +33,7 @@ const SubscribeBanner = () => {
         variant="body2" 
         sx={{ 
           mb: 3, 
-          fontSize: { xs: '15px', md: '16px' },
+          fontSize: { xs: '14px', md: '14px' },
           fontWeight: 400,
           
         }}
@@ -45,11 +44,11 @@ const SubscribeBanner = () => {
         variant="contained"
         sx={{
           bgcolor: 'white',
-          color: '#1565c0',
+          color: '#056CF2',
           fontWeight: 600,
           borderRadius: 2,
           px: 4,
-          py: 1.5,
+          py: 1,
           fontSize: '16px',
           textTransform: 'none',
           boxShadow: 1,

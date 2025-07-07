@@ -105,7 +105,16 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
       recencyScore = 1; // > 3 days ago
     }
     
-    // Calculate total score
+    // Calculate individual weighted scores
+    const weightedUrgencyScore = urgencyScore * 4;
+    const weightedDurationScore = durationScore * 3;
+    const weightedSeverityScore = severityScore * 2;
+    const weightedRecencyScore = recencyScore * 1;
+    
+    // Calculate total score with weights
+    const weightedTotal = weightedUrgencyScore + weightedDurationScore + weightedSeverityScore + weightedRecencyScore;
+    
+    // Original unweighted total (for backwards compatibility)
     const total = urgencyScore + durationScore + severityScore + recencyScore;
 
     return {
@@ -113,6 +122,11 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
       durationScore,
       severityScore,
       recencyScore,
+      weightedUrgencyScore,
+      weightedDurationScore, 
+      weightedSeverityScore,
+      weightedRecencyScore,
+      weightedTotal,
       total,
       isExpired: false
     };
@@ -207,8 +221,8 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
             <Box sx={{ mb: 2 }}>
               <Paper sx={{ p: 2, bgcolor: '#f8f8f8', borderRadius: 2 }}>
                 <Typography variant="h6" gutterBottom sx={{ fontWeight: 600, fontSize: '1.1rem' }}>
-                  Total Impact Score: {scores.total.toFixed(1)}
-                  {followBoost > 0 && " + 0.1 (follow boost) = " + (scores.total + followBoost).toFixed(1)}
+                  Total Impact Score: {(scores.weightedTotal || scores.total).toFixed(1)}
+                  {followBoost > 0 && " + 0.1 (follow boost) = " + ((scores.weightedTotal || scores.total) + followBoost).toFixed(1)}
                 </Typography>
               </Paper>
             </Box>
@@ -222,8 +236,10 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
                 <ListItemText 
                   primary={
                     <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body1">Urgency Score:</Typography>
-                      <Typography variant="body1" fontWeight="bold">{scores.urgencyScore}</Typography>
+                      <Typography variant="body1">Urgency Score (x4):</Typography>
+                      <Typography variant="body1" fontWeight="bold">
+                        {scores.urgencyScore} × 4 = {scores.weightedUrgencyScore || (scores.urgencyScore * 4)}
+                      </Typography>
                     </Box>
                   }
                   secondary={getUrgencyExplanation()}
@@ -234,8 +250,10 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
                 <ListItemText
                   primary={
                     <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body1">Duration Score:</Typography>
-                      <Typography variant="body1" fontWeight="bold">{scores.durationScore}</Typography>
+                      <Typography variant="body1">Duration Score (x3):</Typography>
+                      <Typography variant="body1" fontWeight="bold">
+                        {scores.durationScore} × 3 = {scores.weightedDurationScore || (scores.durationScore * 3)}
+                      </Typography>
                     </Box>
                   }
                   secondary={getDurationExplanation()}
@@ -246,8 +264,10 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
                 <ListItemText
                   primary={
                     <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body1">Severity Score:</Typography>
-                      <Typography variant="body1" fontWeight="bold">{scores.severityScore}</Typography>
+                      <Typography variant="body1">Severity Score (x2):</Typography>
+                      <Typography variant="body1" fontWeight="bold">
+                        {scores.severityScore} × 2 = {scores.weightedSeverityScore || (scores.severityScore * 2)}
+                      </Typography>
                     </Box>
                   }
                   secondary={alert.impact === 'Severe' || !alert.impact
@@ -264,8 +284,10 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
                 <ListItemText
                   primary={
                     <Box display="flex" justifyContent="space-between">
-                      <Typography variant="body1">Recency Score:</Typography>
-                      <Typography variant="body1" fontWeight="bold">{scores.recencyScore}</Typography>
+                      <Typography variant="body1">Recency Score (x1):</Typography>
+                      <Typography variant="body1" fontWeight="bold">
+                        {scores.recencyScore} × 1 = {scores.weightedRecencyScore || scores.recencyScore}
+                      </Typography>
                     </Box>
                   }
                   secondary={getRecencyExplanation()}

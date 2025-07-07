@@ -122,7 +122,7 @@ export default function DisruptionForecast() {
   const [impact, setImpact] = useState<string[]>(['All']);
 
   // Weekly forecast date range (for display)
-  const { isCollaboratorViewer, isSubscribed } = useAuth();
+  const { isCollaboratorViewer, isPremium } = useAuth();
 
   const isViewOnly = () => {
     return isCollaboratorViewer;
@@ -271,7 +271,7 @@ export default function DisruptionForecast() {
       setError('');
 
       // For non-subscribers, ensure we have the Edinburgh location set
-      if (!isSubscribed && (!location || location.city !== "Edinburgh")) {
+      if (!isPremium && (!location || location.city !== "Edinburgh")) {
         setLocation({
           city: "Edinburgh",
           country: "United Kingdom",
@@ -282,7 +282,7 @@ export default function DisruptionForecast() {
       }
 
       // For subscribers, require a location selection
-      if (isSubscribed && !location) {
+      if (isPremium && !location) {
         setError('Please select a location');
         setLocationError(true);
         setLoading(false);
@@ -307,7 +307,7 @@ export default function DisruptionForecast() {
       let effectiveEndDate = endDate;
 
       // If using "This Week" date range or not subscribed, calculate the dates
-      if (dateRangeType === 'thisWeek' || !isSubscribed) {
+      if (dateRangeType === 'thisWeek' || !isPremium) {
         effectiveStartDate = new Date();
         effectiveEndDate = addDays(new Date(), 7);
       }
@@ -526,7 +526,7 @@ export default function DisruptionForecast() {
 
   useEffect(() => {
     // Set default location to Edinburgh for non-subscribed users
-    if (!isSubscribed && !location) {
+    if (!isPremium && !location) {
       setLocation({
         city: "Edinburgh",
         country: "United Kingdom",
@@ -535,14 +535,14 @@ export default function DisruptionForecast() {
         placeId: "ChIJIyaYpQC4h0gRJxfnfHsU8mQ"
       });
     }
-  }, [isSubscribed, location]);
+  }, [isPremium, location]);
 
   // Add this function to show toast for custom date selection
   const handleDateRangeChange = (event: unknown) => {
     const value = (event as SelectChangeEvent<string>).target.value as 'thisWeek' | 'custom';
 
     // If user tries to select custom but isn't subscribed, show toast
-    if (value === 'custom' && !isSubscribed) {
+    if (value === 'custom' && !isPremium) {
       showToast('Please subscribe to unlock this filter', 'error');
       return; // Don't update the state
     }
@@ -552,7 +552,7 @@ export default function DisruptionForecast() {
 
   // Add this function to handle location input click for non-subscribed users
   const handleLocationClick = () => {
-    if (!isSubscribed) {
+    if (!isPremium) {
       showToast('Please subscribe to unlock this filter', 'error');
     }
   };
@@ -758,13 +758,13 @@ export default function DisruptionForecast() {
                       <LocationSearchInput
                         setValue={setLocation}
                         value={location}
-                        disabled={!isSubscribed}
-                        hideIcon={!isSubscribed}
-                        placeholder={!isSubscribed ? "Edinburgh" : "Search for a city..."}
+                        disabled={!isPremium}
+                        hideIcon={!isPremium}
+                        placeholder={!isPremium ? "Edinburgh" : "Search for a city..."}
                         useExternalLabel={true}
                       />
                     </Box>
-                    {!isSubscribed && (
+                    {!isPremium && (
                       <Box sx={{
                         position: 'absolute',
                         right: 14,
@@ -785,9 +785,9 @@ export default function DisruptionForecast() {
                     <Box onClick={handleLocationClick}>
                       <TextField
                         fullWidth
-                        disabled={!isSubscribed}
-                        placeholder={!isSubscribed ? "Edinburgh" : "Loading location search..."}
-                        value={!isSubscribed ? "Edinburgh, United Kingdom" : ""}
+                        disabled={!isPremium}
+                        placeholder={!isPremium ? "Edinburgh" : "Loading location search..."}
+                        value={!isPremium ? "Edinburgh, United Kingdom" : ""}
                         sx={{
                           '& .MuiOutlinedInput-root': {
                             borderRadius: 2,
@@ -796,7 +796,7 @@ export default function DisruptionForecast() {
                         }}
                       />
                     </Box>
-                    {!isSubscribed && (
+                    {!isPremium && (
                       <Box sx={{
                         position: 'absolute',
                         right: 14,
@@ -835,10 +835,10 @@ export default function DisruptionForecast() {
                   }}
                 >
                   <MenuItem value="thisWeek">This Week</MenuItem>
-                  <MenuItem value="custom" disabled={!isSubscribed}>
+                  <MenuItem value="custom" disabled={!isPremium}>
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                       <span>Custom</span>
-                      {!isSubscribed && (
+                      {!isPremium && (
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                           <path fill-rule="evenodd" clip-rule="evenodd" d="M4.875 5.0625V6.39534C3.69924 6.75515 2.81193 7.78955 2.64339 9.04138C2.53227 9.86667 2.4375 10.7339 2.4375 11.625C2.4375 12.5161 2.53227 13.3833 2.64339 14.2086C2.84707 15.7214 4.10037 16.9166 5.64391 16.9876C6.71523 17.0368 7.80312 17.0625 9 17.0625C10.1969 17.0625 11.2848 17.0368 12.3561 16.9876C13.8996 16.9166 15.1529 15.7214 15.3566 14.2086C15.4677 13.3833 15.5625 12.5161 15.5625 11.625C15.5625 10.7339 15.4677 9.86667 15.3566 9.04138C15.1881 7.78955 14.3008 6.75515 13.125 6.39534V5.0625C13.125 2.78433 11.2782 0.9375 9 0.9375C6.72183 0.9375 4.875 2.78433 4.875 5.0625ZM9 2.4375C7.55025 2.4375 6.375 3.61275 6.375 5.0625V6.23262C7.2133 6.20286 8.07403 6.1875 9 6.1875C9.92597 6.1875 10.7867 6.20286 11.625 6.23262V5.0625C11.625 3.61275 10.4497 2.4375 9 2.4375ZM9.75 10.875C9.75 10.4608 9.41421 10.125 9 10.125C8.58579 10.125 8.25 10.4608 8.25 10.875V12.375C8.25 12.7892 8.58579 13.125 9 13.125C9.41421 13.125 9.75 12.7892 9.75 12.375V10.875Z" fill="#E7B119" />
                         </svg>
@@ -847,7 +847,7 @@ export default function DisruptionForecast() {
                   </MenuItem>
                 </Select>
               </FormControl>
-              {(dateRangeType === 'custom' && isSubscribed) && (
+              {(dateRangeType === 'custom' && isPremium) && (
                 <FormControl fullWidth>
                   <Stack direction="row" spacing={2}>
                     <Box sx={{ width: '50%' }}>
@@ -947,7 +947,7 @@ export default function DisruptionForecast() {
             </Box>
 
             {/* Subscription Banner */}
-            {!isSubscribed && (
+            {!isPremium && (
               <Box
                 sx={{
                   display: 'flex',

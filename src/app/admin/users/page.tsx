@@ -18,6 +18,7 @@ import {
   updateUserRole,
   updateUserStatus,
   deleteUser,
+  addUserToSubscribers,
   UserFilters as UserFiltersType
 } from '@/services/api';
 import { User } from '@/types';
@@ -32,6 +33,7 @@ import ChangeRoleModal from '@/components/admin/users/modals/ChangeRoleModal';
 import RestrictUserModal from '@/components/admin/users/modals/RestrictUserModal';
 import DeleteUserModal from '@/components/admin/users/modals/DeleteUserModal';
 import UserActivityModal from '@/components/admin/users/modals/UserActivityModal';
+import AddToSubscribersModal from '@/components/admin/users/modals/AddToSubscribersModal';
 
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -57,6 +59,7 @@ export default function UsersManagement() {
   const [restrictModalOpen, setRestrictModalOpen] = useState<boolean>(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [activityModalOpen, setActivityModalOpen] = useState<boolean>(false);
+  const [addToSubscribersModalOpen, setAddToSubscribersModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalAction, setModalAction] = useState<'restrict' | 'enable'>('restrict');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
@@ -146,6 +149,11 @@ export default function UsersManagement() {
   const handleDeleteUser = (user: User) => {
     setSelectedUser(user);
     setDeleteModalOpen(true);
+  };
+
+  const handleAddToSubscribers = (user: User) => {
+    setSelectedUser(user);
+    setAddToSubscribersModalOpen(true);
   };
 
   // Confirm action handlers
@@ -252,6 +260,42 @@ export default function UsersManagement() {
     }
   };
 
+  const confirmAddToSubscribers = async (sector: string, location: any[]) => {
+    if (!selectedUser) return;
+    
+    setActionLoading(true);
+    try {
+      await addUserToSubscribers(selectedUser._id, sector, location);
+      // Update user in the list
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user._id === selectedUser._id 
+            ? { 
+                ...user, 
+                weeklyForecastSubscribed: true,
+                weeklyForecastSubscribedAt: new Date().toISOString()
+              } 
+            : user
+        )
+      );
+      setSnackbar({
+        open: true,
+        message: 'User added to weekly forecast subscribers',
+        severity: 'success'
+      });
+      setAddToSubscribersModalOpen(false);
+    } catch (error) {
+      console.error('Error adding user to subscribers:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to add user to subscribers',
+        severity: 'error'
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <Box sx={{ mb: 4 }}>
@@ -288,6 +332,7 @@ export default function UsersManagement() {
                     onChangeRole={canManageUsers ? handleChangeRole : () => {}}
                     onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
                     onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
+                    onAddToSubscribers={canManageUsers ? handleAddToSubscribers : () => {}}
                   />
                 ))}
                 {users.length === 0 && (
@@ -306,6 +351,7 @@ export default function UsersManagement() {
                 onChangeRole={canManageUsers ? handleChangeRole : () => {}}
                 onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
                 onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
+                onAddToSubscribers={canManageUsers ? handleAddToSubscribers : () => {}}
               />
             )}
             
@@ -358,6 +404,14 @@ export default function UsersManagement() {
         open={activityModalOpen}
         onClose={() => setActivityModalOpen(false)}
         user={selectedUser}
+      />
+
+      <AddToSubscribersModal
+        open={addToSubscribersModalOpen}
+        onClose={() => setAddToSubscribersModalOpen(false)}
+        user={selectedUser}
+        onConfirm={confirmAddToSubscribers}
+        loading={actionLoading}
       />
 
       {/* Snackbar for notifications */}

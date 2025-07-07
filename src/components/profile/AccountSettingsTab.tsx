@@ -98,24 +98,17 @@ export default function AccountSettingsTab() {
     }
   };
 
+  const inputStyles = {
+    height: '40px',
+    borderRadius: 2,
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+  };
+
   return (
-    <Paper elevation={0} sx={{ p: 2 }}>
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h6">
-          Account Settings
-        </Typography>
-        
-        {isCollaborator && (
-          <Chip 
-            icon={<InfoIcon />} 
-            label="Access Restricted" 
-            color="error" 
-            variant="outlined" 
-            size="small"
-          />
-        )}
-      </Box>
-      
+    <Box component="form" sx={{ px: 0, py: 0, mt:{xs:0, md:-3} }} onSubmit={handleChangePassword} noValidate>
+
+      <Typography variant="h6" sx={{ mb: 0, display: { xs: 'none', md: 'block' } }}>Security</Typography>
+
       <Divider sx={{ mb: 3 }} />
       
       {isCollaborator && (
@@ -138,61 +131,96 @@ export default function AccountSettingsTab() {
       
       {/* Password Change Form - Only shown to account owners */}
       {!isCollaborator && (
-        <Box component="form" onSubmit={handleChangePassword} noValidate>
-          <Typography variant="subtitle1" sx={{ mb: 2 }}>
-            Change Password
-          </Typography>
-          
-          <Stack spacing={3} sx={{ mb: 4 }}>
-            <TextField
-              fullWidth
-              label="Current Password"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
-            />
+        <>
+          <Stack spacing={1.5} sx={{ mb: 4 }}>
+            <Box>
+              <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>Current Password</Typography>
+              <TextField
+                fullWidth
+                placeholder="Current Password"
+                type="password"
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                disabled={isSubmitting}
+                required
+                InputProps={{
+                  sx: inputStyles
+                }}
+                sx={{ 
+                  mb: 0,
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgba(0, 0, 0, 0.45)',
+                    opacity: 1
+                  }
+                }}
+              />
+            </Box>
             
-            <TextField
-              fullWidth
-              label="New Password"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
-              helperText="Password must be at least 6 characters"
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>New Password</Typography>
+              <TextField
+                fullWidth
+                placeholder="New Password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                disabled={isSubmitting}
+                required
+                InputProps={{
+                  sx: inputStyles
+                }}
+                sx={{ 
+                  mb: 0,
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgba(0, 0, 0, 0.45)',
+                    opacity: 1
+                  }
+                }}
+              />
+            </Box>
             
-            <TextField
-              fullWidth
-              label="Confirm New Password"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              disabled={isSubmitting}
-              required
-              error={newPassword !== confirmPassword && confirmPassword !== ''}
-              helperText={
-                newPassword !== confirmPassword && confirmPassword !== ''
-                  ? 'Passwords do not match'
-                  : ''
-              }
-            />
+            <Box>
+              <Typography variant="body2" sx={{ mb: 0.5, fontWeight: 500 }}>Confirm New Password</Typography>
+              <TextField
+                fullWidth
+                placeholder="Confirm New Password"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isSubmitting}
+                required
+                error={newPassword !== confirmPassword && confirmPassword !== ''}
+                helperText={
+                  newPassword !== confirmPassword && confirmPassword !== ''
+                    ? 'Passwords do not match'
+                    : ''
+                }
+                InputProps={{
+                  sx: inputStyles
+                }}
+                sx={{ 
+                  mb: 0,
+                  '& .MuiInputBase-input::placeholder': {
+                    color: 'rgba(0, 0, 0, 0.45)',
+                    opacity: 1
+                  }
+                }}
+              />
+            </Box>
           </Stack>
           
           <Button
             variant="contained"
-            color="primary"
+            color="secondary"
             type="submit"
             disabled={isSubmitting}
-            startIcon={isSubmitting ? <CircularProgress size={20} color="inherit" /> : null}
+            fullWidth
+            sx={{ height: '40px' }}
           >
             {isSubmitting ? 'Changing Password...' : 'Change Password'}
           </Button>
-        </Box>
+        </>
       )}
-    </Paper>
+    </Box>
   );
 } 

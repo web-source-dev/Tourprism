@@ -204,11 +204,17 @@ export default function Home() {
   return (
     <Layout>
       <Container sx={{ padding: { xs: 0, md: 0 } }}>
-        <Box sx={{ textAlign: 'center', display: 'flex', pt: 8, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: {xs:'70vh',md:'80vh'} }}>
+
+
+        {/* Add Subscribe Banner just above the footer */}
+
+
+        <Box sx={{ textAlign: 'center', display: 'flex', pt: 8, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: { xs: '70vh', md: '80vh' } }}>
 
           <Box sx={{
             display: 'flex',
             mb: isMobile ? '40px' : 8,
+            cursor: 'pointer',
           }}
             onClick={() => router.push('/feed')}>
             <svg width="261" height="36" viewBox="0 0 261 36" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -586,7 +592,7 @@ export default function Home() {
 
         <Divider sx={{ my: 8 }} />
 
-        <Box sx={{ textAlign: 'center', height: {xs:'80vh',md:'100vh'}, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <Box sx={{ textAlign: 'center', height: { xs: '80vh', md: '100vh' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <Typography
             variant="h2"
             sx={{
@@ -663,7 +669,7 @@ export default function Home() {
         <Divider sx={{ my: 8 }} />
 
         <Box sx={{ textAlign: 'center', height: { xs: '40vh', md: '45vh' }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-          <Typography variant="h5" fontWeight="500" mb={1}>
+          <Typography variant="h5" fontWeight="500" mb={1} sx={{ fontSize: { xs: '20px', md: '24px' } }}>
             Our Partners
           </Typography>
           <Typography
@@ -782,10 +788,7 @@ export default function Home() {
 
         <Divider sx={{ my: 8 }} />
 
-        {/* Add Subscribe Banner just above the footer */}
         <SubscribeBanner />
-       
-
 
       </Container>
     </Layout>

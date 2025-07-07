@@ -18,6 +18,8 @@ import Navbar from './layout/Navbar';
 import Footer from './layout/Footer';
 import MobileSidebar from './layout/MobileSidebar';
 
+import DisruptionBanner from './DisruptionBanner';
+
 interface LayoutProps {
   children: ReactNode;
   isFooter?: boolean;
@@ -114,11 +116,16 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
     //   ), path: '/subscription'
     // },
     {
-      text: 'Settings', icon: (
+      text: 'Profile', icon: (
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path fillRule="evenodd" clipRule="evenodd" d="M8.11672 0.837754C8.0388 0.831914 7.96055 0.831914 7.88263 0.837754C7.54689 0.862913 7.27481 1.01441 7.02621 1.2089C6.79239 1.39184 6.53373 1.65053 6.23121 1.95308L5.72405 2.3873C5.72405 2.3873 5.4521 2.42267 5.02146 2.42267C4.54732 2.42264 4.14206 2.42262 3.81821 2.46616C3.47241 2.51266 3.14558 2.61688 2.88105 2.88141C2.61651 3.14594 2.51229 3.47278 2.4658 3.81858C2.42226 4.14243 2.42228 4.54769 2.4223 5.02183L2.38694 5.72442L1.95271 6.23157C1.65018 6.53408 1.39147 6.79277 1.20854 7.02658C1.01404 7.27518 0.862547 7.54726 0.837387 7.88299C0.831548 7.96092 0.831548 8.03916 0.837387 8.11709C0.862547 8.45282 1.01404 8.7249 1.20854 8.9735C1.39147 9.20732 1.65016 9.46599 1.95271 9.76851L2.38694 10.2757L2.4223 10.9783C2.42228 11.4524 2.42226 11.8577 2.4658 12.1815C2.51229 12.5273 2.61651 12.8541 2.88105 13.1187C3.14558 13.3832 3.47241 13.4874 3.81821 13.5339C4.14206 13.5775 4.54733 13.5774 5.02147 13.5774L5.72405 13.6128L6.2312 14.047C6.5337 14.3495 6.79241 14.6083 7.02621 14.7912C7.27481 14.9857 7.54689 15.1372 7.88263 15.1623C7.96055 15.1682 8.0388 15.1682 8.11672 15.1623C8.45246 15.1372 8.72454 14.9857 8.97313 14.7912C9.20696 14.6082 9.46563 14.3495 9.76817 14.047L10.2753 13.6128L10.9779 13.5774C11.452 13.5774 11.8573 13.5775 12.1811 13.5339C12.5269 13.4874 12.8538 13.3832 13.1183 13.1187C13.3828 12.8541 13.4871 12.5273 13.5335 12.1815C13.5771 11.8577 13.5771 11.4524 13.577 10.9782L13.6124 10.2757L14.0466 9.76849C14.3492 9.46598 14.6079 9.20732 14.7908 8.9735C14.9853 8.7249 15.1368 8.45282 15.162 8.11709C15.1678 8.03916 15.1678 7.96092 15.162 7.88299C15.1368 7.54726 14.9853 7.27518 14.7908 7.02658C14.6079 6.79275 14.3492 6.53408 14.0466 6.23155L13.6124 5.72442L13.577 5.02183C13.5771 4.54769 13.5771 4.14243 13.5335 3.81858C13.4871 3.47278 13.3828 3.14595 13.1183 2.88141C12.8538 2.61688 12.5269 2.51266 12.1811 2.46616C11.8573 2.42262 11.452 2.42264 10.9779 2.42267C10.5472 2.42267 10.2362 2.3711 10.2362 2.3711L9.76814 1.95308C9.46562 1.65053 9.20695 1.39184 8.97313 1.2089C8.72454 1.01441 8.45246 0.862913 8.11672 0.837754ZM7.99967 5.16671C6.43487 5.16671 5.16634 6.43523 5.16634 8.00004C5.16634 9.56485 6.43487 10.8334 7.99967 10.8334C9.56448 10.8334 10.833 9.56485 10.833 8.00004C10.833 6.43523 9.56448 5.16671 7.99967 5.16671Z" fill="#616161" />
         </svg>
       ), path: '/profile'
+    },
+    {
+      text: 'Security', icon: (
+        <i className="ri-shield-user-fill text-xl"></i>
+      ), path: '/security'
     },
     { text: 'Archive', icon: '', path: '/archive' },
     
@@ -174,6 +181,18 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
     if (pathname.startsWith('/feed/')) {
       return menuItems.find(item => item.path === '/feed');
     }
+    if (pathname.startsWith('/profile/')) {
+      return menuItems.find(item => item.path === '/profile');
+    }
+    if (pathname.startsWith('/profile/business-info/')) {
+      return menuItems.find(item => item.path === '/profile/business-info');
+    }
+    if (pathname.startsWith('/security/')) {
+      return menuItems.find(item => item.path === '/security');
+    }
+    if (pathname.startsWith('/logout/')) {
+      return menuItems.find(item => item.path === '/logout');
+    }
 
     return null;
   };
@@ -205,8 +224,18 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
           easing: theme.transitions.easing.easeInOut,
           duration: theme.transitions.duration.enteringScreen,
         }),
-      }}>
-       
+      }}> 
+        {pathname === '/' && (
+          <Box sx={{ 
+            width: '92%', 
+            position: 'sticky', 
+            mx: 'auto',
+            top: 0, 
+            zIndex: 1000,
+          }}>
+            <DisruptionBanner />
+          </Box>
+        )}
         {/* Navbar Component */}
         <Navbar 
           isFeedPage={isFeedPage}
@@ -230,7 +259,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
 
         {/* Display Banner for authenticated users */}
 
-        <Container component="main" sx={{ flex: 1, py: { xs: 0, sm: 0, md: 2 }, px: { xs: 2, sm: 3, md: 4 } }}>
+        <Container component="main" sx={{ flex: 1, py: { xs: 0, sm: 0, md: 2 }, px: { xs: 2, sm: 3, md: 2 } }}>
 
           {children}
         </Container>

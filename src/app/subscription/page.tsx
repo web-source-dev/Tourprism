@@ -19,17 +19,18 @@ interface LocationType {
 
 
 const sectorOptions: string[] = [
-  "Airlines",
-  "Attractions",
-  "Car Rentals",
-  "Cruise Lines",
-  "DMOs",
-  "Event Managers",
-  "Hotels",
-  "OTAs",
-  "Tour Guides",
-  "Tour Operators",
-  "Travel Agencies",
+  "Airline",
+  "Attraction",
+  "Car Rental",
+  "Cruise Line",
+  "DMO",
+  "Event Manager",
+  "Hotel",
+  "OTA",
+  "Tour Guide",
+  "Tour Operator",
+  "Travel Agency",
+  "Travel Media",
   "Other"
 ];
 
@@ -152,7 +153,7 @@ export default function SubscriptionPage() {
   };
 
   return (
-    <Layout isHeader={true}>
+    <Layout isHeader={true} isFooter={false}>
       <Container maxWidth="sm" sx={{ px: 1 }}>
         <Box
           sx={{
@@ -168,7 +169,7 @@ export default function SubscriptionPage() {
             Stay ahead of disruptions — get your weekly forecast.
           </Typography>
           <Typography variant="body1" paragraph sx={{ mb: 1, fontSize:'16px', color:'black' }}>
-            5 key alerts tailored to your tourism business. Delivered every Monday.
+          Actionable forecasts delivered weekly to help your business respond smarter
           </Typography>
 
           <Box component="form" onSubmit={handleSubmit} noValidate>
@@ -283,6 +284,32 @@ export default function SubscriptionPage() {
                 ))}
               </Select>
             </FormControl>
+            
+            {/* Consent message - only show when not in success state */}
+            {!success && (
+              <Typography 
+                variant="body2" 
+                sx={{ 
+                  mt: 1, 
+                  mb: 2, 
+                  fontSize: '14px', 
+                  color: '#666',
+                  textAlign: 'center',
+                  lineHeight: 1.4
+                }}
+              >
+                By subscribing, I agree to Tourprism's{' '}
+                <Link href="/terms" style={{ color: '#056CF2', textDecoration: 'none' }}>
+                  Terms of Service
+                </Link>
+                {' '}and{' '}
+                <Link href="/privacy" style={{ color: '#056CF2', textDecoration: 'none' }}>
+                  Privacy Policy
+                </Link>
+                .
+              </Typography>
+            )}
+            
             <Button
               type="submit"
               fullWidth
@@ -294,12 +321,12 @@ export default function SubscriptionPage() {
                 borderRadius: 2,
                 py: 1.2,
                 height: '45px',
-                bgcolor: '#1565c0',
+                bgcolor: '#056CF2',
                 color: 'white',
                 textTransform: 'none',
                 fontSize: '16px',
                 fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                '&:hover': { bgcolor: '#0d47a1' },
+                '&:hover': { bgcolor: '#0458D1' },
               }}
             >
               {loading ? <CircularProgress size={24} color="inherit" /> : 'Subscribe Now'}
@@ -312,7 +339,7 @@ export default function SubscriptionPage() {
               Thank you! Your first disruption forecast will arrive on Monday at 10am GMT.
             </Typography>
             <Typography variant="body1" paragraph sx={{color:'black'}}>
-              Want to see what else is disrupting your region? <Link href="/signup" style={{ color: '#1565c0'}}>Create a Free Account</Link>
+            Want to view the full list of disruptions affecting your business? <Link href="/signup" style={{ color: '#056CF2'}}>Create a Free Account</Link>
             </Typography>
             </>
           }

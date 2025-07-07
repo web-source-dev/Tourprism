@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -6,7 +6,10 @@ import {
   List,
   ListItem,
   ListItemText,
+  Collapse,
 } from '@mui/material';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import ExpandMore from '@mui/icons-material/ExpandMore';
 
 interface MenuItem {
   text: string;
@@ -27,6 +30,24 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
   menuItems,
   handleMenuItemClick,
 }) => {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const settingsSubmenuItems = [
+    { text: 'Profile', path: '/profile' },
+    { text: 'Billing', path: '/billing' },
+    { text: 'Security', path: '/security' },
+    { text: 'Support', path: '/support' }
+  ];
+
+  const handleItemClick = (path: string, text: string) => {
+    if (path === 'settings') {
+      setSettingsOpen(!settingsOpen);
+    } else {
+      handleMenuItemClick(path, text);
+      handleDrawerToggle();
+    }
+  };
+
   // Mobile drawer content
   const drawer = (
     <Box sx={{ width: 300 }}>
@@ -35,23 +56,57 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
       </Box>
       <List>
         {menuItems.map((item) => (
-          <ListItem
-            key={item.text}
-            onClick={() => handleMenuItemClick(item.path, item.text)}
-            sx={{
-              color: 'black',
-              textDecoration: 'none',
-              fontSize: '18px',
-              height: '35px',
-              fontWeight: 'bold',
-              '&:hover': {
-                bgcolor: '#f5f5f5'
-              },
-              cursor: 'pointer'
-            }}
-          >
-            <ListItemText primary={item.text} />
-          </ListItem>
+          <React.Fragment key={item.text}>
+            <ListItem
+              onClick={() => handleItemClick(item.path, item.text)}
+              sx={{
+                color: 'black',
+                textDecoration: 'none',
+                fontSize: '18px',
+                height: '35px',
+                fontWeight: 'bold',
+                '&:hover': {
+                  bgcolor: '#f5f5f5'
+                },
+                cursor: 'pointer'
+              }}
+            >
+              <ListItemText primary={item.text} />
+              {item.path === 'settings' && (
+                <Box component="span" sx={{ ml: 'auto' }}>
+                  {settingsOpen ? <ExpandLess /> : <ExpandMore />}
+                </Box>
+              )}
+            </ListItem>
+            {item.path === 'settings' && (
+              <Collapse in={settingsOpen} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {settingsSubmenuItems.map((subItem) => (
+                    <ListItem
+                      key={subItem.text}
+                      onClick={() => handleItemClick(subItem.path, subItem.text)}
+                      sx={{
+                        pl: 4,
+                        py: 1,
+                        color: 'black',
+                        fontSize: '16px',
+                        '&:hover': {
+                          bgcolor: '#f5f5f5',
+                          cursor: 'pointer',
+                        },
+                      }}
+                    >
+                      <ListItemText primary={subItem.text} />
+                      {/* add arrow at right opointing to right side  */}
+                      <Box component="span" sx={{ ml: 'auto' }}>
+                        <ExpandMore  sx={{rotate: '270deg'}}/>
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              </Collapse>
+            )}
+          </React.Fragment>
         ))}
       </List>
     </Box>

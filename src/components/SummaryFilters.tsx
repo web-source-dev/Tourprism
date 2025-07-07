@@ -66,7 +66,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
     locations = [],
     isModal = false,
 }) => {
-    const { isSubscribed } = useAuth();
+    const { isPremium } = useAuth();
     const { showToast } = useToast();
     const [showCustomDateRange, setShowCustomDateRange] = useState(filters.dateCreated === 'Custom');
     const [expanded, setExpanded] = useState<string | false>(false);
@@ -409,7 +409,7 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                             </ListItem>
                             <ListItem
                                 onClick={() => {
-                                    if (!isSubscribed) {
+                                    if (!isPremium) {
                                         showToast('Subscribe to unlock this filter', 'error');
                                         return;
                                     }
@@ -424,13 +424,13 @@ const SummaryFilters: React.FC<SummaryFiltersProps> = ({
                                     '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' },
                                     display: 'flex',
                                     justifyContent: 'space-between',
-                                    opacity: isSubscribed ? 1 : 0.7
+                                    opacity: isPremium ? 1 : 0.7
                                 }}
                                 component="div"
                             >
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
                                     <ListItemText primary="Custom" />
-                                    {!isSubscribed && (
+                                    {!isPremium && (
                                         <Tooltip title="Subscribe to unlock this filter">
                                             <Box component="span">
                                                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">

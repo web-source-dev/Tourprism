@@ -66,7 +66,7 @@ function ArchiveContent() {
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false);
-  const { isSubscribed } = useAuth();
+  const { isPremium } = useAuth();
   const { showToast } = useToast();
   
   // Updated FilterOptions to match the type from types/index.ts
@@ -202,7 +202,7 @@ function ArchiveContent() {
 
   // Handle using current location
   const handleUseMyLocation = async () => {
-    if (!isSubscribed) {
+    if (!isPremium) {
       showToast("Please subscribe to use location features", "error");
       return;
     }

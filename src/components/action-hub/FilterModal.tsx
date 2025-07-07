@@ -84,7 +84,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
     dateRangeType: filterOptions.dateRangeType || '',
   });
   const [expanded, setExpanded] = useState<string | false>(false);
-  const { isSubscribed } = useAuth();
+  const { isPremium } = useAuth();
 
   // Update local state when props change
   React.useEffect(() => {
@@ -131,7 +131,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       });
     } 
     // If clearing or if user is not subscribed and trying to select custom, just update the type
-    else if (dateRangeType === '' || (!isSubscribed && dateRangeType === 'custom')) {
+    else if (dateRangeType === '' || (!isPremium && dateRangeType === 'custom')) {
       setFilters({
         ...filters,
         dateRangeType,
@@ -152,7 +152,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
 
   const handleDateChange = (type: 'startDate' | 'endDate', value: Date | null) => {
     // Only allow date changes if the dateRangeType is 'custom'
-    if (filters.dateRangeType === 'custom' && isSubscribed) {
+    if (filters.dateRangeType === 'custom' && isPremium) {
       setFilters({
         ...filters,
         dateRange: {
@@ -336,7 +336,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
       { 
         value: 'custom', 
         label: 'Custom', 
-        locked: !isSubscribed 
+        locked: !isPremium 
       }
     ];
 
@@ -373,7 +373,7 @@ const FilterModal: React.FC<FilterModalProps> = ({
         ))}
         
         {/* Custom date inputs - only show if 'custom' is selected and user is subscribed */}
-        {filters.dateRangeType === 'custom' && isSubscribed && (
+        {filters.dateRangeType === 'custom' && isPremium && (
           <Box sx={{ py: 2, display: 'flex', gap: 2 }}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <DatePicker

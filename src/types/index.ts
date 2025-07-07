@@ -16,7 +16,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   isVerified: boolean;
-  isSubscribed?: boolean;
+  isPremium?: boolean;
   role?: string;
   status?: 'active' | 'restricted' | 'pending' | 'deleted';
   createdAt: string;
@@ -25,6 +25,10 @@ export interface User {
   emailPrefrences?: boolean;
   isCollaborator?: boolean;
   collaborator?: Collaborator;
+  // Weekly forecast subscription fields
+  weeklyForecastSubscribed?: boolean;
+  weeklyForecastSubscribedAt?: string;
+  lastWeeklyForecastReceived?: string;
   company?: {
     name?: string;
     type?: string;
@@ -47,6 +51,23 @@ export interface User {
     }
   };
   collaborators?: Collaborator[];
+}
+
+export interface Subscriber {
+  _id: string;
+  name?: string;
+  email: string;
+  location?: {
+    name: string;
+    latitude: number;
+    longitude: number;
+    placeId: string;
+  }[];
+  sector?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastWeeklyForecastReceived?: string;
 }
 
 export interface Alert {

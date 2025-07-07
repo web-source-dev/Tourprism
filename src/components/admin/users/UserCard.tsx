@@ -21,7 +21,8 @@ import {
   Delete as DeleteIcon,
   AdminPanelSettings as AdminIcon,
   Person as PersonIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Email as EmailIcon
 } from '@mui/icons-material';
 import { User } from '@/types';
 
@@ -32,6 +33,7 @@ interface UserCardProps {
   onRestrictUser: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onViewActivity: (user: User) => void;
+  onAddToSubscribers: (user: User) => void;
 }
 
 const UserCard: React.FC<UserCardProps> = ({ 
@@ -40,7 +42,8 @@ const UserCard: React.FC<UserCardProps> = ({
   onChangeRole, 
   onRestrictUser, 
   onDeleteUser,
-  onViewActivity
+  onViewActivity,
+  onAddToSubscribers
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -196,6 +199,17 @@ const UserCard: React.FC<UserCardProps> = ({
               <AdminIcon fontSize="small" sx={{ mr: 1 }} />
               Change Role
             </MenuItem>
+            {!user.weeklyForecastSubscribed && (
+              <MenuItem 
+                onClick={() => {
+                  onAddToSubscribers(user);
+                  handleClose();
+                }}
+              >
+                <EmailIcon fontSize="small" sx={{ mr: 1 }} />
+                Add to Weekly Forecast
+              </MenuItem>
+            )}
             <Divider />
             <MenuItem 
               onClick={() => {
@@ -221,7 +235,7 @@ const UserCard: React.FC<UserCardProps> = ({
         </Box>
         
         {/* Status and role badges */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
           <Chip
             label={user.status || 'Active'}
             size="small"
@@ -254,6 +268,22 @@ const UserCard: React.FC<UserCardProps> = ({
               label="Unverified"
               size="small"
               color="default"
+              variant="outlined"
+            />
+          )}
+          {user.isPremium && (
+            <Chip
+              label="Subscribed"
+              size="small"
+              color="primary"
+              variant="outlined"
+            />
+          )}
+          {user.weeklyForecastSubscribed && (
+            <Chip
+              label="Weekly Forecast"
+              size="small"
+              color="secondary"
               variant="outlined"
             />
           )}

@@ -192,7 +192,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, user }) => {
                     {detailedUser.email}
                   </Typography>
                   
-                  <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+                  <Box sx={{ mt: 1, display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                     <Chip
                       label={detailedUser.role || 'User'}
                       size="small"
@@ -217,6 +217,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, user }) => {
                       <Chip label="Verified" size="small" color="success" variant="outlined" />
                     ) : (
                       <Chip label="Unverified" size="small" color="default" variant="outlined" />
+                    )}
+                    {detailedUser.isPremium && (
+                      <Chip label="Subscribed" size="small" color="primary" variant="outlined" />
+                    )}
+                    {detailedUser.weeklyForecastSubscribed && (
+                      <Chip label="Weekly Forecast" size="small" color="secondary" variant="outlined" />
                     )}
                   </Box>
                 </Box>
@@ -268,6 +274,34 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ open, onClose, user }) => {
                         secondary={detailedUser.isVerified ? 'Verified' : 'Not Verified'}
                       />
                     </ListItem>
+                    <ListItem sx={{ px: 0 }}>
+                      <ListItemText
+                        primary="Subscription Status"
+                        secondary={detailedUser.isPremium ? 'Subscribed' : 'Not Subscribed'}
+                      />
+                    </ListItem>
+                    <ListItem sx={{ px: 0 }}>
+                      <ListItemText
+                        primary="Weekly Forecast Subscription"
+                        secondary={detailedUser.weeklyForecastSubscribed ? 'Subscribed' : 'Not Subscribed'}
+                      />
+                    </ListItem>
+                    {detailedUser.weeklyForecastSubscribedAt && (
+                      <ListItem sx={{ px: 0 }}>
+                        <ListItemText
+                          primary="Weekly Forecast Subscribed At"
+                          secondary={formatDate(detailedUser.weeklyForecastSubscribedAt)}
+                        />
+                      </ListItem>
+                    )}
+                    {detailedUser.lastWeeklyForecastReceived && (
+                      <ListItem sx={{ px: 0 }}>
+                        <ListItemText
+                          primary="Last Weekly Forecast Received"
+                          secondary={formatDate(detailedUser.lastWeeklyForecastReceived)}
+                        />
+                      </ListItem>
+                    )}
                   </List>
                 </Box>
                 <Box sx={{ width: { xs: '100%', md: '50%' } }}>

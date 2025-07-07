@@ -35,7 +35,7 @@ export default function SavedForecasts() {
   const [savedForecasts, setSavedForecasts] = useState<Summary[]>([]);
   const [allForecasts, setAllForecasts] = useState<Summary[]>([]);
   const { showToast } = useToast();
-  const { isSubscribed } = useAuth();
+  const { isPremium } = useAuth();
 
   // Filter state
   const [filters, setFilters] = useState<FilterOptions>({
@@ -104,7 +104,7 @@ export default function SavedForecasts() {
 
   // Check subscription status on mount
   useEffect(() => {
-    if (!isSubscribed && filters.dateCreated === 'Custom') {
+    if (!isPremium && filters.dateCreated === 'Custom') {
       // Reset custom date filter if user is not subscribed
       setFilters(prev => ({
         ...prev,
@@ -114,7 +114,7 @@ export default function SavedForecasts() {
       }));
       showToast('Custom date range is available with subscription', 'error');
     }
-  }, [isSubscribed, filters.dateCreated, showToast]);
+  }, [isPremium, filters.dateCreated, showToast]);
 
 
 

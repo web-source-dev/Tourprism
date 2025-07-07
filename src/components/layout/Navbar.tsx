@@ -42,6 +42,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 600px)');
   const isSubscriptionPage = pathname === '/subscription';
+  const isProfilePage = pathname === '/profile' || pathname === '/profile/business-info';
 
   // Navigation links to show on desktop
   const navLinks = [
@@ -56,7 +57,8 @@ const Navbar: React.FC<NavbarProps> = ({
     { text: 'Action Hub', path: '/action-hub' },
     // { text: 'Insights', path: '/insights' },
     // { text: 'Subscription', path: '/subscription' },
-    { text: 'Settings', path: '/settings' }
+    { text: 'Settings', path: '/profile' },
+    { text: 'Security', path: '/security' }
   ];
 
   return (
@@ -76,7 +78,7 @@ const Navbar: React.FC<NavbarProps> = ({
         sx={{
           justifyContent: 'space-between',
           minHeight: { xs: '40px', sm: '50px' },
-          display: isHomePage || isMobile || isSubscriptionPage ? 'flex' : 'none',
+          display: isHomePage  || isMobile || isSubscriptionPage || isProfilePage ? 'flex' : 'none',
 
         }}
       >
@@ -122,7 +124,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
           {/* Page Title and Icon for mobile */}
           {!isHomePage && (
-            <Typography variant="h6" sx={{ fontWeight: '600' }}>
+            <Typography variant="h6" sx={{ fontWeight: '600', display: 'flex' }}>
               {currentPageName}
             </Typography>
           )}
@@ -130,7 +132,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
         {/* Desktop navigation - center of header */}
         <Box sx={{
-          display: { xs: 'none', sm: (isAuthenticated || (!isHomePage && !isSubscriptionPage) || !isHeader) ? 'none' : 'flex' },
+          display: { xs: 'none', sm: (isAuthenticated || (!isHomePage && !isSubscriptionPage && !isProfilePage) || !isHeader) ? 'none' : 'flex' },
           position: 'absolute',
           left: '50%',
           transform: 'translateX(-50%)',

@@ -18,7 +18,7 @@ interface AuthContextType {
   setUser: (user: User | null) => void;
   logout: () => void;
   isAuthenticated: boolean;
-  isSubscribed: boolean;
+  isPremium: boolean;
   isCollaborator: boolean;
   collaboratorRole: string | null;
   collaboratorEmail: string | null;
@@ -32,6 +32,7 @@ interface AuthContextType {
   accessAdminDashboard: boolean;
   // Role check utility function
   hasRole: (role: string | string[]) => boolean;
+  updateUser: (updatedUser: User) => void;
 }
 
 const defaultContext: AuthContextType = {
@@ -40,7 +41,7 @@ const defaultContext: AuthContextType = {
   setUser: () => {},
   logout: () => {},
   isAuthenticated: false,
-  isSubscribed: false,
+  isPremium: false,
   isCollaborator: false,
   collaboratorRole: null,
   collaboratorEmail: null,
@@ -53,7 +54,8 @@ const defaultContext: AuthContextType = {
   isCollaboratorManager: false,
   accessAdminDashboard: false,
   // Role check utility function
-  hasRole: () => false
+  hasRole: () => false,
+  updateUser: () => {}
 };
 
 const AuthContext = createContext<AuthContextType>(defaultContext);
@@ -66,7 +68,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isCollaborator, setIsCollaborator] = useState<boolean>(false);
   const [collaboratorRole, setCollaboratorRole] = useState<string | null>(null);
   const [collaboratorEmail, setCollaboratorEmail] = useState<string | null>(null);
-  const [isSubscribed, setIsSubscribed] = useState<boolean>(false);
+  const [isPremium, setisPremium] = useState<boolean>(false);
   
   // Role-based state values
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
@@ -84,18 +86,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const response = await api.get('/auth/user/profile');
       if(response.data){
         // Type assertion to specify the expected shape of response.data
-        setUser(response.data as User);
-        const userData = response.data as { isSubscribed?: boolean };
-        setIsSubscribed(!!userData.isSubscribed);
+        const userData = response.data as User;
+        setUser(userData);
+        setisPremium(!!userData.isPremium);
+        
+        // Store subscription status
         if (typeof window !== 'undefined') {
-          localStorage.setItem('isSubscribed', (!!userData.isSubscribed).toString());
+          localStorage.setItem('isPremium', (!!userData.isPremium).toString());
+          localStorage.setItem('weeklyForecastSubscribed', (!!userData.weeklyForecastSubscribed).toString());
         }
       }
     }
     catch(error){
       console.error(error);
     }
-}
+  }
 
   // Initial fetch on mount
   useEffect(() => {
@@ -147,7 +152,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       
       // Update subscription status
-      setIsSubscribed(!!user.isSubscribed);
+      setisPremium(!!user.isPremium);
       
       // Update the admin dashboard access flag
       const hasAdminAccess = userRole === 'admin' || 
@@ -160,7 +165,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Store the admin access flag in localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('accessAdminDashboard', hasAdminAccess.toString());
-        localStorage.setItem('isSubscribed', (!!user.isSubscribed).toString());
+        localStorage.setItem('isPremium', (!!user.isPremium).toString());
       }
     } else {
       setIsAdmin(false);
@@ -169,12 +174,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsEditor(false);
       setAccessAdminDashboard(false);
 
-      setIsSubscribed(false);
+      setisPremium(false);
       
       // Clear the admin access flag from localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('accessAdminDashboard');
-        localStorage.removeItem('isSubscribed');
+        localStorage.removeItem('isPremium');
       }
     }
     
@@ -219,9 +224,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
             
             // Set subscription status if present
-            const storedIsSubscribed = localStorage.getItem('isSubscribed');
-            if (storedIsSubscribed === 'true') {
-              setIsSubscribed(true);
+            const storedisPremium = localStorage.getItem('isPremium');
+            if (storedisPremium === 'true') {
+              setisPremium(true);
             }
           } else {
             // Clear any existing cookies if no token in localStorage
@@ -254,7 +259,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       localStorage.removeItem('collaboratorRole');
       localStorage.removeItem('collaboratorEmail');
       localStorage.removeItem('accessAdminDashboard');
-      localStorage.removeItem('isSubscribed');
+      localStorage.removeItem('isPremium');
       
       // Also remove cookies
       Cookies.remove('token', { path: '/' });
@@ -271,11 +276,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsCollaboratorViewer(false);
       setIsCollaboratorManager(false);
       setAccessAdminDashboard(false);
-      setIsSubscribed(false);
+      setisPremium(false);
       
       router.push('/');
       window.location.href = '/';
     }
+  };
+
+  const updateUser = (updatedUser: User) => {
+    setUser(updatedUser);
   };
 
   const value = {
@@ -284,7 +293,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser,
     logout: handleLogout,
     isAuthenticated: !!user,
-    isSubscribed,
+    isPremium,
     isCollaborator,
     collaboratorRole,
     collaboratorEmail,
@@ -296,6 +305,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     isCollaboratorViewer,
     isCollaboratorManager,
     hasRole,
+    updateUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

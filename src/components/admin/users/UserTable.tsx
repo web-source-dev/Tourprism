@@ -14,7 +14,8 @@ import {
   Menu,
   MenuItem,
   Typography,
-  Divider
+  Divider,
+  Box
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -22,7 +23,8 @@ import {
   Block as BlockIcon,
   Delete as DeleteIcon,
   AdminPanelSettings as AdminIcon,
-  History as HistoryIcon
+  History as HistoryIcon,
+  Email as EmailIcon
 } from '@mui/icons-material';
 import { User } from '@/types';
 
@@ -33,6 +35,7 @@ interface UserTableProps {
   onRestrictUser: (user: User) => void;
   onDeleteUser: (user: User) => void;
   onViewActivity: (user: User) => void;
+  onAddToSubscribers: (user: User) => void;
 }
 
 const UserTable: React.FC<UserTableProps> = ({
@@ -41,7 +44,8 @@ const UserTable: React.FC<UserTableProps> = ({
   onChangeRole,
   onRestrictUser,
   onDeleteUser,
-  onViewActivity
+  onViewActivity,
+  onAddToSubscribers
 }) => {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
@@ -134,16 +138,34 @@ const UserTable: React.FC<UserTableProps> = ({
                 <TableCell>{user.email}</TableCell>
                 <TableCell>{user.company?.name || 'Not specified'}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={user.role || 'User'}
-                    size="small"
-                    sx={{
-                      bgcolor: getRoleColor(user.role).bg,
-                      color: getRoleColor(user.role).color,
-                      fontWeight: 'medium',
-                      textTransform: 'capitalize'
-                    }}
-                  />
+                  <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                    <Chip
+                      label={user.role || 'User'}
+                      size="small"
+                      sx={{
+                        bgcolor: getRoleColor(user.role).bg,
+                        color: getRoleColor(user.role).color,
+                        fontWeight: 'medium',
+                        textTransform: 'capitalize'
+                      }}
+                    />
+                    {user.isPremium && (
+                      <Chip
+                        label="Premium"
+                        size="small"
+                        color="primary"
+                        variant="outlined"
+                      />
+                    )}
+                    {user.weeklyForecastSubscribed && (
+                      <Chip
+                        label="Subscribed"
+                        size="small"
+                        color="secondary"
+                        variant="outlined"
+                      />
+                    )}
+                  </Box>
                 </TableCell>
                 <TableCell>
                   <Chip
@@ -224,6 +246,17 @@ const UserTable: React.FC<UserTableProps> = ({
               <AdminIcon fontSize="small" sx={{ mr: 1 }} />
               Change Role
             </MenuItem>
+            {!selectedUser.weeklyForecastSubscribed && (
+              <MenuItem
+                onClick={() => {
+                  onAddToSubscribers(selectedUser);
+                  handleCloseMenu();
+                }}
+              >
+                <EmailIcon fontSize="small" sx={{ mr: 1 }} />
+                Add to Weekly Forecast
+              </MenuItem>
+            )}
             <Divider />
             <MenuItem
               onClick={() => {

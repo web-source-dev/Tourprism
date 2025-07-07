@@ -25,12 +25,12 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
   const pathname = usePathname();
   
   // Use state to track subscription status
-  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(user?.isSubscribed || false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<boolean>(user?.isPremium || false);
   const [loading, setLoading] = useState(false);
   
   // Update the subscription status whenever the user object changes
   useEffect(() => {
-    setSubscriptionStatus(user?.isSubscribed || false);
+    setSubscriptionStatus(user?.isPremium || false);
   }, [user, pathname]);
 
   const handleToggleSubscription = async () => {
@@ -44,7 +44,7 @@ const SubscriptionToggle: React.FC<SubscriptionToggleProps> = ({ onClick }) => {
       }
       
       // Update local state
-      setSubscriptionStatus(updatedUser.isSubscribed || false);
+      setSubscriptionStatus(updatedUser.isPremium || false);
 
       showToast(
         `You have successfully ${!subscriptionStatus ? 'subscribed to' : 'unsubscribed from'
