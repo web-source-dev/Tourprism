@@ -298,7 +298,7 @@ export default function SubscriptionPage() {
                   lineHeight: 1.4
                 }}
               >
-                By subscribing, I agree to Tourprism's{' '}
+                By subscribing, I agree to Tourprism&apos;s{' '}
                 <Link href="/terms" style={{ color: '#056CF2', textDecoration: 'none' }}>
                   Terms of Service
                 </Link>

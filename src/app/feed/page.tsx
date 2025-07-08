@@ -275,6 +275,8 @@ export default function Feed() {
 
   // Fetch user profile if authenticated
   useEffect(() => {
+    setSelectedCity(null);
+    setSelectedLocation(null);
     const fetchUserProfile = async () => {
       if (isAuthenticated) {
         try {
@@ -598,6 +600,7 @@ export default function Feed() {
         setTotalCount(backendTotalCount || totalCount || 0);
         setHasMore(isAuthenticated && sortedAllAlerts.length < (backendTotalCount || totalCount || 0));
         setPage(1);
+        console.log('sortedAllAlerts', page,isLoadingMore);
       }
       
       // Clear the timeout since we completed successfully

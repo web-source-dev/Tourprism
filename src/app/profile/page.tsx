@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
-import { Box, Container, Typography, CircularProgress, Paper } from '@mui/material';
+import React from 'react';
+import { Container, CircularProgress } from '@mui/material';
 import Layout from '@/components/Layout';
 import PersonalInfoTab from '@/components/profile/PersonalInfoTab';
 import { useAuth } from '@/context/AuthContext';
@@ -11,14 +11,8 @@ export default function ProfilePage() {
   const { user, updateUser } = useAuth();
 
   const handleUserUpdate = (updatedUser: User) => {
-    // Update the user in the auth context
     updateUser(updatedUser);
   };
-
-  // Fetch user data when component mounts
-  useEffect(() => {
-    // This is handled by the AuthContext
-  }, []);
 
   if (!user) {
     return (

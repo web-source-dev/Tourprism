@@ -5,13 +5,9 @@ import { useRouter } from 'next/navigation';
 
 interface UnlockFeaturesCardProps {
   onDismiss: () => void;
-  profileCompletionPercentage?: number;
 }
 
-const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({
-  onDismiss,
-  profileCompletionPercentage
-}) => {
+const UnlockFeaturesCard: React.FC<UnlockFeaturesCardProps> = ({ onDismiss }) => {
   const router = useRouter();
 
   const handleCompleteProfile = () => {

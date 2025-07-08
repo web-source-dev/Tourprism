@@ -260,7 +260,7 @@ export default function UsersManagement() {
     }
   };
 
-  const confirmAddToSubscribers = async (sector: string, location: any[]) => {
+  const confirmAddToSubscribers = async (sector: string, location: unknown[]) => {
     if (!selectedUser) return;
     
     setActionLoading(true);

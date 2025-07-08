@@ -10,7 +10,6 @@ import {
   CircularProgress,
   Stack,
   Divider,
-  Paper,
   FormControlLabel,
   Checkbox,
   MenuItem,
@@ -20,7 +19,6 @@ import {
   Link,
   ListItemIcon
 } from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { User } from '@/types';
 import { updatePersonalInfo, updateCompanyInfo, updateSubscriberStatusByEmail } from '@/services/api';
@@ -182,6 +180,7 @@ export default function PersonalInfoTab({ user, onUpdate }: PersonalInfoTabProps
       }
       setWeeklyForecast(checked);
     } catch (error) {
+      console.error('Error updating subscription status:', error);
       showToast('Failed to update subscription status', 'error');
       // Revert checkbox state on error
       setWeeklyForecast(!checked);
@@ -520,7 +519,7 @@ export default function PersonalInfoTab({ user, onUpdate }: PersonalInfoTabProps
                       maxHeight: '200px'
                     },
                     '& .MuiSelect-select[aria-expanded="false"]': {
-                      color: formData => !businessType ? 'rgba(0, 0, 0, 0.45)' : 'inherit'
+                      color: !businessType ? 'rgba(0, 0, 0, 0.45)' : 'inherit'
                     }
                   }}
                   MenuProps={{

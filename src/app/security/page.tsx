@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Box, Container } from '@mui/material';
+import { Container } from '@mui/material';
 import Layout from '@/components/Layout';
 import AccountSettingsTab from '@/components/profile/AccountSettingsTab';
 

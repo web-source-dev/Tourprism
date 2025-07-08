@@ -1031,7 +1031,7 @@ export const getAllSubscribers = async (params: SubscriberFilters = {}): Promise
   }
 };
 
-export const addUserToSubscribers = async (userId: string, sector?: string, location?: any[]): Promise<{ success: boolean; subscriber: Subscriber }> => {
+export const addUserToSubscribers = async (userId: string, sector?: string, location?: unknown[]): Promise<{ success: boolean; subscriber: Subscriber }> => {
   try {
     const response = await api.post<{ success: boolean; subscriber: Subscriber }>('/api/admin/subscribers/add-user', { userId, sector, location });
     return response.data;

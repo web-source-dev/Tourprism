@@ -7,13 +7,9 @@ import {
   Button,
   Typography,
   Alert,
-  CircularProgress,
   Stack,
   Divider,
-  Paper,
-  Chip,
 } from '@mui/material';
-import InfoIcon from '@mui/icons-material/Info';
 import { api } from '@/services/api';
 import { useAuth } from '@/context/AuthContext';
 

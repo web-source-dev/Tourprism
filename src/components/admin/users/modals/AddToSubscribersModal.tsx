@@ -14,7 +14,6 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  TextField,
   Alert
 } from '@mui/material';
 import { Email as EmailIcon } from '@mui/icons-material';
@@ -24,7 +23,7 @@ interface AddToSubscribersModalProps {
   open: boolean;
   onClose: () => void;
   user: User | null;
-  onConfirm: (sector: string, location: any[]) => void;
+  onConfirm: (sector: string, location: unknown[]) => void;
   loading: boolean;
 }
 
@@ -146,7 +145,7 @@ const AddToSubscribersModal: React.FC<AddToSubscribersModalProps> = ({
         </FormControl>
         
         <Typography variant="body2" color="text.secondary">
-          The user will be added to the weekly forecast subscriber list and will receive disruption forecasts based on their company's operating regions.
+          The user will be added to the weekly forecast subscriber list and will receive disruption forecasts based on their company&apos;s operating regions.
         </Typography>
       </DialogContent>
       

@@ -3,18 +3,15 @@
 import { useState, useEffect } from 'react';
 import {
   Container,
-  Paper,
   Typography,
   Box,
   FormControl,
   Select,
   MenuItem,
-  Chip,
   TextField,
   Button,
   ListItemIcon,
   SelectChangeEvent,
-  OutlinedInput,
   Link,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
@@ -137,7 +134,6 @@ export default function BusinessInfoPage() {
   const { user, updateUser } = useAuth();
   const { showToast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isProfileComplete, setIsProfileComplete] = useState(false);
   const [showSaved, setShowSaved] = useState(false);
 
   // Form state
@@ -158,10 +154,10 @@ export default function BusinessInfoPage() {
   useEffect(() => {
     if (user?.company) {
       // Type assertion to access the extended company properties
-      const company = user.company as any;
+      const company = user.company as unknown as FormData;
       
       setFormData({
-        companySize: company.size || '',
+        companySize: company.companySize || '',
         customerTypes: company.customerTypes || [],
         otherCustomerType: company.otherCustomerType || '',
         targetMarkets: company.targetMarkets || [],
@@ -222,7 +218,6 @@ export default function BusinessInfoPage() {
       });
       
       updateUser(updatedUser);
-      setIsProfileComplete(true);
       showToast('Business profile updated successfully', 'success');
       
       // Show "Profile Saved!" message
@@ -233,6 +228,7 @@ export default function BusinessInfoPage() {
         setShowSaved(false);
       }, 3000);
     } catch (error) {
+      console.error('Error updating business profile:', error);
       showToast('Failed to update business profile', 'error');
     } finally {
       setIsSubmitting(false);

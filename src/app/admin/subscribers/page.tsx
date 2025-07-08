@@ -9,18 +9,6 @@ import {
   CircularProgress,
   Snackbar,
   Alert,
-  useMediaQuery,
-  useTheme,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Chip,
   IconButton,
   Menu,
@@ -28,7 +16,6 @@ import {
   Divider,
 } from '@mui/material';
 import {
-  Add as AddIcon,
   MoreVert as MoreVertIcon,
   Delete as DeleteIcon,
   Block as BlockIcon,
@@ -60,12 +47,9 @@ export default function SubscribersManagement() {
     message: '',
     severity: 'success' as 'success' | 'error'
   });
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAdmin } = useAuth();
 
   // Modal states
-  const [addSubscriberModalOpen, setAddSubscriberModalOpen] = useState<boolean>(false);
   const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null);
   const [actionLoading, setActionLoading] = useState<boolean>(false);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -100,6 +84,9 @@ export default function SubscribersManagement() {
   }, [page, rowsPerPage, sortBy, sortOrder, filters]);
 
   useEffect(() => {
+    setFilters({});
+    setSortBy('createdAt');
+    setSortOrder('desc');
     fetchSubscribers();
   }, [fetchSubscribers]);
 
