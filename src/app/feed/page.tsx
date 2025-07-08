@@ -1943,7 +1943,6 @@ export default function Feed() {
                         }}
                       >
                         <UnlockFeaturesCard
-                          profileCompletionPercentage={userProfile?.profileCompletionPercentage || 75}
                           onDismiss={() => handleDismissCard('banner1')}
                         />
                       </Box>
@@ -1962,7 +1961,6 @@ export default function Feed() {
                         }}
                       >
                         <UnlockFeaturesCard
-                          profileCompletionPercentage={userProfile?.profileCompletionPercentage || 75}
                           onDismiss={() => handleDismissCard('banner2')}
                         />
                       </Box>
