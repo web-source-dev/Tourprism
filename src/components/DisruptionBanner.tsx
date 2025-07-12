@@ -15,7 +15,7 @@ export default function DisruptionBanner() {
          your business. Get yours <span className="font-semibold">Free!</span>
         </span>
       </div>
-      <button onClick={() => router.push('/subscription')} className="px-4 py-1 bg-black cursor-pointer text-white text-sm rounded-md font-semibold hover:opacity-90 transition self-start md:self-auto">
+      <button onClick={() => router.push('/subscribe')} className="px-4 py-1 bg-black cursor-pointer text-white text-sm rounded-md font-semibold hover:opacity-90 transition self-start md:self-auto">
         Subscribe
       </button>
     </div>

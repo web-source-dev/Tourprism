@@ -48,6 +48,9 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
     }
   };
 
+  // Filter out the Profile menu item from mobile sidebar
+  const filteredMenuItems = menuItems.filter(item => item.text !== 'Profile' && item.text !== 'Security' );
+
   // Mobile drawer content
   const drawer = (
     <Box sx={{ width: 300 }}>
@@ -55,7 +58,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
         <Typography onClick={handleDrawerToggle}>X</Typography>
       </Box>
       <List>
-        {menuItems.map((item) => (
+        {filteredMenuItems.map((item) => (
           <React.Fragment key={item.text}>
             <ListItem
               onClick={() => handleItemClick(item.path, item.text)}
@@ -97,9 +100,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                       }}
                     >
                       <ListItemText primary={subItem.text} />
-                      {/* add arrow at right opointing to right side  */}
                       <Box component="span" sx={{ ml: 'auto' }}>
-                        <ExpandMore  sx={{rotate: '270deg'}}/>
+                        <ExpandMore sx={{rotate: '270deg'}}/>
                       </Box>
                     </ListItem>
                   ))}

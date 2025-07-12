@@ -54,7 +54,7 @@ const SubscribeBanner = () => {
           boxShadow: 1,
           '&:hover': { bgcolor: '#f5f5f5' },
         }}
-        onClick={() => router.push('/subscription')}
+        onClick={() => router.push('/subscribe')}
       >
         Subscribe Now
       </Button>

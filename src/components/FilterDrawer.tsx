@@ -166,15 +166,15 @@ const FilterDrawer = ({
       });
       return;
     }
-    
+    console.log("impactLevel",impactLevel);
     // Toggle the selected impact level in the array
-    const updatedImpact = filters.impactLevel?.includes(impactLevel)
+    const updatedImpact = filters.impactLevel?.includes(impactLevel as "Minor" | "Moderate" | "Severe")
       ? filters.impactLevel.filter(level => level !== impactLevel)
       : [...(filters.impactLevel || []), impactLevel];
       
     onFilterChange({
       ...filters,
-      impactLevel: updatedImpact
+      impactLevel: updatedImpact as ("Minor" | "Moderate" | "Severe")[]
     });
   };
 
@@ -796,7 +796,7 @@ const FilterDrawer = ({
                     component="div"
                   >
                     <ListItemText primary={level.label} sx={globalStyles} />
-                    {filters.impactLevel?.includes(level.value) && <SelectedIcon />}
+                    {filters.impactLevel?.includes(level.value as "Minor" | "Moderate" | "Severe") && <SelectedIcon />}
                   </ListItem>
                 ))}
               </List>

@@ -161,7 +161,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           minHeight: 'calc(100vh - 64px)' // full height minus AppBar
         }}
       >
-        <Container maxWidth="xl">
+        <Container maxWidth="xl" sx={{ p: 0 }}>
           {children}
         </Container>
       </Box>

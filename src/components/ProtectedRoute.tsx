@@ -16,7 +16,7 @@ const publicRoutes = [
   '/pricing',
   '/ambassadors',
   '/insights',
-  '/subscription',
+  '/subscribe',
   '/feature',
   '/resources',
   '/not-found',

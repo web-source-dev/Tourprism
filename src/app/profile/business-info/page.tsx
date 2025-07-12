@@ -96,7 +96,7 @@ const DISRUPTION_FREQUENCY = [
 // Common styles for all inputs
 const inputStyles = {
   borderRadius: 2,
-  height: '45px',
+  height: '40px',
   fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
 };
 
@@ -237,17 +237,17 @@ export default function BusinessInfoPage() {
 
   return (
     <Layout isFooter={false} isHeader={false}>
-    <Container maxWidth="md" sx={{ py: {xs: 3, sm: 2 ,md: 0},px:1 }}>
+    <Container maxWidth="lg" sx={{ py: {xs: 3, sm: 2 ,md: 0},px:1 }}>
         <Typography variant="h5" component="h1" gutterBottom fontWeight="500">
-          <Link href="/profile" color="primary" underline="none">
-            <ArrowBackIcon sx={{ fontSize: 24, mr: 1 }} />
+          <Link href="/profile" color="secondary" underline="none">
+            <ArrowBackIcon sx={{ fontSize: 24, mr: 1 ,color:'secondary' }} />
           </Link>
           Advanced Profile
         </Typography>
        
         <Box component="form" onSubmit={handleSubmit} sx={{ mt: 2 }}>
           {/* Company Size */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Business Size</Typography>
             <FormControl fullWidth>
               <Select
@@ -286,7 +286,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Customer Types */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Primary Customers</Typography>
             <FormControl fullWidth>
               <Select
@@ -351,7 +351,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Target Markets */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Top Source Markets</Typography>
             <FormControl fullWidth>
               <Select
@@ -416,7 +416,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Booking Windows */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Booking Window</Typography>
             <FormControl fullWidth>
               <Select
@@ -463,7 +463,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Peak Seasons */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Peak Season</Typography>
             <FormControl fullWidth>
               <Select
@@ -510,7 +510,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Disruption Types */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Primary Concerns</Typography>
             <FormControl fullWidth>
               <Select
@@ -575,7 +575,7 @@ export default function BusinessInfoPage() {
           </Box>
 
           {/* Disruption Frequency */}
-          <Box sx={{ mb: 1.5 }}>
+          <Box sx={{ mb: 1 }}>
             <Typography variant="body2" sx={{ mb: 1, fontWeight: 500 }}>Disruption Frequency</Typography>
             <FormControl fullWidth>
               <Select

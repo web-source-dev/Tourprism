@@ -390,6 +390,7 @@ export interface FetchAlertsParams {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   originOnly?: boolean;
+  impact?: string[]; // Add impact parameter for filtering by impact level
 }
 
 export const fetchAlerts = async (params: FetchAlertsParams = {}): Promise<{ alerts: Alert[], totalCount: number }> => {
@@ -429,6 +430,15 @@ export const fetchAlerts = async (params: FetchAlertsParams = {}): Promise<{ ale
     if (params.endDate) {
       queryParams.append('endDate', params.endDate);
     }
+
+    // Impact level filter
+    if (params.impact && Array.isArray(params.impact) && params.impact.length > 0) {
+      params.impact.forEach(level => {
+        queryParams.append('impact[]', level);
+      });
+    }
+    console.log("impact",params.impact);
+
     // Update incident type filters to use alertCategory
     if (params.alertCategory && Array.isArray(params.alertCategory) && params.alertCategory.length > 0) {
       params.alertCategory.forEach(category => {
@@ -710,24 +720,86 @@ export const createNewAlert = async (alertData: Partial<Alert>): Promise<{ succe
 
 // Define DashboardStats interface for the dashboard stats return type
 interface DashboardStats {
-  totalUsers: number;
-  totalAlerts: number;
-  alertsByStatus: {
-    pending: number;
-    approved: number;
-    rejected: number;
-    published: number;
+  metrics: {
+    alerts: {
+      total: number;
+      totalChange: number;
+      active: number;
+      activeChange: number;
+      new: number;
+      newChange: number;
+    };
+    users: {
+      total: number;
+      totalChange: number;
+      active: number;
+      activeChange: number;
+      new: number;
+      newChange: number;
+    };
+    subscribers: {
+      total: number;
+      totalChange: number;
+      active: number;
+      activeChange: number;
+      new: number;
+      newChange: number;
+    };
   };
-  recentAlerts: {
-    _id: string;
-    title: string;
-    description: string;
-    status: string;
-    createdAt: string;
-    city: string;
-  }[];
-  totalSubscribers: number;
-  activeUsers: number;
+  regionalStats: {
+    [city: string]: {
+      alerts: {
+        total: number;
+        active: number;
+        new: number;
+      };
+      users: {
+        total: number;
+        active: number;
+        new: number;
+      };
+      subscribers: {
+        total: number;
+        new: number;
+        unsubscribed: number;
+      };
+      forecast: {
+        openRate: number;
+        clickRate: number;
+      };
+    };
+  };
+  engagement?: {
+    topFollowedAlerts: Array<{
+      title: string;
+      location: string;
+      category: string;
+      followCount: number;
+      trend?: number;
+    }>;
+    upcomingAlerts: Array<{
+      title: string;
+      location: string;
+      category: string;
+      followCount: number;
+      trend?: number;
+    }>;
+    engagedLocations: Array<{
+      name: string;
+      metric: string;
+      details: string;
+    }>;
+    engagedBusinessTypes: Array<{
+      type: string;
+      metric: string;
+      details: string;
+    }>;
+    engagedAlertTypes: Array<{
+      type: string;
+      follows: number;
+      engagement: number;
+    }>;
+  };
 }
 
 // Define a type for API errors that can be used in catch blocks
@@ -740,10 +812,11 @@ export interface ApiError extends Error {
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
   try {
-    const response = await api.get<DashboardStats>('/api/admin/dashboard');
+    const response = await api.get<DashboardStats>('/api/admin/dashboard/stats');
     return response.data;
   } catch (error) {
-    throw getErrorMessage(error as CustomAxiosError);
+    const errorMessage = getErrorMessage(error as CustomAxiosError);
+    throw new Error(errorMessage);
   }
 };
 

@@ -41,7 +41,7 @@ const Navbar: React.FC<NavbarProps> = ({
   const router = useRouter();
   const pathname = usePathname();
   const isMobile = useMediaQuery('(max-width: 600px)');
-  const isSubscriptionPage = pathname === '/subscription';
+  const isSubscriptionPage = pathname === '/subscribe';
   const isProfilePage = pathname === '/profile' || pathname === '/profile/business-info';
 
   // Navigation links to show on desktop
@@ -56,7 +56,7 @@ const Navbar: React.FC<NavbarProps> = ({
     { text: 'Feed', path: '/feed' },
     { text: 'Action Hub', path: '/action-hub' },
     // { text: 'Insights', path: '/insights' },
-    // { text: 'Subscription', path: '/subscription' },
+    // { text: 'Subscribe', path: '/subscribe' },
     { text: 'Settings', path: '/profile' },
     { text: 'Security', path: '/security' }
   ];

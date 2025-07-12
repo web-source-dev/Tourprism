@@ -247,6 +247,17 @@ export const getSummaryById = async (summaryId: string): Promise<SummaryDetailRe
   }
 };
 
+// Add getSummaries function here
+export const getSummaries = async (): Promise<{ summaries: Summary[], totalCount: number }> => {
+  try {
+    const response = await api.get<{ summaries: Summary[], totalCount: number }>('/api/summaries');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching summaries:', error);
+    throw error;
+  }
+};
+
 export const deleteSummary = async (summaryId: string): Promise<{ success: boolean; message: string }> => {
   try {
     const response = await api.delete<{ success: boolean; message: string }>(`/api/summaries/${summaryId}`);

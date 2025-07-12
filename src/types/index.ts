@@ -154,7 +154,7 @@ export interface FilterOptions {
   alertCategory: string[];
   timeRange: number;
   distance: number;
-  impactLevel?: string[];
+  impactLevel: ('Minor' | 'Moderate' | 'Severe')[];
   customDateFrom?: Date | null;
   customDateTo?: Date | null;
 }
@@ -267,4 +267,20 @@ export interface TeamMember {
   email: string;
   role: 'viewer' | 'manager';
   status: 'active' | 'restricted' | 'deleted' | 'invited' | 'accepted';
+} 
+
+export interface FetchAlertsParams {
+  city?: string;
+  latitude?: number;
+  longitude?: number;
+  distance?: number;
+  startDate?: string;
+  endDate?: string;
+  alertCategory?: string[];
+  limit?: number;
+  page?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  originOnly?: boolean;
+  impact?: string[]; // Add impact parameter for filtering by impact level
 } 

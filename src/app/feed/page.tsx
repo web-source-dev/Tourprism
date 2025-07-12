@@ -275,8 +275,6 @@ export default function Feed() {
 
   // Fetch user profile if authenticated
   useEffect(() => {
-    setSelectedCity(null);
-    setSelectedLocation(null);
     const fetchUserProfile = async () => {
       if (isAuthenticated) {
         try {
@@ -302,11 +300,6 @@ export default function Feed() {
           // Step 3 (75%): Check if user has set preferences for weekly disruption forecast reports
           if (user?.preferences?.AlertSummaries?.weekly === true) {
             profileCompletion.weeklyForecast = true;
-          }
-
-          // Step 4 (100%): Check if user has invited team members (collaborators)
-          if (user?.collaborators && user.collaborators.length > 0) {
-            profileCompletion.teamMembers = true;
           }
 
           // Calculate the percentage (25% for each completed feature)
@@ -346,7 +339,7 @@ export default function Feed() {
       for (const region of operatingRegions) {
         const params: Record<string, unknown> = {
           page: 1,
-          limit: isAuthenticated ? 40 : 15, // <-- Set limit based on auth
+          limit: isAuthenticated ? 20 : 15, // <-- Set limit based on auth
           sortBy: filters.sortBy,
           latitude: region.latitude,
           longitude: region.longitude,
@@ -464,7 +457,7 @@ export default function Feed() {
       if (!skipDefaultLocation) {
         const params: Record<string, unknown> = {
           page: 1,
-          limit: isAuthenticated ? 40 : 15, // <-- Set limit based on auth
+          limit: isAuthenticated ? 20 : 15, // <-- Set limit based on auth
           sortBy: filters.sortBy,
         };
         if (filters.timeRange > 0) {
@@ -591,7 +584,7 @@ export default function Feed() {
 
         // Apply the limit for non-authenticated users
         if (!isAuthenticated) {
-          setAlerts(sortedAllAlerts.slice(0, 40));
+          setAlerts(sortedAllAlerts.slice(0, 20));
         } else {
           setAlerts(sortedAllAlerts);
         }
@@ -1136,6 +1129,27 @@ export default function Feed() {
   };
 
   const handleApplyFilters = (selectedCity?: string) => {
+    // Map impact level filters to actual impact values
+    const mappedImpactLevels = filters.impactLevel?.map(level => {
+      // No need to map since we're already using the correct values from FilterDrawer
+      console.log("level",level);
+      return level;
+    });
+
+    const params: FetchAlertsParams = {
+      city: selectedCity || city || 'Edinburgh', // Default to Edinburgh if no city
+      latitude: coords?.latitude ?? 55.9533, // Default Edinburgh coordinates
+      longitude: coords?.longitude ?? -3.1883,
+      distance: filters.distance,
+      sortBy: filters.sortBy,
+    };
+
+    // Add impact levels to params
+    if (mappedImpactLevels && mappedImpactLevels.length > 0) {
+      params.impact = mappedImpactLevels;
+      console.log('Frontend - Impact levels being sent:', params.impact);
+    }
+
     setIsFilterDrawerOpen(false);
 
     // If a city is passed from FilterDrawer, use it
@@ -1174,6 +1188,7 @@ export default function Feed() {
   };
 
   const handleClearFilters = () => {
+    // Reset filters to default state
     setFilters({
       sortBy: 'impact_score',
       alertCategory: [],
@@ -1183,6 +1198,21 @@ export default function Feed() {
       customDateFrom: new Date(),
       customDateTo: new Date(),
     });
+
+    // Reset location to Edinburgh
+    setCity('Edinburgh');
+    setCoords({ latitude: 55.9533, longitude: -3.1883 });
+    setLocationAccuracy(null);
+    setLocationConfirmed(true);
+
+    // Clear local storage
+    localStorage.removeItem('selectedCity');
+    localStorage.removeItem('selectedLat');
+    localStorage.removeItem('selectedLng');
+    localStorage.removeItem('locationAccuracy');
+
+    // Fetch alerts with default location
+    fetchLocationAlerts('Edinburgh', { latitude: 55.9533, longitude: -3.1883 });
   };
 
   const getCityFromCoordinates = async (latitude: number, longitude: number) => {

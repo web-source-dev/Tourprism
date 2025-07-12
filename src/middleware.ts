@@ -15,7 +15,7 @@ const publicPaths = [
   '/feature',
   '/resources',
   '/insights',
-  '/subscription',
+  '/subscribe',
   '/invite/accept',
   '/api/subscribers/unsubscribe' // Allow unsubscribe endpoint without authentication
   // Add other public paths here
