@@ -883,7 +883,7 @@ const FilterDrawer = ({
             </AccordionDetails>
           </Accordion>
         </Box>
-
+{/* 
         {!isAuthenticated && (
           <>
             <Box
@@ -921,9 +921,9 @@ const FilterDrawer = ({
 
             </Box>
           </>
-        )}
+        )} */}
         {/* Action Buttons */}
-        <Box sx={{ mt: 4, display: 'flex', gap: 2, ...globalStyles }}>
+        <Box sx={{ mt: 4, display: 'flex' ,flexDirection:'column', gap: 2, ...globalStyles }}>
           <Button
             variant="contained"
             onClick={handleApplyFiltersClick}
