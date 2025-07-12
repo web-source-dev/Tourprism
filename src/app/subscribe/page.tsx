@@ -17,37 +17,7 @@ interface LocationType {
   placeId: string;
 }
 
-// Google Maps API types
-interface GoogleMapsPlace {
-  geometry: {
-    location: {
-      lat: () => number;
-      lng: () => number;
-    };
-  };
-  formatted_address?: string;
-  name?: string;
-  place_id?: string;
-  address_components?: Array<{
-    long_name: string;
-    types: string[];
-  }>;
-}
 
-declare global {
-  interface Window {
-    google: {
-      maps: {
-        places: {
-          Autocomplete: new (input: HTMLInputElement, options: Record<string, unknown>) => {
-            addListener: (event: string, callback: () => void) => void;
-            getPlace: () => GoogleMapsPlace;
-          };
-        };
-      };
-    };
-  }
-}
 
 const sectorOptions: string[] = [
   "Airline",
@@ -139,21 +109,18 @@ export default function SubscriptionPage() {
   const { showToast } = useToast();
   
   const locationInputRef = useRef<HTMLInputElement>(null);
-  const autocompleteRef = useRef<{
-    addListener: (event: string, callback: () => void) => void;
-    getPlace: () => GoogleMapsPlace;
-  } | null>(null);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   
   const googleMapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 
   const initializeAutocomplete = () => {
     if (!locationInputRef.current || !window.google || !window.google.maps) return;
     
-    autocompleteRef.current = new window.google.maps.places.Autocomplete(
+    autocompleteRef.current = new google.maps.places.Autocomplete(
       locationInputRef.current,
       { 
         types: ['geocode', 'establishment'],
-        fields: ['formatted_address', 'geometry', 'name', 'address_components']
+        fields: ['formatted_address', 'geometry', 'name', 'address_components', 'place_id']
       }
     );
     
@@ -166,11 +133,11 @@ export default function SubscriptionPage() {
         return;
       }
       
-      updateLocationData(place);
+      updateLocationData(place );
     });
   };
 
-  const updateLocationData = (place: GoogleMapsPlace) => {
+  const updateLocationData = (place: google.maps.places.PlaceResult) => {
     let city = '';
     let country = '';
     
@@ -188,9 +155,9 @@ export default function SubscriptionPage() {
     const newLocation: LocationType = {
       city: city || place.name || place.formatted_address || '',
       country: country || '',
-      latitude: place.geometry.location.lat(),
-      longitude: place.geometry.location.lng(),
-      placeId: (place as GoogleMapsPlace).place_id || '',
+      latitude: place.geometry?.location?.lat() || 0,
+      longitude: place.geometry?.location?.lng() || 0,
+      placeId: place.place_id || '',
     };
     
     setLocation(newLocation);
