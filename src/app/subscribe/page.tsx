@@ -190,7 +190,7 @@ export default function SubscriptionPage() {
       country: country || '',
       latitude: place.geometry.location.lat(),
       longitude: place.geometry.location.lng(),
-      placeId: (place as any).place_id || '',
+      placeId: (place as GoogleMapsPlace).place_id || '',
     };
     
     setLocation(newLocation);

@@ -8,10 +8,10 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SummaryList from '@/components/admin/alerts/SummaryList';
 
 // Import a summary service to fetch summary data
-import { getSummaries } from '@/services/summaryService';
+import { getSummaries, Summary } from '@/services/summaryService';
 
 export default function ForecastSummaryPage() {
-  const [summaries, setSummaries] = useState([]);
+  const [summaries, setSummaries] = useState<Summary[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [totalCount, setTotalCount] = useState<number>(0);
   const router = useRouter();
@@ -21,7 +21,7 @@ export default function ForecastSummaryPage() {
       try {
         setLoading(true);
         const response = await getSummaries();
-        setSummaries(response.summaries as any);
+        setSummaries(response.summaries as Summary[]  );
         setTotalCount(response.totalCount);
         setLoading(false);
       } catch (error) {

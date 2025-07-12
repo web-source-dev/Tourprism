@@ -9,7 +9,7 @@ import { ToastProvider } from "@/ui/toast";
 import 'remixicon/fonts/remixicon.css';
 
 export const metadata: Metadata = {
-  title: "TourPrism",
+  title: "Tourprism",
   description: "Access real-time, hyperlocal safety alerts and insights for travelers",
 };
 

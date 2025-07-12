@@ -1,6 +1,5 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
 import { Box, Link, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 
@@ -10,7 +9,7 @@ interface GetAccessCardProps {
 
 const GetAccessCard: React.FC<GetAccessCardProps> = ({ onClick }) => {
   const router = useRouter();
-  const [isMobile, setIsMobile] = useState(false);
+
 
   const handleClick = () => {
     if (onClick) {
@@ -20,17 +19,6 @@ const GetAccessCard: React.FC<GetAccessCardProps> = ({ onClick }) => {
     }
   };
 
-  useEffect(() => {
-    // Only runs on the client
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768); // You can change the breakpoint as needed
-    };
-
-    checkMobile(); // initial check
-    window.addEventListener("resize", checkMobile);
-
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
 
   return (

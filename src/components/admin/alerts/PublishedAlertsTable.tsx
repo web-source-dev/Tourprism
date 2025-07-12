@@ -15,7 +15,8 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle
+  DialogTitle,
+  ChipProps
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
@@ -149,7 +150,7 @@ export default function PublishedAlertsTable({ alerts, refreshData }: PublishedA
                   <Chip 
                     label={alert.impact || 'N/A'} 
                     size="small"
-                    color={getImpactColor(alert.impact) as any} 
+                    color={getImpactColor(alert.impact) as ChipProps['color']} 
                   />
                 </TableCell>
                 <TableCell>{formatDate(alert.createdAt)}</TableCell>

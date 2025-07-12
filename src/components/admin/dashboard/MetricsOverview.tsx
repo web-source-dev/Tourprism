@@ -1,7 +1,5 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import TrendingDownIcon from '@mui/icons-material/TrendingDown';
 
 interface MetricCardProps {
   title: string;

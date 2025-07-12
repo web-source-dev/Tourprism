@@ -16,13 +16,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField
+  TextField,
+  ChipProps
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { Alert } from '@/types';
-import { updateAlertStatus, deleteAlert } from '@/services/api';
+import { updateAlertStatus } from '@/services/api';
 import { useToast } from '@/ui/toast';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
@@ -82,23 +83,6 @@ export default function PendingAlertsTable({ alerts, refreshData }: PendingAlert
     }
   };
 
-  const handleDeleteAlert = async () => {
-    if (!selectedAlert) return;
-    
-    setActionLoading(true);
-    try {
-      await deleteAlert(selectedAlert._id);
-      showToast('Alert deleted successfully', 'success');
-      refreshData();
-    } catch (error) {
-      console.error('Error deleting alert:', error);
-      showToast('Failed to delete alert', 'error');
-    } finally {
-      setActionLoading(false);
-      setSelectedAlert(null);
-    }
-  };
-
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
     return format(new Date(dateString), 'MMM dd, yyyy');
@@ -152,7 +136,7 @@ export default function PendingAlertsTable({ alerts, refreshData }: PendingAlert
                   <Chip 
                     label={alert.impact || 'N/A'} 
                     size="small"
-                    color={getImpactColor(alert.impact) as any} 
+                    color={getImpactColor(alert.impact) as ChipProps['color']} 
                   />
                 </TableCell>
                 <TableCell>{formatDate(alert.createdAt)}</TableCell>

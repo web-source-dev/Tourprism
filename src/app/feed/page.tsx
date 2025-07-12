@@ -314,6 +314,8 @@ export default function Feed() {
           });
         } catch (error) {
           console.error('Error fetching user profile:', error);
+    console.log('Fetching user profile',setSelectedCity,setSelectedLocation);
+
         } finally {
           setProfileLoaded(true);
         }
