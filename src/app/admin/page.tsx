@@ -34,6 +34,7 @@ interface DashboardStats {
       activeChange: number;
       new: number;
       newChange: number;
+      unsubscribes: number;
     };
   };
   regionalStats: {
@@ -116,7 +117,8 @@ const defaultMetrics = {
     active: 0,
     activeChange: 0,
     new: 0,
-    newChange: 0
+    newChange: 0,
+    unsubscribes: 0
   }
 };
 
