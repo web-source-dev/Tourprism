@@ -1,224 +1,247 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableContainer, 
-  TableHead, 
-  TableRow, 
-  Paper, 
-  IconButton,
-  Button, 
-  Chip, 
   Box,
   Typography,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle
+  Paper,
+  CircularProgress,
+  Alert,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DeleteIcon from '@mui/icons-material/Delete';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import SearchIcon from '@mui/icons-material/Search';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/ui/toast';
-import { downloadPdf, deleteSummary, Summary } from '@/services/summaryService';
+import { getAllForecastSummaries } from '@/services/api';
+import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 
-interface SummaryListProps {
-  summaries: Summary[];
-  refreshData: () => void;
+interface AggregatedSummary {
+  date: string;
+  displayDate: string;
+  location: string;
+  sector: string;
+  totalRecipients: number;
 }
 
-export default function SummaryList({ summaries, refreshData }: SummaryListProps) {
-  const [selectedSummary, setSelectedSummary] = useState<Summary | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
-  const { showToast } = useToast();
-  const router = useRouter();
+export default function SummaryList() {
+  const [summaries, setSummaries] = useState<AggregatedSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [fetchTrigger, setFetchTrigger] = useState(0);
 
-  const handleViewSummary = (summaryId: string) => {
-    router.push(`/alerts-summary/${summaryId}`);
+  useEffect(() => {
+    const fetchSummaries = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const params: { limit: number; search?: string; startDate?: string; endDate?: string } = { limit: 100 };
+        if (search) params.search = search;
+        if (startDate) params.startDate = format(startDate, 'yyyy-MM-dd');
+        if (endDate) params.endDate = format(endDate, 'yyyy-MM-dd');
+        const response = await getAllForecastSummaries(params);
+        const grouped: Record<string, AggregatedSummary> = {};
+        response.summaries.forEach((summary) => {
+          const dateKey = format(new Date(summary.sentAt), 'yyyy-MM-dd');
+          const displayDate = format(new Date(summary.sentAt), 'EEEE, MMMM d, yyyy');
+          const location = summary.location || 'Unknown';
+          const sector = summary.sector || 'Unknown';
+          const key = `${dateKey}|${location}|${sector}`;
+          if (!grouped[key]) {
+            grouped[key] = {
+              date: dateKey,
+              displayDate,
+              location,
+              sector,
+              totalRecipients: 0
+            };
+          }
+          grouped[key].totalRecipients += summary.recipientCount;
+        });
+        const aggregated = Object.values(grouped).sort((a, b) => b.date.localeCompare(a.date));
+        setSummaries(aggregated);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch summaries');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSummaries();
+  }, [fetchTrigger]);
+
+  // Handlers for search and date filters
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  };
+  const handleFilterSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFetchTrigger(f => f + 1);
   };
 
-  const handleDownloadPdf = async (summary: Summary) => {
-    setActionLoading(true);
-    try {
-      await downloadPdf(summary._id);
-      showToast('PDF downloaded successfully', 'success');
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      showToast('Failed to download PDF', 'error');
-    } finally {
-      setActionLoading(false);
-    }
-  };
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="300px">
+        <CircularProgress />
+      </Box>
+    );
+  }
 
-  const handleDeleteSummary = async () => {
-    if (!selectedSummary) return;
-    
-    setActionLoading(true);
-    try {
-      await deleteSummary(selectedSummary._id);
-      showToast('Summary deleted successfully', 'success');
-      refreshData();
-    } catch (error) {
-      console.error('Error deleting summary:', error);
-      showToast('Failed to delete summary', 'error');
-    } finally {
-      setActionLoading(false);
-      setDeleteDialogOpen(false);
-      setSelectedSummary(null);
-    }
-  };
-
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy');
-    } catch (error) {
-      console.error('Error formatting date:', error);
-      return 'Invalid date';
-    }
-  };
-
-  // Get summary type display name
-  const getSummaryTypeDisplay = (type: string) => {
-    switch (type) {
-      case 'forecast':
-        return 'Forecast';
-      case 'custom':
-        return 'Custom';
-      case 'automated':
-        return 'Automated';
-      default:
-        return type;
-    }
-  };
+  if (error) {
+    return <Alert severity="error">{error}</Alert>;
+  }
 
   return (
-    <>
-      <TableContainer component={Paper} sx={{ mb: 4, boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}>
-        <Table aria-label="summaries table">
-          <TableHead sx={{ bgcolor: 'primary.main' }}>
-            <TableRow>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Title</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Type</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Location</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Created Date</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Time Range</TableCell>
-              <TableCell sx={{ color: 'white', fontWeight: 'bold' }} align="center">Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {summaries.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6}>
-                  <Box sx={{ py: 3, textAlign: 'center' }}>
-                    <Typography variant="body1">No summaries available</Typography>
-                  </Box>
-                </TableCell>
-              </TableRow>
-            ) : (
-              summaries.map((summary) => (
-                <TableRow key={summary._id} hover>
-                  <TableCell>
-                    <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                      {summary.title}
-                    </Typography>
-                    {summary.description && (
-                      <Typography variant="body2" color="text.secondary">
-                        {summary.description.length > 50 
-                          ? `${summary.description.substring(0, 50)}...` 
-                          : summary.description}
-                      </Typography>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={getSummaryTypeDisplay(summary.summaryType)} 
-                      size="small" 
-                      color={summary.summaryType === 'forecast' ? 'primary' : 'default'} 
-                      variant="outlined"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    {summary.locations && summary.locations.length > 0 
-                      ? summary.locations.map(loc => loc.city).join(', ')
-                      : 'Multiple locations'}
-                  </TableCell>
-                  <TableCell>{formatDate(summary.createdAt)}</TableCell>
-                  <TableCell>
-                    {summary.timeRange?.startDate && summary.timeRange?.endDate 
-                      ? `${formatDate(summary.timeRange.startDate)} - ${formatDate(summary.timeRange.endDate)}`
-                      : 'N/A'}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                      <IconButton 
-                        color="info" 
-                        onClick={() => handleViewSummary(summary._id)}
-                        title="View Summary"
-                      >
-                        <VisibilityIcon />
-                      </IconButton>
-                      {summary.pdfUrl && (
-                        <IconButton 
-                          color="success" 
-                          onClick={() => handleDownloadPdf(summary)}
-                          title="Download PDF"
-                          disabled={actionLoading}
-                        >
-                          <PictureAsPdfIcon />
-                        </IconButton>
-                      )}
-                      <IconButton 
-                        color="error" 
-                        onClick={() => {
-                          setSelectedSummary(summary);
-                          setDeleteDialogOpen(true);
-                        }}
-                        title="Delete Summary"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <Box>
+        {/* Filters */}
+        <Box
+          component="form"
+          onSubmit={handleFilterSubmit}
+          sx={{
+            display: 'flex',
+            flexDirection: { xs: 'column', sm: 'row' },
+            gap: 1.5,
+            mb: 2,
+            alignItems: 'stretch',
+            width: '100%',
+            mx: { xs: 'auto', md: 0 },
+          }}
+        >
+          <TextField
+            placeholder="Search..."
+            value={search}
+            onChange={handleSearchChange}
+            size="medium"
+            variant="outlined"
+            sx={{
+              width: '100%',
+              borderRadius: 4,
+              '& .MuiOutlinedInput-root': {
+                borderRadius: 2,
+              },
+              background: '#fff',
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon />
+                </InputAdornment>
+              ),
+            }}
+          />
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: 1.5,
+              width: '100%',
+            }}
+          >
+            <DatePicker
+              label="Start Date"
+              value={startDate}
+              onChange={setStartDate}
+              slotProps={{
+                textField: {
+                  variant: 'outlined',
+                  placeholder: 'Start Date',
+                  sx: {
+                    width: '100%',
+                    borderRadius: 2,
+                    background: '#fff',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  },
+                  InputProps: {
+                    style: { borderRadius: 8 },
+                  },
+                },
+              }}
+              format="yyyy-MM-dd"
+            />
+            <DatePicker
+              label="End Date"
+              value={endDate}
+              onChange={setEndDate}
+              slotProps={{
+                textField: {
+                  variant: 'outlined',
+                  placeholder: 'End Date',
+                  sx: {
+                    width: '100%',
+                    borderRadius: 2,
+                    background: '#fff',
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 2,
+                    },
+                  },
+                  InputProps: {
+                    style: { borderRadius: 8 }
+                  },
+                },
+              }}
+              format="yyyy-MM-dd"
+            />
+          </Box>
+          <Box sx={{ display: 'none' }}>
+            {/* Hidden submit button for Enter key accessibility */}
+            <button type="submit" tabIndex={-1} />
+          </Box>
+        </Box>
 
-      {/* Delete Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-      >
-        <DialogTitle>Delete Summary</DialogTitle>
-        <DialogContent>
-          <Typography>
-            Are you sure you want to delete this summary? This action cannot be undone.
-          </Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => setDeleteDialogOpen(false)} 
-            color="primary"
-            disabled={actionLoading}
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleDeleteSummary} 
-            color="error" 
-            autoFocus
-            disabled={actionLoading}
-          >
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </>
+        {/* List */}
+        <Box
+          sx={{
+            display: 'flex',
+            p: 0,
+            flexDirection: { xs: 'column', md: 'row' },
+            flexWrap: { xs: 'nowrap', md: 'wrap' },
+            gap: { xs: 0, md: 2 },
+            width: '100%',
+          }}
+        >
+          {summaries.map((summary, idx) => (
+            <Paper
+              key={summary.date + summary.location + summary.sector + idx}
+              elevation={0}
+              sx={{
+                border: '1.5px solid #222',
+                p: 2,
+                minHeight: 90,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                boxShadow: 'none',
+                background: '#fff',
+                width: { xs: '100%', md: '32%' },
+                mb: { xs: 0, md: 2 },
+                mr: { xs: 0, md: 0 },
+                borderBottom: { xs: '1.5px solid #222', md: '1.5px solid #222' },
+                borderTop: { xs: idx === 0 ? '1.5px solid #222' : 'none', md: '1.5px solid #222' },
+                borderLeft: '1.5px solid #222',
+                borderRight: '1.5px solid #222',
+                // Remove border radius and attach boxes on mobile
+                borderBottomLeftRadius: { xs: idx === summaries.length - 1 ? 8 : 0, md: 8 },
+                borderBottomRightRadius: { xs: idx === summaries.length - 1 ? 8 : 0, md: 8 },
+                borderTopLeftRadius: { xs: idx === 0 ? 8 : 0, md: 8 },
+                borderTopRightRadius: { xs: idx === 0 ? 8 : 0, md: 8 },
+              }}
+            >
+              <Typography variant="subtitle1" fontWeight={500} sx={{ mb: 0.5 }}>
+                {summary.displayDate}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                {summary.location} &middot; {summary.sector}
+              </Typography>
+              <Typography variant="body1" fontWeight={500}>
+                {summary.totalRecipients.toLocaleString()} recipients
+              </Typography>
+            </Paper>
+          ))}
+        </Box>
+      </Box>
+    </LocalizationProvider>
   );
 } 

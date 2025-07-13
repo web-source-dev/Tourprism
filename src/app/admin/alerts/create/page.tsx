@@ -40,17 +40,18 @@ const ALERT_TYPE_MAP: Record<string, string[]> = {
 
 // Define target audience options
 const TARGET_AUDIENCE_OPTIONS = [
-  "Hotels",
-  "Tour Operators",
-  "Travel Agencies",
-  "DMOs",
-  "Airlines",
-  "Cruise Lines",
-  "OTAs",
-  "Event Managers",
-  "Attractions",
-  "Car Rentals",
-  "Tour Guides",
+  "Airline",
+  "Attraction",
+  "Car Rental",
+  "Cruise Line",
+  "DMO",
+  "Event Manager",
+  "Hotel",
+  "OTA",
+  "Tour Guide",
+  "Tour Operator",
+  "Travel Agency",
+  "Travel Media",
   "Other"
 ];
 
@@ -769,22 +770,6 @@ export default function CreateAlertPage() {
                 </StyledFormControl>
 
                 <StyledFormControl sx={{ flex: '1 1 45%', minWidth: '250px' }}>
-                  <InputLabel id="risk-label">Risk Level</InputLabel>
-                  <Select
-                    labelId="risk-label"
-                    id="risk"
-                    name="risk"
-                    value={formValues.risk || ''}
-                    label="Risk Level"
-                    onChange={handleSelectChange}
-                  >
-                    <MenuItem value="Low">Low</MenuItem>
-                    <MenuItem value="Medium">Medium</MenuItem>
-                    <MenuItem value="High">High</MenuItem>
-                  </Select>
-                </StyledFormControl>
-
-                <StyledFormControl sx={{ flex: '1 1 45%', minWidth: '250px' }}>
                   <InputLabel id="impact-label">Impact Severity</InputLabel>
                   <Select
                     labelId="impact-label"
@@ -831,25 +816,6 @@ export default function CreateAlertPage() {
               <Box sx={{ display: 'flex', gap: 3 }}>
 
                 <StyledFormControl sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleSelectAllAudiences}
-                      startIcon={<i className="ri-checkbox-multiple-line" />}
-                      sx={{ 
-                        mr: 1, 
-                        textTransform: 'none',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      Select All
-                    </Button>
-                    <Typography variant="caption" color="text.secondary">
-                      (quickly select all predefined audiences)
-                    </Typography>
-                  </Box>
-
                   <Autocomplete
                     multiple
                     id="targetAudience"
@@ -954,6 +920,21 @@ export default function CreateAlertPage() {
                   </Select>
                 </StyledFormControl>
               </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleSelectAllAudiences}
+                      startIcon={<i className="ri-checkbox-multiple-line" />}
+                      sx={{ 
+                        mt: 1, 
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      Select All
+                    </Button>
+                  </Box>
             </SectionContent>
           </StyledSection>
 

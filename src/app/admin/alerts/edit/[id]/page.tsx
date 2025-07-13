@@ -14,7 +14,6 @@ import {
   CircularProgress,
   Snackbar,
   Alert as MuiAlert,
-  Stack,
   SelectChangeEvent,
   Chip,
   Autocomplete,
@@ -28,6 +27,7 @@ import AdminLayout from '@/components/AdminLayout';
 import { getAlertById, updateAlert } from '@/services/api';
 import { Alert } from '@/types';
 import { useAuth } from '@/context/AuthContext';
+import Script from 'next/script';
 
 // Extended interface for Alert type that includes expectedStart and expectedEnd
 interface ExtendedAlert extends Alert {
@@ -121,10 +121,11 @@ export default function EditAlertPage() {
   const { isAdmin, isManager, isEditor } = useAuth();
   const theme = useTheme();
 
-  // Change the default state to true to allow data fetching regardless of Maps API
+  // Google Maps autocomplete refs
   const [googleLoaded, setGoogleLoaded] = useState(false);
-  // Add a new state to track if we're waiting for Maps
-  const [mapsScriptAttempted, setMapsScriptAttempted] = useState(false);
+
+  // State for alert types based on selected category
+  const [availableAlertTypes, setAvailableAlertTypes] = useState<string[]>([]);
 
   const [alert, setAlert] = useState<ExtendedAlert | null>(null);
   const [loading, setLoading] = useState(true);
@@ -137,8 +138,8 @@ export default function EditAlertPage() {
     severity: 'success' as 'success' | 'error' | 'info' | 'warning'
   });
 
-  // State for alert types based on selected category
-  const [availableAlertTypes, setAvailableAlertTypes] = useState<string[]>([]);
+  const [customAudience, setCustomAudience] = useState('');
+  const [showCustomAudienceInput, setShowCustomAudienceInput] = useState(false);
 
   // Permission check
   const canEditAlert = isAdmin || isManager || isEditor;
@@ -282,41 +283,24 @@ export default function EditAlertPage() {
     }
   }, [canEditAlert, googleLoaded, setupImpactLocationAutocomplete]);
 
-  // Modified effect to load Google Maps Script dynamically
+  // Redirect if not authorized
   useEffect(() => {
-    // Avoid multiple attempts to load the script
-    if (mapsScriptAttempted) return;
+    if (!canEditAlert) {
+      // Redirect after showing message briefly
+      const redirectTimer = setTimeout(() => {
+        router.push('/admin/alerts');
+      }, 2000);
 
-    // Mark that we've attempted to load the script
-    setMapsScriptAttempted(true);
-
-    // Check if Google Maps is already loaded
-    if (typeof window !== 'undefined' && window.google && window.google.maps) {
-      setGoogleLoaded(true);
-      return;
+      return () => clearTimeout(redirectTimer);
     }
+  }, [canEditAlert, router]);
 
-    // If not loaded, create and append the script
-    const googleMapsScript = document.createElement('script');
-    googleMapsScript.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
-    googleMapsScript.async = true;
-    googleMapsScript.defer = true;
-
-    googleMapsScript.onload = () => {
-      console.log('Google Maps API loaded successfully');
-      setGoogleLoaded(true);
-    };
-
-    googleMapsScript.onerror = () => {
-      console.error('Failed to load Google Maps API');
-      // Still need to fetch alert data even if Maps fails
-      if (canEditAlert) {
-        fetchAlertDetails();
-      }
-    };
-
-    document.head.appendChild(googleMapsScript);
-  }, [canEditAlert, mapsScriptAttempted, fetchAlertDetails]);
+  // Fetch alert details
+  useEffect(() => {
+    if (canEditAlert) {
+      fetchAlertDetails();
+    }
+  }, [fetchAlertDetails, canEditAlert]);
 
   // Update alert types when category changes
   useEffect(() => {
@@ -332,31 +316,23 @@ export default function EditAlertPage() {
     }
   }, [formValues.alertCategory, formValues.alertType]);
 
-  // Redirect if not authorized
-  useEffect(() => {
-    if (!canEditAlert) {
-      // Redirect after showing message briefly
-      const redirectTimer = setTimeout(() => {
-        router.push('/admin/alerts');
-      }, 2000);
-
-      return () => clearTimeout(redirectTimer);
-    }
-  }, [canEditAlert, router]);
-
-  // Modified to fetch data even without Google Maps API loaded
-  useEffect(() => {
-    if (canEditAlert) {
-      fetchAlertDetails();
-    }
-  }, [fetchAlertDetails, canEditAlert]);
-
-  const [customAudience, setCustomAudience] = useState('');
-  const [showCustomAudienceInput, setShowCustomAudienceInput] = useState(false);
-
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'expectedStart') {
+      // When start date is selected, set default end date to same day at 11:59 PM
+      const startDate = new Date(value);
+      const endDate = new Date(startDate);
+      endDate.setHours(23, 59, 0, 0);
+      
+      setFormValues(prev => ({ 
+        ...prev, 
+        [name]: value,
+        expectedEnd: endDate.toISOString().substring(0, 16)
+      }));
+    } else {
+      setFormValues(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (e: SelectChangeEvent) => {
@@ -527,33 +503,14 @@ export default function EditAlertPage() {
 
   return (
     <AdminLayout>
-      <Box
-        sx={{
-          maxWidth: 1200,
-          mx: 'auto',
-          mb: 4,
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-          <Button
-            variant="text"
-            onClick={handleCancel}
-            startIcon={<i className="ri-arrow-left-line" />}
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
-          <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
-            Edit Alert
-          </Typography>
-        </Stack>
-        <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-          Update alert information
-        </Typography>
-      </Box>
+      {/* Load Google Maps API */}
+      <Script
+        src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+        onLoad={() => setGoogleLoaded(true)}
+      />
 
-      {/* Only display form if authorized and data is loaded */}
-      {canEditAlert && !loading && !error && alert && (
+      {/* Only display form if authorized */}
+      {canEditAlert && (
         <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 1200, mx: 'auto' }}>
           {/* Basic Information */}
           <StyledSection>
@@ -572,19 +529,12 @@ export default function EditAlertPage() {
                   value={formValues.title || ''}
                   onChange={handleInputChange}
                   sx={{ flex: '1 1 48%', minWidth: '250px' }}
+                  required
                   placeholder="Enter a descriptive title for the alert"
                 />
-                
-                <StyledTextField
-                  name="linkToSource"
-                  label="Link to Source"
-                  variant="outlined"
-                  value={formValues.linkToSource || ''}
-                  onChange={handleInputChange}
-                  placeholder="Enter a URL linking to more information about this alert"
-                  sx={{ flex: '1 1 48%', minWidth: '250px' }}
-                />
-                
+                <div style={{flex: '1 1 48%', minWidth: '250px'}}>
+
+                </div>
                 <StyledTextField
                   name="description"
                   label="Issue"
@@ -594,7 +544,8 @@ export default function EditAlertPage() {
                   value={formValues.description || ''}
                   onChange={handleInputChange}
                   sx={{ flex: '1 1 48%', minWidth: '250px' }}
-                  placeholder="Provide a detailed description of the alert"
+                  required
+                  placeholder="Provide a detailed Issue of the alert"
                 />
                 
                 <StyledTextField
@@ -634,6 +585,7 @@ export default function EditAlertPage() {
                 inputProps={{
                   autoComplete: "new-password", // disable browser autocomplete
                 }}
+                required
                 sx={{ mb: 2 }}
               />
 
@@ -751,6 +703,7 @@ export default function EditAlertPage() {
                     ))}
                   </Box>
 
+                  {/* Hidden info panel that shows details when expanded */}
                   <Box
                     sx={{
                       mt: 2,
@@ -780,7 +733,7 @@ export default function EditAlertPage() {
                         }
                       }}
                     >
-                      {formValues.impactLocations?.length || 0} location{(formValues.impactLocations?.length || 0) !== 1 ? 's' : ''} added
+                      {formValues.impactLocations?.length || 0} location{formValues.impactLocations?.length !== 1 ? 's' : ''} added
                     </Button>
                   </Box>
                 </Box>
@@ -800,26 +753,50 @@ export default function EditAlertPage() {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                 <StyledTextField
                   name="expectedStart"
-                  label="Expected Start"
+                  label="Expected Start Date"
                   variant="outlined"
-                  type="datetime-local"
-                  value={formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().substring(0, 16) : ''}
-                  onChange={handleInputChange}
+                  type="date"
+                  value={formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (date) {
+                      // Set time to 12:00 AM (00:00:00)
+                      const startDateTime = new Date(date + 'T00:00:00');
+                      setFormValues(prev => ({ ...prev, expectedStart: startDateTime.toISOString() }));
+                    } else {
+                      setFormValues(prev => ({ ...prev, expectedStart: '' }));
+                    }
+                  }}
                   InputLabelProps={{ shrink: true }}
                   sx={{ flex: '1 1 45%', minWidth: '250px' }}
-                  helperText="When is this alert expected to start?"
+                  helperText="Date when this alert is expected to start (time will be set to 12:00 AM)"
+                  inputProps={{
+                    min: new Date().toISOString().split('T')[0]
+                  }}
                 />
 
                 <StyledTextField
                   name="expectedEnd"
-                  label="Expected End"
+                  label="Expected End Date"
                   variant="outlined"
-                  type="datetime-local"
-                  value={formValues.expectedEnd ? new Date(formValues.expectedEnd as string).toISOString().substring(0, 16) : ''}
-                  onChange={handleInputChange}
+                  type="date"
+                  value={formValues.expectedEnd ? new Date(formValues.expectedEnd as string).toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (date) {
+                      // Set time to 11:59 PM (23:59:59)
+                      const endDateTime = new Date(date + 'T23:59:59');
+                      setFormValues(prev => ({ ...prev, expectedEnd: endDateTime.toISOString() }));
+                    } else {
+                      setFormValues(prev => ({ ...prev, expectedEnd: '' }));
+                    }
+                  }}
                   InputLabelProps={{ shrink: true }}
                   sx={{ flex: '1 1 45%', minWidth: '250px' }}
-                  helperText="When is this alert expected to end?"
+                  helperText="Date when this alert is expected to end (time will be set to 11:59 PM)"
+                  inputProps={{
+                    min: formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+                  }}
                 />
               </Box>
             </SectionContent>
@@ -871,22 +848,6 @@ export default function EditAlertPage() {
                 </StyledFormControl>
 
                 <StyledFormControl sx={{ flex: '1 1 45%', minWidth: '250px' }}>
-                  <InputLabel id="risk-label">Risk Level</InputLabel>
-                  <Select
-                    labelId="risk-label"
-                    id="risk"
-                    name="risk"
-                    value={formValues.risk || ''}
-                    label="Risk Level"
-                    onChange={handleSelectChange}
-                  >
-                    <MenuItem value="Low">Low</MenuItem>
-                    <MenuItem value="Medium">Medium</MenuItem>
-                    <MenuItem value="High">High</MenuItem>
-                  </Select>
-                </StyledFormControl>
-
-                <StyledFormControl sx={{ flex: '1 1 45%', minWidth: '250px' }}>
                   <InputLabel id="impact-label">Impact Severity</InputLabel>
                   <Select
                     labelId="impact-label"
@@ -902,7 +863,7 @@ export default function EditAlertPage() {
                   </Select>
                 </StyledFormControl>
 
-                <StyledFormControl sx={{ flex: '1 1 45%', display: 'none', minWidth: '250px' }}>
+                <StyledFormControl sx={{ flex: '0%', display: 'none', minWidth: '200px' }}>
                   <InputLabel id="priority-label">Priority</InputLabel>
                   <Select
                     labelId="priority-label"
@@ -932,27 +893,7 @@ export default function EditAlertPage() {
             <SectionContent>
               <Box sx={{ display: 'flex', gap: 3 }}>
 
-
                 <StyledFormControl sx={{ width: '100%' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                    <Button
-                      variant="outlined"
-                      size="small"
-                      onClick={handleSelectAllAudiences}
-                      startIcon={<i className="ri-checkbox-multiple-line" />}
-                      sx={{ 
-                        mr: 1, 
-                        textTransform: 'none',
-                        borderRadius: '8px',
-                      }}
-                    >
-                      Select All
-                    </Button>
-                    <Typography variant="caption" color="text.secondary">
-                      (quickly select all predefined audiences)
-                    </Typography>
-                  </Box>
-
                   <Autocomplete
                     multiple
                     id="targetAudience"
@@ -1041,25 +982,37 @@ export default function EditAlertPage() {
                     </Box>
                   )}
                 </StyledFormControl>
-                
-                <StyledFormControl sx={{ width: '100%' }}>
+                <StyledFormControl sx={{ width: '100%' }} required>
                   <InputLabel id="status-label">Status</InputLabel>
                   <Select
                     labelId="status-label"
                     id="status"
                     name="status"
-                    value={formValues.status || 'pending'}
+                    value={formValues.status || 'approved'}
                     label="Status"
                     onChange={handleSelectChange}
                   >
                     <MenuItem value="pending">Pending</MenuItem>
                     <MenuItem value="approved">Approved</MenuItem>
                     <MenuItem value="rejected">Rejected</MenuItem>
-                    <MenuItem value="archived">Archived</MenuItem>
-                    <MenuItem value="deleted">Deleted</MenuItem>
                   </Select>
                 </StyledFormControl>
               </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      onClick={handleSelectAllAudiences}
+                      startIcon={<i className="ri-checkbox-multiple-line" />}
+                      sx={{ 
+                        mt: 1, 
+                        textTransform: 'none',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      Select All
+                    </Button>
+                  </Box>
             </SectionContent>
           </StyledSection>
 
@@ -1076,6 +1029,7 @@ export default function EditAlertPage() {
             <StyledButton
               type="submit"
               variant="contained"
+              color="primary"
               disabled={saving}
               startIcon={saving ? <CircularProgress size={20} /> : <i className="ri-save-line" />}
               sx={{ minWidth: 150 }}

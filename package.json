@@ -15,6 +15,7 @@
     "@mui/icons-material": "^7.0.1",
     "@mui/material": "^7.0.1",
     "@mui/x-date-pickers": "^8.1.0",
+    "@mui/x-date-pickers-pro": "^8.8.0",
     "@react-google-maps/api": "^2.20.6",
     "@types/axios": "^0.9.36",
     "axios": "^1.8.4",

@@ -11,7 +11,22 @@ import {
   Alert,
   useMediaQuery,
   useTheme,
+  Button,
+  Stack,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  TextField,
+  Collapse,
+  IconButton,
+  Divider,
+  SelectChangeEvent,
 } from '@mui/material';
+import {  FilterList as FilterIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AdminLayout from '@/components/AdminLayout';
 import {
   getAllUsers,
@@ -19,14 +34,13 @@ import {
   updateUserStatus,
   deleteUser,
   addUserToSubscribers,
-  UserFilters as UserFiltersType
+  UserFilters as UserFiltersType,
+  getUserLogs
 } from '@/services/api';
 import { User } from '@/types';
 import { useAuth } from '@/context/AuthContext';
 
 // Import custom components
-import UserFiltersComponent from '@/components/admin/users/UserFilters';
-import UserTable from '@/components/admin/users/UserTable';
 import UserCard from '@/components/admin/users/UserCard';
 import ProfileModal from '@/components/admin/users/modals/ProfileModal';
 import ChangeRoleModal from '@/components/admin/users/modals/ChangeRoleModal';
@@ -34,6 +48,7 @@ import RestrictUserModal from '@/components/admin/users/modals/RestrictUserModal
 import DeleteUserModal from '@/components/admin/users/modals/DeleteUserModal';
 import UserActivityModal from '@/components/admin/users/modals/UserActivityModal';
 import AddToSubscribersModal from '@/components/admin/users/modals/AddToSubscribersModal';
+import AddUserModal from '@/components/admin/users/modals/AddUserModal';
 
 export default function UsersManagement() {
   const [users, setUsers] = useState<User[]>([]);
@@ -47,11 +62,20 @@ export default function UsersManagement() {
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
-    severity: 'success' as 'success' | 'error'
+    severity: 'success' as 'success' | 'error' | 'info'
   });
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const { isAdmin } = useAuth();
+
+  // Filter states
+  const [signupStartDate, setSignupStartDate] = useState<Date | null>(null);
+  const [signupEndDate, setSignupEndDate] = useState<Date | null>(null);
+  const [lastLoginStartDate, setLastLoginStartDate] = useState<Date | null>(null);
+  const [lastLoginEndDate, setLastLoginEndDate] = useState<Date | null>(null);
+  const [location, setLocation] = useState<string>('');
+  const [businessType, setBusinessType] = useState<string>('');
+  const [filtersExpanded, setFiltersExpanded] = useState<boolean>(!isMobile);
 
   // Modal states
   const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
@@ -60,12 +84,20 @@ export default function UsersManagement() {
   const [deleteModalOpen, setDeleteModalOpen] = useState<boolean>(false);
   const [activityModalOpen, setActivityModalOpen] = useState<boolean>(false);
   const [addToSubscribersModalOpen, setAddToSubscribersModalOpen] = useState<boolean>(false);
+  const [addUserModalOpen, setAddUserModalOpen] = useState<boolean>(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [modalAction, setModalAction] = useState<'restrict' | 'enable'>('restrict');
   const [actionLoading, setActionLoading] = useState<boolean>(false);
 
   // Permission check for changing user roles/status - only admin can do this
   const canManageUsers = isAdmin;
+
+  // Update filters expanded state when screen size changes
+  useEffect(() => {
+    setFiltersExpanded(!isMobile);
+  }, [isMobile]);
+
+  const [userLogs, setUserLogs] = useState<Record<string, { action: string; timestamp: string; details?: string }[]>>({});
 
   const fetchUsers = useCallback(async () => {
     setLoading(true);
@@ -81,6 +113,21 @@ export default function UsersManagement() {
       const { users: fetchedUsers, totalCount } = await getAllUsers(params);
       setUsers(fetchedUsers);
       setTotalCount(totalCount);
+
+      // Fetch recent logs for each user (2 most recent)
+      const logsResults = await Promise.all(
+        fetchedUsers.map(async (user) => {
+          try {
+            const res = await getUserLogs(user._id, { limit: 2, sortBy: 'timestamp', sortOrder: 'desc' });
+            // Accepts either { logs: Log[] } or just Log[]
+            const logs = Array.isArray(res) ? res : (res as { logs: unknown[] }).logs || [];
+            return [user._id, logs.map((log: { action: string; timestamp: string; details?: string }) => ({ action: log.action, timestamp: log.timestamp, details: log.details }))];
+          } catch {
+            return [user._id, []];
+          }
+        })
+      );
+      setUserLogs(Object.fromEntries(logsResults));
     } catch (error) {
       console.error('Error fetching users:', error);
       setSnackbar({
@@ -106,19 +153,54 @@ export default function UsersManagement() {
     setPage(0);
   };
 
-  const handleFilterChange = (newFilters: UserFiltersType) => {
+  const handleSortByChange = (event: SelectChangeEvent<string>) => {
+    const value = event.target.value as string;
+    setSortBy(value);
+    setPage(0);
+  };
+
+  const handleSortOrderChange = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    setPage(0);
+  };
+
+  const handleFilterChange = () => {
+    const newFilters: UserFiltersType = {};
+    
+    if (signupStartDate) {
+      newFilters.startDate = signupStartDate.toISOString().split('T')[0];
+    }
+    if (signupEndDate) {
+      newFilters.endDate = signupEndDate.toISOString().split('T')[0];
+    }
+    if (location) {
+      newFilters.company = location;
+    }
+    if (businessType) {
+      newFilters.role = businessType;
+    }
+    
     setFilters(newFilters);
     setPage(0);
   };
 
-  const handleSortChange = (newSortBy: string, newSortOrder: 'asc' | 'desc') => {
-    setSortBy(newSortBy);
-    setSortOrder(newSortOrder);
+  const handleResetFilters = () => {
+    setSignupStartDate(null);
+    setSignupEndDate(null);
+    setLastLoginStartDate(null);
+    setLastLoginEndDate(null);
+    setLocation('');
+    setBusinessType('');
+    setFilters({});
     setPage(0);
   };
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
+  };
+
+  const toggleFilters = () => {
+    setFiltersExpanded(!filtersExpanded);
   };
 
   // User action handlers
@@ -139,9 +221,6 @@ export default function UsersManagement() {
 
   const handleRestrictUser = (user: User) => {
     setSelectedUser(user);
-    // Check user's current status to determine the action
-    // For 'deleted' and 'restricted' users, enable them
-    // For 'active' and any other status, restrict them
     setModalAction(user.status === 'restricted' || user.status === 'deleted' ? 'enable' : 'restrict');
     setRestrictModalOpen(true);
   };
@@ -163,7 +242,6 @@ export default function UsersManagement() {
     setActionLoading(true);
     try {
       await updateUserRole(selectedUser._id, newRole);
-      // Update user in the list
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user._id === selectedUser._id 
@@ -192,13 +270,11 @@ export default function UsersManagement() {
   const confirmRestrictUser = async () => {
     if (!selectedUser) return;
     
-    // Allow transitioning between active, restricted, and deleted states
     const newStatus = modalAction === 'restrict' ? 'restricted' : 'active';
     
     setActionLoading(true);
     try {
       await updateUserStatus(selectedUser._id, newStatus);
-      // Update user in the list
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user._id === selectedUser._id 
@@ -234,7 +310,6 @@ export default function UsersManagement() {
     setActionLoading(true);
     try {
       await deleteUser(selectedUser._id);
-      // Update user in the list
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user._id === selectedUser._id 
@@ -266,7 +341,6 @@ export default function UsersManagement() {
     setActionLoading(true);
     try {
       await addUserToSubscribers(selectedUser._id, sector, location);
-      // Update user in the list
       setUsers(prevUsers => 
         prevUsers.map(user => 
           user._id === selectedUser._id 
@@ -296,33 +370,248 @@ export default function UsersManagement() {
     }
   };
 
+  const handleAddUser = async (userData: unknown) => {
+    setActionLoading(true);
+    try {
+      // TODO: Implement API call to create user
+      console.log('Creating user:', userData);
+      
+      // For now, just show success message
+      setSnackbar({
+        open: true,
+        message: 'User creation functionality will be implemented soon',
+        severity: 'info'
+      });
+      setAddUserModalOpen(false);
+    } catch (error) {
+      console.error('Error creating user:', error);
+      setSnackbar({
+        open: true,
+        message: 'Failed to create user',
+        severity: 'error'
+      });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 'bold' }}>
-          User Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          View, filter, and manage all users
-        </Typography>
-      </Box>
-
-      {/* User filter controls */}
-      <UserFiltersComponent
-        onFilterChange={handleFilterChange}
-        onSortChange={handleSortChange}
-      />
-
-      <Paper sx={{ p: 3, mb: 3, borderRadius: 2 }} elevation={0}>
-        {loading ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
-            <CircularProgress />
+      <LocalizationProvider dateAdapter={AdapterDateFns}>
+        {/* Filters Section */}
+        <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }} elevation={0}>
+          {/* Filter Header */}
+          <Box 
+            sx={{ 
+              p: 2, 
+              backgroundColor: '#f8f9fa',
+              borderBottom: '1px solid #e0e0e0',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              cursor: isMobile ? 'pointer' : 'default'
+            }}
+            onClick={isMobile ? toggleFilters : undefined}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <FilterIcon sx={{ color: 'primary.main' }} />
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Filters
+              </Typography>
+            </Box>
+            {isMobile && (
+              <IconButton size="small">
+                {filtersExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            )}
           </Box>
-        ) : (
-          <>
-            {/* Switch between mobile card view and desktop table view */}
-            {isMobile ? (
-              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 2 }}>
+
+          {/* Filter Content */}
+          <Collapse in={filtersExpanded}>
+            <Box sx={{ p: 3 }}>
+              <Stack spacing={3}>
+                {/* Quick Filters Row */}
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2}
+                  alignItems={{ xs: 'stretch', sm: 'center' }}
+                >
+                  {/* Sort By */}
+                  <FormControl sx={{ minWidth: { xs: '100%', sm: '180px' } }} size="small">
+                    <InputLabel>Sort by</InputLabel>
+                    <Select
+                      value={sortBy}
+                      label="Sort by"
+                      onChange={handleSortByChange}
+                    >
+                      <MenuItem value="createdAt">Signup Date</MenuItem>
+                      <MenuItem value="lastLogin">Last Login</MenuItem>
+                      <MenuItem value="firstName">Name</MenuItem>
+                      <MenuItem value="email">Email</MenuItem>
+                    </Select>
+                  </FormControl>
+
+                  {/* Sort Order */}
+                  <Button 
+                    variant="outlined" 
+                    onClick={handleSortOrderChange}
+                    size="small"
+                    sx={{ 
+                      minWidth: '50px', 
+                      px: 2,
+                      height: '40px',
+                      borderColor: 'primary.main',
+                      color: 'primary.main',
+                      '&:hover': {
+                        backgroundColor: 'primary.main',
+                        color: 'white'
+                      }
+                    }}
+                  >
+                    {sortOrder === 'asc' ? '↑' : '↓'}
+                  </Button>
+
+                  {/* Location */}
+                  <TextField
+                    sx={{ flex: 1, minWidth: { xs: '100%', sm: '200px' } }}
+                    placeholder="Search by location..."
+                    variant="outlined"
+                    size="small"
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
+                  />
+
+                  {/* Business Type */}
+                  <FormControl sx={{ minWidth: { xs: '100%', sm: '200px' } }} size="small">
+                    <InputLabel>Business Type</InputLabel>
+                    <Select
+                      value={businessType}
+                      label="Business Type"
+                      onChange={(e) => setBusinessType(e.target.value)}
+                    >
+                      <MenuItem value="">All Types</MenuItem>
+                      <MenuItem value="Hotel">Hotel</MenuItem>
+                      <MenuItem value="Tour Operator">Tour Operator</MenuItem>
+                      <MenuItem value="Restaurant">Restaurant</MenuItem>
+                      <MenuItem value="Transportation">Transportation</MenuItem>
+                      <MenuItem value="Retail">Retail</MenuItem>
+                      <MenuItem value="Other">Other</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
+
+                <Divider />
+
+                {/* Date Range Filters */}
+                <Stack spacing={2}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    Date Filters
+                  </Typography>
+                  
+                  <Stack 
+                    direction={{ xs: 'column', lg: 'row' }} 
+                    spacing={2}
+                    alignItems={{ xs: 'stretch', lg: 'center' }}
+                  >
+                    {/* Signup Date Range */}
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
+                      <Typography variant="body2" sx={{ minWidth: '80px', fontWeight: 500 }}>Signup:</Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flex: 1 }}>
+                        <DatePicker
+                          value={signupStartDate}
+                          onChange={setSignupStartDate}
+                          slotProps={{ 
+                            textField: { 
+                              size: 'small',
+                              placeholder: "From date",
+                              sx: { minWidth: '150px' }
+                            } 
+                          }}
+                        />
+                        <DatePicker
+                          value={signupEndDate}
+                          onChange={setSignupEndDate}
+                          slotProps={{ 
+                            textField: { 
+                              size: 'small',
+                              placeholder: "To date",
+                              sx: { minWidth: '150px' }
+                            } 
+                          }}
+                        />
+                      </Stack>
+                    </Box>
+
+                    {/* Last Login Date Range */}
+                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
+                      <Typography variant="body2" sx={{ minWidth: '80px', fontWeight: 500 }}>Login:</Typography>
+                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flex: 1 }}>
+                        <DatePicker
+                          value={lastLoginStartDate}
+                          onChange={setLastLoginStartDate}
+                          slotProps={{ 
+                            textField: { 
+                              size: 'small',
+                              placeholder: "From date",
+                              sx: { minWidth: '150px' }
+                            } 
+                          }}
+                        />
+                        <DatePicker
+                          value={lastLoginEndDate}
+                          onChange={setLastLoginEndDate}
+                          slotProps={{ 
+                            textField: { 
+                              size: 'small',
+                              placeholder: "To date",
+                              sx: { minWidth: '150px' }
+                            } 
+                          }}
+                        />
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Stack>
+
+                {/* Action Buttons */}
+                <Stack 
+                  direction={{ xs: 'column', sm: 'row' }} 
+                  spacing={2}
+                  justifyContent="flex-end"
+                  sx={{ pt: 1 }}
+                >
+                  <Button 
+                    variant="outlined" 
+                    color="secondary" 
+                    onClick={handleResetFilters}
+                    size="medium"
+                    sx={{ minWidth: '100px' }}
+                  >
+                    Reset
+                  </Button>
+                  <Button 
+                    variant="contained" 
+                    onClick={handleFilterChange}
+                    size="medium"
+                    sx={{ minWidth: '100px' }}
+                  >
+                    Apply Filters
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
+          </Collapse>
+        </Paper>
+
+        {/* User Cards */}
+        <Paper sx={{ p: 0, mb: 3, borderRadius: 2 }} elevation={0}>
+          {loading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', p: 5 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <>
+              <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(330px, 1fr))', gap: 3 }}>
                 {users.map(user => (
                   <UserCard
                     key={user._id}
@@ -333,6 +622,7 @@ export default function UsersManagement() {
                     onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
                     onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
                     onAddToSubscribers={canManageUsers ? handleAddToSubscribers : () => {}}
+                    activityLogs={userLogs[user._id] || []}
                   />
                 ))}
                 {users.length === 0 && (
@@ -343,91 +633,88 @@ export default function UsersManagement() {
                   </Box>
                 )}
               </Box>
-            ) : (
-              <UserTable
-                users={users}
-                onViewProfile={handleViewProfile}
-                onViewActivity={handleViewActivity}
-                onChangeRole={canManageUsers ? handleChangeRole : () => {}}
-                onRestrictUser={canManageUsers ? handleRestrictUser : () => {}}
-                onDeleteUser={canManageUsers ? handleDeleteUser : () => {}}
-                onAddToSubscribers={canManageUsers ? handleAddToSubscribers : () => {}}
-              />
-            )}
             
-            <TablePagination
-              rowsPerPageOptions={[5, 10, 20, 50]}
-              component="div"
-              count={totalCount}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-          </>
-        )}
-      </Paper>
+              <TablePagination
+                rowsPerPageOptions={[10, 20, 50]}
+                component="div"
+                count={totalCount}
+                rowsPerPage={rowsPerPage}
+                page={page}
+                onPageChange={handleChangePage}
+                onRowsPerPageChange={handleChangeRowsPerPage}
+              />
+            </>
+          )}
+        </Paper>
 
-      {/* Modal components */}
-      <ProfileModal
-        open={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-        user={selectedUser}
-      />
+        {/* Modal components */}
+        <ProfileModal
+          open={profileModalOpen}
+          onClose={() => setProfileModalOpen(false)}
+          user={selectedUser}
+        />
 
-      <ChangeRoleModal
-        open={roleModalOpen}
-        onClose={() => setRoleModalOpen(false)}
-        user={selectedUser}
-        onConfirm={confirmRoleChange}
-        loading={actionLoading}
-      />
+        <ChangeRoleModal
+          open={roleModalOpen}
+          onClose={() => setRoleModalOpen(false)}
+          user={selectedUser}
+          onConfirm={confirmRoleChange}
+          loading={actionLoading}
+        />
 
-      <RestrictUserModal
-        open={restrictModalOpen}
-        onClose={() => setRestrictModalOpen(false)}
-        user={selectedUser}
-        onConfirm={confirmRestrictUser}
-        loading={actionLoading}
-        action={modalAction}
-      />
+        <RestrictUserModal
+          open={restrictModalOpen}
+          onClose={() => setRestrictModalOpen(false)}
+          user={selectedUser}
+          onConfirm={confirmRestrictUser}
+          loading={actionLoading}
+          action={modalAction}
+        />
 
-      <DeleteUserModal
-        open={deleteModalOpen}
-        onClose={() => setDeleteModalOpen(false)}
-        user={selectedUser}
-        onConfirm={confirmDeleteUser}
-        loading={actionLoading}
-      />
-      
-      <UserActivityModal
-        open={activityModalOpen}
-        onClose={() => setActivityModalOpen(false)}
-        user={selectedUser}
-      />
+        <DeleteUserModal
+          open={deleteModalOpen}
+          onClose={() => setDeleteModalOpen(false)}
+          user={selectedUser}
+          onConfirm={confirmDeleteUser}
+          loading={actionLoading}
+        />
+        
+        <UserActivityModal
+          open={activityModalOpen}
+          onClose={() => setActivityModalOpen(false)}
+          user={selectedUser}
+        />
 
-      <AddToSubscribersModal
-        open={addToSubscribersModalOpen}
-        onClose={() => setAddToSubscribersModalOpen(false)}
-        user={selectedUser}
-        onConfirm={confirmAddToSubscribers}
-        loading={actionLoading}
-      />
+        <AddToSubscribersModal
+          open={addToSubscribersModalOpen}
+          onClose={() => setAddToSubscribersModalOpen(false)}
+          user={selectedUser}
+          onConfirm={confirmAddToSubscribers}
+          loading={actionLoading}
+        />
 
-      {/* Snackbar for notifications */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={5000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      >
-        <Alert
+        <AddUserModal
+          open={addUserModalOpen}
+          onClose={() => setAddUserModalOpen(false)}
+          onSubmit={handleAddUser}
+          loading={actionLoading}
+        />
+
+        {/* Snackbar for notifications */}
+        <Snackbar
+          open={snackbar.open}
+          autoHideDuration={5000}
           onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
         >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
+          <Alert
+            onClose={handleCloseSnackbar}
+            severity={snackbar.severity}
+          >
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      </LocalizationProvider>
     </AdminLayout>
   );
 } 

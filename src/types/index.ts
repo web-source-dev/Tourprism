@@ -284,3 +284,42 @@ export interface FetchAlertsParams {
   originOnly?: boolean;
   impact?: string[]; // Add impact parameter for filtering by impact level
 } 
+
+export interface ForecastSendSummary {
+  _id: string;
+  sentAt: string;
+  dayOfWeek: string;
+  location?: string;
+  alertTypes: string[];
+  recipientCount: number;
+  recipients: string[];
+  alertIds: Alert[] | string[];
+  digestType: string;
+  sector?: string;
+  rawAlerts: unknown[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ForecastSummaryFilters extends Record<string, unknown> {
+  search?: string;
+  location?: string;
+  sector?: string;
+  digestType?: string;
+  startDate?: string;
+  endDate?: string;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+  page?: number;
+  limit?: number;
+} 
+
+export interface DashboardStats {
+  metrics: {
+    subscribers: {
+      total: number;
+      new: number;
+      unsubscribes: number;
+    };
+  };
+}

@@ -50,7 +50,7 @@ interface CustomAxiosError<T = unknown> extends Error {
   };
 }
 
-import { User, Alert, Notification } from '../types';
+import { User, Alert, Notification, ForecastSendSummary, ForecastSummaryFilters } from '../types';
 import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tourprism-api.onrender.com';
@@ -646,7 +646,12 @@ export const deleteUser = async (userId: string): Promise<{ success: boolean }> 
   }
 };
 
-export const getAllAlertsAdmin = async (params = {}): Promise<{ alerts: Alert[], totalCount: number }> => {
+/**
+ * Fetch all alerts for admin with pagination and filters
+ * @param params { status?: string, page?: number, limit?: number, ... }
+ * @returns { alerts: Alert[], totalCount: number }
+ */
+export const getAllAlertsAdmin = async (params: { status?: string; page?: number; limit?: number; [key: string]: unknown } = {}): Promise<{ alerts: Alert[], totalCount: number }> => {
   try {
     const response = await api.get<{ alerts: Alert[], totalCount: number }>('/api/admin/alerts', { params });
     return response.data;
@@ -744,6 +749,7 @@ interface DashboardStats {
       activeChange: number;
       new: number;
       newChange: number;
+      unsubscribes: number; // <-- add this
     };
   };
   regionalStats: {
@@ -1086,6 +1092,7 @@ export interface Subscriber {
 export interface SubscriberFilters extends Record<string, unknown> {
   search?: string;
   sector?: string;
+  location?: string;
   isActive?: boolean;
   startDate?: string;
   endDate?: string;
@@ -1165,6 +1172,42 @@ export interface BusinessInfoData {
 export const updateBusinessInfo = async (data: BusinessInfoData): Promise<User> => {
   try {
     const response = await api.put<User>('/profile/business-info', data);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+}; 
+
+// Get all forecast send summaries with filtering
+export const getAllForecastSummaries = async (params: ForecastSummaryFilters = {}): Promise<{ 
+  summaries: ForecastSendSummary[], 
+  totalCount: number,
+  filters: {
+    locations: string[];
+    sectors: string[];
+    digestTypes: string[];
+  }
+}> => {
+  try {
+    const response = await api.get<{ 
+      summaries: ForecastSendSummary[], 
+      totalCount: number,
+      filters: {
+        locations: string[];
+        sectors: string[];
+        digestTypes: string[];
+      }
+    }>('/api/admin/forecast-summaries', { params });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get forecast summary details by ID
+export const getForecastSummaryById = async (summaryId: string): Promise<{ summary: ForecastSendSummary }> => {
+  try {
+    const response = await api.get<{ summary: ForecastSendSummary }>(`/api/admin/forecast-summaries/${summaryId}`);
     return response.data;
   } catch (error) {
     throw getErrorMessage(error as CustomAxiosError);
