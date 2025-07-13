@@ -2,23 +2,15 @@
 
 import React from 'react';
 import { 
-  Box, 
   Typography, 
-  Grid,
   Card,
   CardContent,
-  Button,
-  useTheme
+  Box,
 } from '@mui/material';
 import AdminLayout from '@/components/AdminLayout';
 import { useRouter } from 'next/navigation';
-import AddIcon from '@mui/icons-material/Add';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import PendingIcon from '@mui/icons-material/Pending';
-import HistoryIcon from '@mui/icons-material/History';
 
 export default function AlertsManagement() {
-  const theme = useTheme();
   const router = useRouter();
 
   const navigateTo = (path: string) => {
@@ -28,61 +20,46 @@ export default function AlertsManagement() {
   const actionCards = [
     {
       title: 'Create New Alert',
-      description: 'Create a new alert to inform users about disruptions',
-      icon: <AddIcon sx={{ fontSize: 40 }} />,
       path: '/admin/alerts/create',
-      color: theme.palette.primary.main
     },
     {
       title: 'View Published Alerts',
-      description: 'View and manage all approved alerts',
-      icon: <VisibilityIcon sx={{ fontSize: 40 }} />,
       path: '/admin/alerts/published',
-      color: theme.palette.success.main
     },
     {
       title: 'Review Pending Alerts',
-      description: 'Review and approve pending alerts',
-      icon: <PendingIcon sx={{ fontSize: 40 }} />,
       path: '/admin/alerts/pending',
-      color: theme.palette.warning.main
     },
     {
       title: 'View Forecast History',
-      description: 'Access historical forecast data and summaries',
-      icon: <HistoryIcon sx={{ fontSize: 40 }} />,
       path: '/admin/alerts/summary',
-      color: theme.palette.info.main
     }
   ];
 
   return (
     <AdminLayout>
-      <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" sx={{ mb: 1, fontWeight: 'bold' }}>
-          Alerts Management
-        </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Manage alerts, review pending submissions and access forecast history
-        </Typography>
-      </Box>
-
-      <Grid container spacing={3}>
+      <Box sx={{ 
+        display: 'flex', 
+        flexWrap: 'wrap', 
+        gap: { xs: 1, md: 3 },
+        justifyContent: 'center'
+      }}>
         {actionCards.map((card, index) => (
-          <Grid key={index} size={{ xs: 12, sm: 6, md: 6, lg: 3 }}>
+          <Box key={index} sx={{ 
+            width: { xs: '100%', md: 'calc(50% - 12px)' },
+            minWidth: { xs: '100%', md: '400px' }
+          }}>
             <Card 
               sx={{ 
-                height: '100%', 
+                height: { xs: '80px', md: '220px' }, 
                 display: 'flex', 
                 flexDirection: 'column',
-                borderRadius: 2,
-                transition: 'transform 0.2s, box-shadow 0.2s',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)',
-                  cursor: 'pointer'
-                },
-                boxShadow: '0 4px 8px rgba(0,0,0,0.05)'
+                justifyContent: 'center',
+                alignItems: 'center',
+                borderRadius: 4,
+                boxShadow: 'none',
+                cursor: 'pointer',
+                border: '1px solid rgb(179, 179, 179)'
               }}
               onClick={() => navigateTo(card.path)}
             >
@@ -92,50 +69,26 @@ export default function AlertsManagement() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 textAlign: 'center',
-                p: 4,
-                height: '100%'
+                p: { xs: 1, md: 4 },
+                height: '100%',
+                '&:last-child': { pb: { xs: 1, md: 4 } },
+                minHeight: { xs: '80px', md: 'auto' }
               }}>
-                <Box 
-                  sx={{ 
-                    mb: 2, 
-                    p: 2, 
-                    borderRadius: '50%',
-                    backgroundColor: `${card.color}20`,
-                    color: card.color,
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    width: 80,
-                    height: 80
-                  }}
-                >
-                  {card.icon}
-                </Box>
-                <Typography variant="h6" sx={{ mb: 1, fontWeight: 'bold' }}>
+                <Typography variant="body2" sx={{ 
+                  mb: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  color: 'primary.main'
+                }}>
                   {card.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                  {card.description}
-                </Typography>
-                <Button 
-                  variant="contained" 
-                  sx={{ 
-                    mt: 'auto',
-                    backgroundColor: card.color,
-                    '&:hover': {
-                      backgroundColor: theme.palette.mode === 'light' 
-                        ? `${card.color}` 
-                        : `${card.color}CC`
-                    }
-                  }}
-                >
-                  {card.title}
-                </Button>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
     </AdminLayout>
   );
 } 

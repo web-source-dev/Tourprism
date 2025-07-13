@@ -104,7 +104,7 @@ const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Logo */}
-          {!isAuthenticated && !isFeedPage && (
+          {(!isAuthenticated || isSubscriptionPage) && !isFeedPage && (
             <Typography
               component={Link}
               href="/"
@@ -123,7 +123,7 @@ const Navbar: React.FC<NavbarProps> = ({
           )}
 
           {/* Page Title and Icon for mobile */}
-          {!isHomePage && (
+          {!isHomePage && !isSubscriptionPage && (
             <Typography variant="h6" sx={{ fontWeight: '600', display: 'flex' }}>
               {currentPageName}
             </Typography>

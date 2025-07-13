@@ -14,7 +14,6 @@ import {
   CircularProgress,
   Snackbar,
   Alert as MuiAlert,
-  Stack,
   SelectChangeEvent,
   Chip,
   Autocomplete,
@@ -122,7 +121,7 @@ export default function CreateAlertPage() {
 
   const [saving, setSaving] = useState(false);
   const [formValues, setFormValues] = useState<Partial<Alert>>({
-    status: 'pending',
+    status: 'approved',
     originLatitude: undefined,
     originLongitude: undefined,
     originCity: '',
@@ -137,6 +136,8 @@ export default function CreateAlertPage() {
     targetAudience: [],
     recommendedAction: '',
     linkToSource: '',
+    expectedStart: '',
+    expectedEnd: '',
   });
 
   const [snackbar, setSnackbar] = useState({
@@ -229,6 +230,15 @@ export default function CreateAlertPage() {
               }
             });
 
+            // Create impact location object from origin
+            const originAsImpactLocation = {
+              placeId: place.place_id,
+              latitude: place.geometry?.location?.lat() || 0,
+              longitude: place.geometry?.location?.lng() || 0,
+              city: city || place.name || '',
+              country: country,
+            };
+
             setFormValues(prev => ({
               ...prev,
               originPlaceId: place.place_id,
@@ -236,6 +246,13 @@ export default function CreateAlertPage() {
               originLongitude: place.geometry?.location?.lng(),
               originCity: city || place.name,
               originCountry: country,
+              // Automatically add origin location to impact locations if not already present
+              impactLocations: prev.impactLocations?.some(loc => 
+                loc.placeId === place.place_id || 
+                (loc.city === (city || place.name) && loc.country === country)
+              ) 
+                ? prev.impactLocations 
+                : [...(prev.impactLocations || []), originAsImpactLocation]
             }));
           }
         });
@@ -274,7 +291,21 @@ export default function CreateAlertPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormValues(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'expectedStart') {
+      // When start date is selected, set default end date to same day at 11:59 PM
+      const startDate = new Date(value);
+      const endDate = new Date(startDate);
+      endDate.setHours(23, 59, 0, 0);
+      
+      setFormValues(prev => ({ 
+        ...prev, 
+        [name]: value,
+        expectedEnd: endDate.toISOString().substring(0, 16)
+      }));
+    } else {
+      setFormValues(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleSelectChange = (e: SelectChangeEvent) => {
@@ -399,31 +430,6 @@ export default function CreateAlertPage() {
         onLoad={handleGoogleMapsLoaded}
       />
 
-      <Box
-        sx={{
-          mb: 4,
-          maxWidth: 1200,
-          mx: 'auto',
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-          <Button
-            variant="text"
-            onClick={handleCancel}
-            startIcon={<i className="ri-arrow-left-line" />}
-            sx={{ mr: 1 }}
-          >
-            Back
-          </Button>
-          <Typography variant="h4" sx={{ fontWeight: 700, letterSpacing: '-0.01em' }}>
-            Create New Alert
-          </Typography>
-        </Stack>
-        <Typography variant="body1" color="text.secondary" sx={{ mt: 1 }}>
-          Create a new alert with all necessary details
-        </Typography>
-      </Box>
-
       {/* Only display form if authorized */}
       {canCreateAlert && (
         <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 1200, mx: 'auto' }}>
@@ -447,17 +453,9 @@ export default function CreateAlertPage() {
                   required
                   placeholder="Enter a descriptive title for the alert"
                 />
-                
-                <StyledTextField
-                  name="linkToSource"
-                  label="Link to Source"
-                  variant="outlined"
-                  value={formValues.linkToSource || ''}
-                  onChange={handleInputChange}
-                  placeholder="Enter a URL linking to more information about this alert"
-                  sx={{ flex: '1 1 48%', minWidth: '250px' }}
-                />
-                
+               <div style={{flex: '1 1 48%', minWidth: '250px'}}>
+
+               </div>
                 <StyledTextField
                   name="description"
                   label="Issue"
@@ -676,26 +674,50 @@ export default function CreateAlertPage() {
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                 <StyledTextField
                   name="expectedStart"
-                  label="Expected Start"
+                  label="Expected Start Date"
                   variant="outlined"
-                  type="datetime-local"
-                  value={formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().substring(0, 16) : ''}
-                  onChange={handleInputChange}
+                  type="date"
+                  value={formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (date) {
+                      // Set time to 12:00 AM (00:00:00)
+                      const startDateTime = new Date(date + 'T00:00:00');
+                      setFormValues(prev => ({ ...prev, expectedStart: startDateTime.toISOString() }));
+                    } else {
+                      setFormValues(prev => ({ ...prev, expectedStart: '' }));
+                    }
+                  }}
                   InputLabelProps={{ shrink: true }}
                   sx={{ flex: '1 1 45%', minWidth: '250px' }}
-                  helperText="When is this alert expected to start?"
+                  helperText="Date when this alert is expected to start (time will be set to 12:00 AM)"
+                  inputProps={{
+                    min: new Date().toISOString().split('T')[0]
+                  }}
                 />
 
                 <StyledTextField
                   name="expectedEnd"
-                  label="Expected End"
+                  label="Expected End Date"
                   variant="outlined"
-                  type="datetime-local"
-                  value={formValues.expectedEnd ? new Date(formValues.expectedEnd as string).toISOString().substring(0, 16) : ''}
-                  onChange={handleInputChange}
+                  type="date"
+                  value={formValues.expectedEnd ? new Date(formValues.expectedEnd as string).toISOString().split('T')[0] : ''}
+                  onChange={(e) => {
+                    const date = e.target.value;
+                    if (date) {
+                      // Set time to 11:59 PM (23:59:59)
+                      const endDateTime = new Date(date + 'T23:59:59');
+                      setFormValues(prev => ({ ...prev, expectedEnd: endDateTime.toISOString() }));
+                    } else {
+                      setFormValues(prev => ({ ...prev, expectedEnd: '' }));
+                    }
+                  }}
                   InputLabelProps={{ shrink: true }}
                   sx={{ flex: '1 1 45%', minWidth: '250px' }}
-                  helperText="When is this alert expected to end?"
+                  helperText="Date when this alert is expected to end (time will be set to 11:59 PM)"
+                  inputProps={{
+                    min: formValues.expectedStart ? new Date(formValues.expectedStart as string).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+                  }}
                 />
               </Box>
             </SectionContent>
@@ -922,7 +944,7 @@ export default function CreateAlertPage() {
                     labelId="status-label"
                     id="status"
                     name="status"
-                    value={formValues.status || 'pending'}
+                    value={formValues.status || 'approved'}
                     label="Status"
                     onChange={handleSelectChange}
                   >

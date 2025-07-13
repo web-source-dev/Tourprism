@@ -17,7 +17,7 @@ import {
   CssBaseline, 
   Container 
 } from '@mui/material';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '../context/AuthContext';
 
 
@@ -32,7 +32,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
   const { logout} = useAuth();
-
+  const router = useRouter();
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
@@ -45,6 +45,30 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
     { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
   ];
+
+  const AllAdminPages = [
+    { text: 'Dashboard', icon: 'ri-dashboard-line', path: '/admin' },
+    { text: 'Alerts Management', icon: 'ri-notification-4-line', path: '/admin/alerts' },
+    { text: 'Create Alert', icon: 'ri-add-line', path: '/admin/alerts/create' },
+    { text: 'Pending Alerts', icon: 'ri-time-line', path: '/admin/alerts/pending' },
+    { text: 'Published Alerts', icon: 'ri-eye-line', path: '/admin/alerts/published' },
+    { text: 'Forecast History', icon: 'ri-history-line', path: '/admin/alerts/summary' },
+    { text: 'User Management', icon: 'ri-user-settings-line', path: '/admin/users' },
+    { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
+    { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
+  ];
+
+  // Define main parent pages where back button should NOT show
+  const mainParentPages = [
+    '/admin',
+    '/admin/alerts',
+    '/admin/users',
+    '/admin/subscribers',
+    '/admin/logs'
+  ];
+
+  // Check if current page is a sub-page (should show back button)
+  const isSubPage = !mainParentPages.includes(pathname);
 
   const handleMenuItemClick = (path: string) => {
     setMobileOpen(false);
@@ -117,8 +141,21 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           >
             <i className="ri-menu-line" style={{ fontSize: 24 }}></i>
           </IconButton>
+          {isSubPage && (
+            <IconButton 
+              onClick={() => router.back()}
+              sx={{
+                backgroundColor:'transparent',
+                '&:hover': {
+                  backgroundColor: 'transparent',
+                }
+              }}
+            >
+              <i className="ri-arrow-left-line" style={{ fontSize: 24 }}></i>
+            </IconButton>
+          )}
           <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {menuItems.find(item => item.path === pathname)?.text || 'Admin Panel'}
+            {AllAdminPages.find(item => item.path === pathname)?.text || 'Admin Panel'}
           </Typography>
         </Toolbar>
       </AppBar>

@@ -106,12 +106,61 @@ export default function SubscriptionPage() {
   const [isAlreadySubscribed, setIsAlreadySubscribed] = useState(false);
   const [checkingSubscription, setCheckingSubscription] = useState(false);
   const [subscriptionCompleted, setSubscriptionCompleted] = useState(false);
+  
+  // Validation error states
+  const [nameError, setNameError] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [locationError, setLocationError] = useState('');
+  const [sectorError, setSectorError] = useState('');
+  
+  // Validation success states
+  const [nameValid, setNameValid] = useState(false);
+  const [emailValid, setEmailValid] = useState(false);
+  
+  // User account check state
+  const [hasAccount, setHasAccount] = useState(false);
+  
+  // Track if this is a new subscription
+  const [isNewSubscription, setIsNewSubscription] = useState(false);
+  
   const { showToast } = useToast();
   
   const locationInputRef = useRef<HTMLInputElement>(null);
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   
   const googleMapApiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
+
+  // Email validation function
+  const isValidEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Check if user has an account
+  const checkUserAccount = async (email: string) => {
+    if (!email || !isValidEmail(email)) return;
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL || 'https://tourprism-api.onrender.com'}/auth/check-account`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setHasAccount(data.exists);
+        console.log('Account check result:', data.exists, 'for email:', email);
+      } else {
+        setHasAccount(false);
+      }
+    } catch (error) {
+      console.error('Error checking user account:', error);
+      setHasAccount(false);
+    }
+  };
 
   const initializeAutocomplete = () => {
     if (!locationInputRef.current || !window.google || !window.google.maps) return;
@@ -177,7 +226,17 @@ export default function SubscriptionPage() {
         setCheckingSubscription(true);
         try {
           const status = await checkSubscriberStatus(email);
-          setIsAlreadySubscribed(status.exists && status.isActive);
+          console.log('Subscription status:', status, 'for email:', email);
+          
+          // Only set as already subscribed if both exists AND isActive are true
+          const alreadySubscribed = status.exists && status.isActive;
+          console.log('Setting isAlreadySubscribed to:', alreadySubscribed);
+          setIsAlreadySubscribed(alreadySubscribed);
+          
+          // Also check if user has an account
+          if (isValidEmail(email)) {
+            await checkUserAccount(email);
+          }
         } catch (error) {
           console.error('Error checking subscription status:', error);
           setIsAlreadySubscribed(false);
@@ -186,6 +245,7 @@ export default function SubscriptionPage() {
         }
       } else {
         setIsAlreadySubscribed(false);
+        setHasAccount(false);
       }
     };
 
@@ -197,44 +257,60 @@ export default function SubscriptionPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     
+    // Reset all errors
+    setNameError('');
+    setEmailError('');
+    setLocationError('');
+    setSectorError('');
+    
+    let hasErrors = false;
+    
     if (isAlreadySubscribed) {
       showToast("You're already subscribed to our weekly forecasts!", "success");
       return;
     }
     
-    if (!name) {
-      showToast("Please enter your name", "error");
-      return;
+    if (!name.trim()) {
+      setNameError('Please enter your name');
+      hasErrors = true;
     }
     
-    if (!email) {
-      showToast("Please enter your email", "error");
-      return;
+    if (!email.trim()) {
+      setEmailError('Please enter your email');
+      hasErrors = true;
+    } else if (!isValidEmail(email)) {
+      setEmailError('Please enter a valid email address');
+      hasErrors = true;
     }
     
     if (!location && !showLocationInput) {
-      showToast("Please select a location", "error");
-      return;
+      setLocationError('Please specify your location');
+      hasErrors = true;
     }
     
     if (showLocationInput && !customLocation.trim()) {
-      showToast("Please enter your location", "error");
-      return;
+      setLocationError('Please specify your location');
+      hasErrors = true;
     }
     
     if (!sector) {
-      showToast("Please select your sector", "error");
-      return;
+      setSectorError('Please specify your sector');
+      hasErrors = true;
     }
     
     if (showSectorInput && !customSector.trim()) {
-      showToast("Please enter your sector", "error");
+      setSectorError('Please specify your sector');
+      hasErrors = true;
+    }
+    
+    if (hasErrors) {
       return;
     }
     
     setLoading(true);
     
     try {
+      console.log('Submitting subscription for:', email);
       await createSubscriber({
         name,
         email,
@@ -246,11 +322,18 @@ export default function SubscriptionPage() {
         }] : [],
         sector: sector === 'Other' ? customSector : sector,
       });
+      
+      console.log('Subscription successful for:', email);
       setSuccess(true);
       setSubscriptionCompleted(true);
-      setIsAlreadySubscribed(true);
+      setIsNewSubscription(true); // Mark this as a new subscription
+      
+      // Re-check account status after successful subscription
+      console.log('Re-checking account status for:', email);
+      await checkUserAccount(email);
+      
     } catch (err: unknown) {
-      console.error(err);
+      console.error('Subscription error:', err);
       showToast('Subscription failed. Please try again.', "error");
     } finally {
       setLoading(false);
@@ -258,6 +341,7 @@ export default function SubscriptionPage() {
   };
 
   const handleLocationSelect = (locationCity: string) => {
+    setLocationError(''); // Clear error when user makes a selection
     if (locationCity === 'Other') {
       setShowLocationInput(true);
       setLocation(null);
@@ -273,6 +357,7 @@ export default function SubscriptionPage() {
   };
 
   const handleSectorSelect = (selectedSector: string) => {
+    setSectorError(''); // Clear error when user makes a selection
     if (selectedSector === 'Other') {
       setShowSectorInput(true);
       setSector('Other');
@@ -286,10 +371,38 @@ export default function SubscriptionPage() {
 
   const handleCustomLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomLocation(e.target.value);
+    setLocationError(''); // Clear error when user types
   };
 
   const handleCustomSectorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomSector(e.target.value);
+    setSectorError(''); // Clear error when user types
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    setNameError(''); // Clear error when user types
+    
+    // Validate name (at least 2 characters)
+    if (value.trim().length >= 2) {
+      setNameValid(true);
+    } else {
+      setNameValid(false);
+    }
+  };
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailError(''); // Clear error when user types
+    
+    // Validate email format
+    if (value.trim() && isValidEmail(value)) {
+      setEmailValid(true);
+    } else {
+      setEmailValid(false);
+    }
   };
 
   return (
@@ -323,59 +436,90 @@ export default function SubscriptionPage() {
               margin="normal"
               required
               fullWidth
-              placeholder="Name"
+              placeholder={nameError || "Name"}
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
+              error={!!nameError}
               sx={{ 
                 mb: 0,
                 '& .MuiInputBase-input::placeholder': {
-                  color: '#222',
+                  color: nameError ? '#d32f2f' : '#222',
                   opacity: 1
                 }
               }}
               InputProps={{
-                sx: inputStyles
+                sx: {
+                  ...inputStyles,
+                  ...(nameError && {
+                    borderColor: '#d32f2f',
+                    '&:hover': {
+                      borderColor: '#d32f2f'
+                    }
+                  })
+                },
+                endAdornment: nameValid ? (
+                  <CheckCircleIcon sx={{ color: 'green', fontSize: 20 }} />
+                ) : null
               }}
             />
             <TextField
               margin="normal"
               required
               fullWidth
-              placeholder="Email"
+              placeholder={emailError || "Email"}
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={handleEmailChange}
+              error={!!emailError}
               sx={{ 
                 mb: 0,
                 '& .MuiInputBase-input::placeholder': {
-                  color: '#222',
+                  color: emailError ? '#d32f2f' : '#222',
                   opacity: 1
                 }
               }}
               InputProps={{
-                sx: inputStyles,
+                sx: {
+                  ...inputStyles,
+                  ...(emailError && {
+                    borderColor: '#d32f2f',
+                    '&:hover': {
+                      borderColor: '#d32f2f'
+                    }
+                  })
+                },
                 endAdornment: checkingSubscription ? (
                   <CircularProgress size={20} sx={{ color: '#056CF2' }} />
                 ) : isAlreadySubscribed ? (
+                  <CheckCircleIcon sx={{ color: 'green', fontSize: 20 }} />
+                ) : emailValid ? (
                   <CheckCircleIcon sx={{ color: 'green', fontSize: 20 }} />
                 ) : null
               }}
             />
             
             {/* Location dropdown */}
-            <FormControl fullWidth margin="normal" sx={{ mb: 0 }}>
+            <FormControl fullWidth margin="normal" sx={{ mb: 0 }} error={!!locationError}>
               <Select
                 displayEmpty
                 value={location?.city || ''}
                 onChange={(e) => handleLocationSelect(e.target.value)}
                 renderValue={(selected) => {
                   if (!selected) {
-                    return <Typography sx={{ color: '#222' }}>Select location</Typography>;
+                    return <Typography sx={{ color: locationError ? '#d32f2f' : '#222' }}>
+                      {locationError || "Select location"}
+                    </Typography>;
                   }
                   return selected;
                 }}
                 sx={{
-                  ...inputStyles
+                  ...inputStyles,
+                  ...(locationError && {
+                    borderColor: '#d32f2f',
+                    '&:hover': {
+                      borderColor: '#d32f2f'
+                    }
+                  })
                 }}
                 MenuProps={menuProps}
               >
@@ -408,36 +552,53 @@ export default function SubscriptionPage() {
                 margin="normal"
                 required
                 fullWidth
-                placeholder="Enter your location"
+                placeholder={locationError || "Enter your location"}
                 value={customLocation}
                 onChange={handleCustomLocationChange}
                 inputRef={locationInputRef}
+                error={!!locationError}
                 sx={{ 
                   mb: 0,
                   '& .MuiInputBase-input::placeholder': {
-                    color: '#222',
+                    color: locationError ? '#d32f2f' : '#222',
                     opacity: 1
                   }
                 }}
                 InputProps={{
-                  sx: inputStyles
+                  sx: {
+                    ...inputStyles,
+                    ...(locationError && {
+                      borderColor: '#d32f2f',
+                      '&:hover': {
+                        borderColor: '#d32f2f'
+                      }
+                    })
+                  }
                 }}
               />
             )}
             
-            <FormControl fullWidth margin="normal" sx={{ mb: 0 }}>
+            <FormControl fullWidth margin="normal" sx={{ mb: 0 }} error={!!sectorError}>
               <Select
                 displayEmpty
                 value={sector}
                 onChange={(e) => handleSectorSelect(e.target.value as string)}
                 renderValue={(selected) => {
                   if (!selected) {
-                    return <Typography sx={{ color: '#222' }}>Select sector</Typography>;
+                    return <Typography sx={{ color: sectorError ? '#d32f2f' : '#222' }}>
+                      {sectorError || "Select sector"}
+                    </Typography>;
                   }
                   return selected;
                 }}
                 sx={{
-                  ...inputStyles
+                  ...inputStyles,
+                  ...(sectorError && {
+                    borderColor: '#d32f2f',
+                    '&:hover': {
+                      borderColor: '#d32f2f'
+                    }
+                  })
                 }}
                 MenuProps={menuProps}
               >
@@ -468,18 +629,27 @@ export default function SubscriptionPage() {
                 margin="normal"
                 required
                 fullWidth
-                placeholder="Enter your sector"
+                placeholder={sectorError || "Enter your sector"}
                 value={customSector}
                 onChange={handleCustomSectorChange}
+                error={!!sectorError}
                 sx={{ 
                   mb: 0,
                   '& .MuiInputBase-input::placeholder': {
-                    color: '#222',
+                    color: sectorError ? '#d32f2f' : '#222',
                     opacity: 1
                   }
                 }}
                 InputProps={{
-                  sx: inputStyles
+                  sx: {
+                    ...inputStyles,
+                    ...(sectorError && {
+                      borderColor: '#d32f2f',
+                      '&:hover': {
+                        borderColor: '#d32f2f'
+                      }
+                    })
+                  }
                 }}
               />
             )}
@@ -491,7 +661,7 @@ export default function SubscriptionPage() {
               variant="contained"
               disabled={loading || isAlreadySubscribed || subscriptionCompleted}
               sx={{
-                mt: 2,
+                mt: 4,
                 mb: 2,
                 borderRadius: 2,
                 py: 1.2,
@@ -508,7 +678,7 @@ export default function SubscriptionPage() {
                 '&:disabled': {
                   bgcolor: '#056CF2',
                   color: 'white',
-                  cursor: 'https://i.sstatic.net/BdK0K.png'
+                  cursor: 'not-allowed'
                 }
               }}
             >
@@ -546,17 +716,54 @@ export default function SubscriptionPage() {
               </Typography>
             )}
             
-          {(success || isAlreadySubscribed || subscriptionCompleted) &&
-          <>
-            <Typography variant="body1" sx={{color:'black'}} paragraph>
-              Thank you! Your first disruption forecast will arrive on Monday at 10am GMT.
-            </Typography>
-            <Typography variant="body1" paragraph sx={{color:'black'}}>
-            Want to view the full list of disruptions affecting your business? <Link href="/signup" style={{ color: '#056CF2'}}>Create a Free Account</Link>
-            </Typography>
+          {/* Success messages based on subscription status and account existence */}
+          {(success || isAlreadySubscribed || subscriptionCompleted) && (
+            <>
+              {isAlreadySubscribed && !isNewSubscription ? (
+                // Already subscribed message (for users who were already subscribed before)
+                <>
+                  <Typography variant="body1" sx={{color:'black'}} paragraph>
+                    You&apos;re already subscribed to our weekly forecasts!
+                  </Typography>
+                  <Typography variant="body1" paragraph sx={{color:'black'}}>
+                    {hasAccount ? (
+                      <>
+                        Want to view the full list of disruptions affecting your business?{' '}
+                        <Link href="/feed" style={{ color: '#056CF2'}}>Go to Feed Page</Link>
+                      </>
+                    ) : (
+                      <>
+                        Want to view the full list of disruptions affecting your business?{' '}
+                        <Link href="/signup" style={{ color: '#056CF2'}}>Create a Free Account</Link>
+                      </>
+                    )}
+                  </Typography>
+                </>
+              ) : (
+                // New subscription success message (for new subscriptions)
+                <>
+                  <Typography variant="body1" sx={{color:'black'}} paragraph>
+                    Thank you! Your first disruption forecast will arrive on Monday at 10am GMT.
+                  </Typography>
+                  <Typography variant="body1" paragraph sx={{color:'black'}}>
+                    {hasAccount ? (
+                      <>
+                        Want to view the full list of disruptions affecting your business?{' '}
+                        <Link href="/feed" style={{ color: '#056CF2'}}>Go to Feed Page</Link>
+                      </>
+                    ) : (
+                      <>
+                        Want to view the full list of disruptions affecting your business?{' '}
+                        <Link href="/signup" style={{ color: '#056CF2'}}>Create a Free Account</Link>
+                      </>
+                    )}
+                  </Typography>
+                </>
+              )}
             </>
-          }
+          )}
         </Box>
+        
       </Container>
     </Layout>
   );
