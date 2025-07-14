@@ -14,17 +14,12 @@ import {
   Button,
   Stack,
   FormControl,
-  InputLabel,
   Select,
   MenuItem,
-  TextField,
   Collapse,
   IconButton,
-  Divider,
-  SelectChangeEvent,
 } from '@mui/material';
-import {  FilterList as FilterIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon } from '@mui/icons-material';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import {  FilterList as FilterIcon, ExpandMore as ExpandMoreIcon, ExpandLess as ExpandLessIcon, Clear as ClearIcon } from '@mui/icons-material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AdminLayout from '@/components/AdminLayout';
@@ -56,9 +51,7 @@ export default function UsersManagement() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
-  const [filters, setFilters] = useState<UserFiltersType>({});
-  const [sortBy, setSortBy] = useState<string>('createdAt');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: '',
@@ -75,7 +68,39 @@ export default function UsersManagement() {
   const [lastLoginEndDate, setLastLoginEndDate] = useState<Date | null>(null);
   const [location, setLocation] = useState<string>('');
   const [businessType, setBusinessType] = useState<string>('');
+  const [sortFilter, setSortFilter] = useState<string>('createdAt:desc');
   const [filtersExpanded, setFiltersExpanded] = useState<boolean>(!isMobile);
+
+  // Sort options
+  const sortOptions = [
+    { value: 'createdAt:desc', label: 'Most Recent' },
+    { value: 'createdAt:asc', label: 'Oldest First' },
+    { value: 'firstName:asc', label: 'Alphabetical (A-Z)' },
+    { value: 'firstName:desc', label: 'Alphabetical (Z-A)' },
+    { value: 'lastLogin:desc', label: 'Last Login' }
+  ];
+
+  // Business type options
+  const businessTypeOptions = [
+    "Airline",
+  "Attraction",
+  "Car Rental",
+  "Cruise Line",
+  "DMO",
+  "Event Manager",
+  "Hotel",
+  "OTA",
+  "Tour Guide",
+  "Tour Operator",
+  "Travel Agency",
+  "Travel Media",
+  "Other"
+  ];
+
+  // Location options
+  const locationOptions = [
+    "Edinburgh", "Glasgow", "Stirling", "Manchester", "London"
+  ];
 
   // Modal states
   const [profileModalOpen, setProfileModalOpen] = useState<boolean>(false);
@@ -105,11 +130,20 @@ export default function UsersManagement() {
       const params: UserFiltersType = {
         page: page + 1,
         limit: rowsPerPage,
-        sortBy,
-        sortOrder,
-        ...filters
+        sortBy: sortFilter.split(':')[0],
+        sortOrder: sortFilter.split(':')[1] as 'asc' | 'desc' || 'desc',
       };
-
+      if (signupStartDate && signupEndDate) {
+        params.startDate = signupStartDate.toISOString();
+        params.endDate = signupEndDate.toISOString();
+      }
+      if (lastLoginStartDate && lastLoginEndDate) {
+        params.lastLoginStart = lastLoginStartDate.toISOString();
+        params.lastLoginEnd = lastLoginEndDate.toISOString();
+      }
+      if (location) params.location = location;
+      if (businessType) params.businessType = businessType;
+      
       const { users: fetchedUsers, totalCount } = await getAllUsers(params);
       setUsers(fetchedUsers);
       setTotalCount(totalCount);
@@ -138,7 +172,7 @@ export default function UsersManagement() {
     } finally {
       setLoading(false);
     }
-  }, [page, rowsPerPage, sortBy, sortOrder, filters]);
+  }, [page, rowsPerPage, sortFilter, signupStartDate, signupEndDate, lastLoginStartDate, lastLoginEndDate, location, businessType]);
 
   useEffect(() => {
     fetchUsers();
@@ -153,47 +187,33 @@ export default function UsersManagement() {
     setPage(0);
   };
 
-  const handleSortByChange = (event: SelectChangeEvent<string>) => {
-    const value = event.target.value as string;
-    setSortBy(value);
+  // Filter change handlers
+  const handleFilterChange = (key: string, value: unknown) => {
     setPage(0);
+    switch (key) {
+      case 'signupStartDate': setSignupStartDate(value as Date | null); break;
+      case 'signupEndDate': setSignupEndDate(value as Date | null); break;
+      case 'lastLoginStartDate': setLastLoginStartDate(value as Date | null); break;
+      case 'lastLoginEndDate': setLastLoginEndDate(value as Date | null); break;
+      case 'location': setLocation(value as string); break;
+      case 'businessType': setBusinessType(value as string); break;
+      case 'sort': setSortFilter(value as string); break;
+      default: break;
+    }
   };
 
-  const handleSortOrderChange = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    setPage(0);
-  };
-
-  const handleFilterChange = () => {
-    const newFilters: UserFiltersType = {};
-    
-    if (signupStartDate) {
-      newFilters.startDate = signupStartDate.toISOString().split('T')[0];
-    }
-    if (signupEndDate) {
-      newFilters.endDate = signupEndDate.toISOString().split('T')[0];
-    }
-    if (location) {
-      newFilters.company = location;
-    }
-    if (businessType) {
-      newFilters.role = businessType;
-    }
-    
-    setFilters(newFilters);
-    setPage(0);
-  };
-
-  const handleResetFilters = () => {
+  const handleClearFilters = () => {
     setSignupStartDate(null);
     setSignupEndDate(null);
     setLastLoginStartDate(null);
     setLastLoginEndDate(null);
     setLocation('');
     setBusinessType('');
-    setFilters({});
+    setSortFilter(sortOptions[0].value);
     setPage(0);
   };
+
+
 
   const handleCloseSnackbar = () => {
     setSnackbar({ ...snackbar, open: false });
@@ -398,7 +418,7 @@ export default function UsersManagement() {
   return (
     <AdminLayout>
       <LocalizationProvider dateAdapter={AdapterDateFns}>
-        {/* Filters Section */}
+        {/* Collapsible Filter Bar */}
         <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }} elevation={0}>
           {/* Filter Header */}
           <Box 
@@ -437,165 +457,64 @@ export default function UsersManagement() {
                   alignItems={{ xs: 'stretch', sm: 'center' }}
                 >
                   {/* Sort By */}
-                  <FormControl sx={{ minWidth: { xs: '100%', sm: '180px' } }} size="small">
-                    <InputLabel>Sort by</InputLabel>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180, md: 280 }, borderRadius: 3 }}>
                     <Select
-                      value={sortBy}
-                      label="Sort by"
-                      onChange={handleSortByChange}
+                      value={sortFilter}
+                      displayEmpty
+                      onChange={e => handleFilterChange('sort', e.target.value)}
+                      sx={{ borderRadius: 3 }}
                     >
-                      <MenuItem value="createdAt">Signup Date</MenuItem>
-                      <MenuItem value="lastLogin">Last Login</MenuItem>
-                      <MenuItem value="firstName">Name</MenuItem>
-                      <MenuItem value="email">Email</MenuItem>
+                      {sortOptions.map(opt => (
+                        <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
-
-                  {/* Sort Order */}
-                  <Button 
-                    variant="outlined" 
-                    onClick={handleSortOrderChange}
-                    size="small"
-                    sx={{ 
-                      minWidth: '50px', 
-                      px: 2,
-                      height: '40px',
-                      borderColor: 'primary.main',
-                      color: 'primary.main',
-                      '&:hover': {
-                        backgroundColor: 'primary.main',
-                        color: 'white'
-                      }
-                    }}
-                  >
-                    {sortOrder === 'asc' ? '↑' : '↓'}
-                  </Button>
-
                   {/* Location */}
-                  <TextField
-                    sx={{ flex: 1, minWidth: { xs: '100%', sm: '200px' } }}
-                    placeholder="Search by location..."
-                    variant="outlined"
-                    size="small"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                  />
-
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160, md: 280 }, borderRadius: 3 }}>
+                    <Select
+                      value={location}
+                      displayEmpty
+                      onChange={e => handleFilterChange('location', e.target.value)}
+                      renderValue={selected => selected || 'Location'}
+                      sx={{ borderRadius: 3 }}
+                      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                    >
+                      <MenuItem value=""><em>All Locations</em></MenuItem>
+                      {locationOptions.map(loc => (
+                        <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
                   {/* Business Type */}
-                  <FormControl sx={{ minWidth: { xs: '100%', sm: '200px' } }} size="small">
-                    <InputLabel>Business Type</InputLabel>
+                  <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160, md: 280 }, borderRadius: 3 }}>
                     <Select
                       value={businessType}
-                      label="Business Type"
-                      onChange={(e) => setBusinessType(e.target.value)}
+                      displayEmpty
+                      onChange={e => handleFilterChange('businessType', e.target.value)}
+                      renderValue={selected => selected || 'Business Type'}
+                      sx={{ borderRadius: 3 }}
+                      MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
                     >
-                      <MenuItem value="">All Types</MenuItem>
-                      <MenuItem value="Hotel">Hotel</MenuItem>
-                      <MenuItem value="Tour Operator">Tour Operator</MenuItem>
-                      <MenuItem value="Restaurant">Restaurant</MenuItem>
-                      <MenuItem value="Transportation">Transportation</MenuItem>
-                      <MenuItem value="Retail">Retail</MenuItem>
-                      <MenuItem value="Other">Other</MenuItem>
+                      <MenuItem value=""><em>All Types</em></MenuItem>
+                      {businessTypeOptions.map(type => (
+                        <MenuItem key={type} value={type}>{type}</MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
-                </Stack>
-
-                <Divider />
-
-                {/* Date Range Filters */}
-                <Stack spacing={2}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.secondary' }}>
-                    Date Filters
-                  </Typography>
-                  
-                  <Stack 
-                    direction={{ xs: 'column', lg: 'row' }} 
-                    spacing={2}
-                    alignItems={{ xs: 'stretch', lg: 'center' }}
+                  {/* Clear Filters Button */}
+                  <Button
+                    variant="outlined"
+                    color="secondary"
+                    size="small"
+                    startIcon={<ClearIcon />}
+                    onClick={handleClearFilters}
+                    sx={{ 
+                      minWidth: { xs: '100%', sm: 120 }, 
+                      borderRadius: 3,
+                      height: { xs: 40, sm: 32, md: 37 }
+                    }}
                   >
-                    {/* Signup Date Range */}
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
-                      <Typography variant="body2" sx={{ minWidth: '80px', fontWeight: 500 }}>Signup:</Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flex: 1 }}>
-                        <DatePicker
-                          value={signupStartDate}
-                          onChange={setSignupStartDate}
-                          slotProps={{ 
-                            textField: { 
-                              size: 'small',
-                              placeholder: "From date",
-                              sx: { minWidth: '150px' }
-                            } 
-                          }}
-                        />
-                        <DatePicker
-                          value={signupEndDate}
-                          onChange={setSignupEndDate}
-                          slotProps={{ 
-                            textField: { 
-                              size: 'small',
-                              placeholder: "To date",
-                              sx: { minWidth: '150px' }
-                            } 
-                          }}
-                        />
-                      </Stack>
-                    </Box>
-
-                    {/* Last Login Date Range */}
-                    <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 1, alignItems: { xs: 'stretch', sm: 'center' } }}>
-                      <Typography variant="body2" sx={{ minWidth: '80px', fontWeight: 500 }}>Login:</Typography>
-                      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} sx={{ flex: 1 }}>
-                        <DatePicker
-                          value={lastLoginStartDate}
-                          onChange={setLastLoginStartDate}
-                          slotProps={{ 
-                            textField: { 
-                              size: 'small',
-                              placeholder: "From date",
-                              sx: { minWidth: '150px' }
-                            } 
-                          }}
-                        />
-                        <DatePicker
-                          value={lastLoginEndDate}
-                          onChange={setLastLoginEndDate}
-                          slotProps={{ 
-                            textField: { 
-                              size: 'small',
-                              placeholder: "To date",
-                              sx: { minWidth: '150px' }
-                            } 
-                          }}
-                        />
-                      </Stack>
-                    </Box>
-                  </Stack>
-                </Stack>
-
-                {/* Action Buttons */}
-                <Stack 
-                  direction={{ xs: 'column', sm: 'row' }} 
-                  spacing={2}
-                  justifyContent="flex-end"
-                  sx={{ pt: 1 }}
-                >
-                  <Button 
-                    variant="outlined" 
-                    color="secondary" 
-                    onClick={handleResetFilters}
-                    size="medium"
-                    sx={{ minWidth: '100px' }}
-                  >
-                    Reset
-                  </Button>
-                  <Button 
-                    variant="contained" 
-                    onClick={handleFilterChange}
-                    size="medium"
-                    sx={{ minWidth: '100px' }}
-                  >
-                    Apply Filters
+                    Clear
                   </Button>
                 </Stack>
               </Stack>

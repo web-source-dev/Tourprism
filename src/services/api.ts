@@ -578,6 +578,8 @@ export interface UserFilters extends Record<string, unknown> {
   role?: string;
   status?: string;
   company?: string;
+  location?: string;
+  businessType?: string;
   search?: string;
   startDate?: string;
   endDate?: string;

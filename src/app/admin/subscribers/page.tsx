@@ -20,6 +20,10 @@ import {
   Card,
   CardContent,
   Avatar,
+  useMediaQuery,
+  useTheme,
+  Collapse,
+  Stack,
 } from '@mui/material';
 import {
   MoreVert as MoreVertIcon,
@@ -29,6 +33,11 @@ import {
   Email as EmailIcon,
   CalendarToday as CalendarIcon,
   AccessTime as AccessTimeIcon,
+  FilterList as FilterIcon,
+  ExpandMore as ExpandMoreIcon,
+  ExpandLess as ExpandLessIcon,
+  LocationOn as LocationOnIcon,
+  Business as BusinessIcon,
 } from '@mui/icons-material';
 import AdminLayout from '@/components/AdminLayout';
 import {
@@ -92,8 +101,18 @@ export default function SubscribersManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('');
   const [sortFilter, setSortFilter] = useState<string>(sortOptions[0].value);
 
+  // Collapsible filter states
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const [filtersExpanded, setFiltersExpanded] = useState<boolean>(!isMobile);
+
   // Permission check - only admin and manager can manage subscribers
   const canManageSubscribers = isAdmin;
+
+  // Update filters expanded state when screen size changes
+  useEffect(() => {
+    setFiltersExpanded(!isMobile);
+  }, [isMobile]);
 
   const fetchSubscribers = useCallback(async () => {
     setLoading(true);
@@ -276,6 +295,10 @@ export default function SubscribersManagement() {
     setPage(0);
   };
 
+  const toggleFilters = () => {
+    setFiltersExpanded(!filtersExpanded);
+  };
+
   return (
     <AdminLayout>
       {/* Add New Subscriber Button */}
@@ -358,96 +381,124 @@ export default function SubscribersManagement() {
         ) : null}
       </Box>
 
-      {/* Filter Bar */}
-      <Paper sx={{
-        display: 'flex',
-        flexDirection: { xs: 'column', sm: 'row' },
-        gap: { xs: 1.5, sm: 2 },
-        alignItems: { xs: 'stretch', sm: 'center' },
-        p: 2,
-        mb: 3,
-        borderRadius: 4,
-        boxShadow: 'none',
-        border: '1px solid #e0e0e0',
-        background: '#fafbfc',
-        overflowX: 'auto',
-      }}> 
-        {/* Sort By */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180 ,md:280}, borderRadius: 3 }}>
-          <Select
-            value={sortFilter}
-            displayEmpty
-            onChange={e => handleFilterChange('sort', e.target.value)}
-            sx={{ borderRadius: 3 }}
-          >
-            {sortOptions.map(opt => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {/* Location */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 ,md:280}, borderRadius: 3 }}>
-          <Select
-            value={locationFilter}
-            displayEmpty
-            onChange={e => handleFilterChange('location', e.target.value)}
-            renderValue={selected => selected || 'Location'}
-            sx={{ borderRadius: 3 }}
-            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-          >
-            <MenuItem value=""><em>All Locations</em></MenuItem>
-            {locationOptions.map(loc => (
-              <MenuItem key={loc} value={loc}>{loc}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {/* Sector */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160 ,md:280}, borderRadius: 3 }}>
-          <Select
-            value={sectorFilter}
-            displayEmpty
-            onChange={e => handleFilterChange('sector', e.target.value)}
-            renderValue={selected => selected || 'Sector'}
-            sx={{ borderRadius: 3 }}
-            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-          >
-            <MenuItem value=""><em>All Sectors</em></MenuItem>
-            {sectorOptions.map(sector => (
-              <MenuItem key={sector} value={sector}>{sector}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {/* Status */}
-        <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140 ,md:280}, borderRadius: 3 }}>
-          <Select
-            value={statusFilter}
-            displayEmpty
-            onChange={e => handleFilterChange('status', e.target.value)}
-            renderValue={selected => selected ? (selected === 'active' ? 'Subscribed' : 'Unsubscribed') : 'Status'}
-            sx={{ borderRadius: 3 }}
-            MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
-          >
-            <MenuItem value=""><em>All Statuses</em></MenuItem>
-            {statusOptions.map(opt => (
-              <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        {/* Clear Filters Button */}
-        <Button
-          variant="outlined"
-          color="secondary"
-          size="small"
-          startIcon={<ClearIcon />}
-          onClick={handleClearFilters}
+      {/* Collapsible Filter Bar */}
+      <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }} elevation={0}>
+        {/* Filter Header */}
+        <Box 
           sx={{ 
-            minWidth: { xs: '100%', sm: 120 }, 
-            borderRadius: 3,
-            height: { xs: 40, sm: 32 ,md:37}
+            p: 2, 
+            backgroundColor: '#f8f9fa',
+            borderBottom: '1px solid #e0e0e0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            cursor: isMobile ? 'pointer' : 'default'
           }}
+          onClick={isMobile ? toggleFilters : undefined}
         >
-          Clear
-        </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <FilterIcon sx={{ color: 'primary.main' }} />
+            <Typography variant="h6" sx={{ fontWeight: 600 }}>
+              Filters
+            </Typography>
+          </Box>
+          {isMobile && (
+            <IconButton size="small">
+              {filtersExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+            </IconButton>
+          )}
+        </Box>
+
+        {/* Filter Content */}
+        <Collapse in={filtersExpanded}>
+          <Box sx={{ p: 3 }}>
+            <Stack spacing={3}>
+              {/* Quick Filters Row */}
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                spacing={2}
+                alignItems={{ xs: 'stretch', sm: 'center' }}
+              >
+                {/* Sort By */}
+                <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 180, md: 280 }, borderRadius: 3 }}>
+                  <Select
+                    value={sortFilter}
+                    displayEmpty
+                    onChange={e => handleFilterChange('sort', e.target.value)}
+                    sx={{ borderRadius: 3 }}
+                  >
+                    {sortOptions.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {/* Location */}
+                <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160, md: 280 }, borderRadius: 3 }}>
+                  <Select
+                    value={locationFilter}
+                    displayEmpty
+                    onChange={e => handleFilterChange('location', e.target.value)}
+                    renderValue={selected => selected || 'Location'}
+                    sx={{ borderRadius: 3 }}
+                    MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                  >
+                    <MenuItem value=""><em>All Locations</em></MenuItem>
+                    {locationOptions.map(loc => (
+                      <MenuItem key={loc} value={loc}>{loc}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {/* Sector */}
+                <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 160, md: 280 }, borderRadius: 3 }}>
+                  <Select
+                    value={sectorFilter}
+                    displayEmpty
+                    onChange={e => handleFilterChange('sector', e.target.value)}
+                    renderValue={selected => selected || 'Sector'}
+                    sx={{ borderRadius: 3 }}
+                    MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                  >
+                    <MenuItem value=""><em>All Sectors</em></MenuItem>
+                    {sectorOptions.map(sector => (
+                      <MenuItem key={sector} value={sector}>{sector}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {/* Status */}
+                <FormControl size="small" sx={{ minWidth: { xs: '100%', sm: 140, md: 280 }, borderRadius: 3 }}>
+                  <Select
+                    value={statusFilter}
+                    displayEmpty
+                    onChange={e => handleFilterChange('status', e.target.value)}
+                    renderValue={selected => selected ? (selected === 'active' ? 'Subscribed' : 'Unsubscribed') : 'Status'}
+                    sx={{ borderRadius: 3 }}
+                    MenuProps={{ PaperProps: { style: { maxHeight: 300 } } }}
+                  >
+                    <MenuItem value=""><em>All Statuses</em></MenuItem>
+                    {statusOptions.map(opt => (
+                      <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+                {/* Clear Filters Button */}
+                <Button
+                  variant="outlined"
+                  color="secondary"
+                  size="small"
+                  startIcon={<ClearIcon />}
+                  onClick={handleClearFilters}
+                  sx={{ 
+                    minWidth: { xs: '100%', sm: 120 }, 
+                    borderRadius: 3,
+                    height: { xs: 40, sm: 32, md: 37 }
+                  }}
+                >
+                  Clear
+                </Button>
+              </Stack>
+            </Stack>
+          </Box>
+        </Collapse>
       </Paper>
 
       {/* Subscribers Card Grid */}
@@ -487,20 +538,19 @@ export default function SubscribersManagement() {
                   overflow: 'visible' 
                 }}>
                   <CardContent sx={{ pb: 1.5, pt: 2, px: 1 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'flex-start', mb: 1, position: 'relative' }}>
                       <Avatar sx={{ 
                         bgcolor: subscriber.isActive ? '#e8f5e9' : '#ffebee', 
                         color: subscriber.isActive ? '#2e7d32' : '#c62828', 
                         width: { xs: 40, sm: 44 }, 
                         height: { xs: 40, sm: 44 }, 
-                        mr: 2 
+                        mr: 1 
                       }}>
                         {subscriber.name ? subscriber.name[0] : subscriber.email[0].toUpperCase()}
                       </Avatar>
                       <Box sx={{ flexGrow: 1, minWidth: 0 }}>
                         <Typography variant="h6" sx={{ 
                           fontWeight: 'bold', 
-                          mb: 0.5,
                           fontSize: { xs: '1rem', sm: '1.25rem' },
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
@@ -512,38 +562,61 @@ export default function SubscribersManagement() {
                           {subscriber.email}
                         </Typography>
                       </Box>
-                      {canManageSubscribers && (
-                        <IconButton 
-                          onClick={(event) => handleOpenMenu(event, subscriber)} 
+                      <Box sx={{position: 'relative' }}>
+                        {/* Subscription Status - Top Right */}
+                        <Chip
+                          label={subscriber.isActive ? 'Subscribed' : 'Unsubscribed'}
                           size="small"
-                          sx={{ minWidth: 40, minHeight: 40 }}
-                        >
-                          <MoreVertIcon />
-                        </IconButton>
-                      )}
+                          sx={{
+                            bgcolor: getStatusColor(subscriber.isActive).bg,
+                            color: getStatusColor(subscriber.isActive).color,
+                            fontWeight: 'medium',
+                            textTransform: 'capitalize',
+                            borderRadius: 2,
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            minWidth: 'fit-content',
+                            position: 'absolute',
+                            top: 0,
+                            right: 0
+                          }}
+                        />
+                        {canManageSubscribers && (
+                          <IconButton 
+                            onClick={(event) => handleOpenMenu(event, subscriber)} 
+                            size="small"
+                            sx={{ minWidth: 40, minHeight: 40 }}
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              bottom: -180,
+                            }}
+                          >
+                            <MoreVertIcon />
+                          </IconButton>
+                        )}
+                      </Box>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                      <Chip
-                        label={subscriber.isActive ? 'Subscribed' : 'Unsubscribed'}
-                        size="small"
-                        sx={{
-                          bgcolor: getStatusColor(subscriber.isActive).bg,
-                          color: getStatusColor(subscriber.isActive).color,
-                          fontWeight: 'medium',
-                          textTransform: 'capitalize',
-                          borderRadius: 2,
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                        }}
-                      />
-                      <Chip
-                        label={subscriber.sector || 'Not specified'}
-                        size="small"
-                        variant="outlined"
-                        sx={{ 
-                          borderRadius: 2,
-                          fontSize: { xs: '0.75rem', sm: '0.875rem' }
-                        }}
-                      />
+                    <LocationOnIcon fontSize="small" color="action" />
+                      <Typography variant="body2" sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {subscriber.location ? (Array.isArray(subscriber.location) ? subscriber.location.map(loc => loc.name).join(', ') : subscriber.location) : 'Location not specified'}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
+                    <BusinessIcon fontSize="small" color="action" />
+                      <Typography variant="body2" sx={{ 
+                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        {subscriber.sector ? (Array.isArray(subscriber.sector) ? subscriber.sector.map(loc => loc.name).join(', ') : subscriber.sector) : 'Sector not specified'}
+                      </Typography>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <CalendarIcon fontSize="small" color="action" />
@@ -565,7 +638,7 @@ export default function SubscribersManagement() {
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <AccessTimeIcon fontSize="small" color="action" />
                       <Typography variant="body2" sx={{ fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>
-                        Last: {formatDate(subscriber.lastWeeklyForecastReceived)}
+                        Last Forecast: {formatDate(subscriber.lastWeeklyForecastReceived)}
                       </Typography>
                     </Box>
                   </CardContent>

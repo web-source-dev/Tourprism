@@ -1,21 +1,21 @@
 'use client';
 
 import React, { useState } from 'react';
-import { 
-  Card, 
-  CardContent, 
-  Typography, 
-  Box, 
-  Chip, 
-  IconButton, 
-  Menu, 
-  MenuItem, 
+import {
+  Card,
+  CardContent,
+  Typography,
+  Box,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
   Avatar,
   Divider,
   Button,
   Stack,
 } from '@mui/material';
-import { 
+import {
   MoreVert as MoreVertIcon,
   Block as BlockIcon,
   Delete as DeleteIcon,
@@ -41,11 +41,11 @@ interface UserCardProps {
   activityLogs?: { action: string; timestamp: string; details?: string }[];
 }
 
-const UserCard: React.FC<UserCardProps> = ({ 
-  user, 
-  onViewProfile, 
-  onChangeRole, 
-  onRestrictUser, 
+const UserCard: React.FC<UserCardProps> = ({
+  user,
+  onViewProfile,
+  onChangeRole,
+  onRestrictUser,
   onDeleteUser,
   onViewActivity,
   onAddToSubscribers,
@@ -53,11 +53,11 @@ const UserCard: React.FC<UserCardProps> = ({
 }) => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  
+
   const handleClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
-  
+
   const handleClose = () => {
     setAnchorEl(null);
   };
@@ -65,10 +65,12 @@ const UserCard: React.FC<UserCardProps> = ({
   const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'Not recorded';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
 
@@ -106,19 +108,19 @@ const UserCard: React.FC<UserCardProps> = ({
 
   const getNameInitials = () => {
     let initials = '';
-    
+
     if (user.firstName) {
       initials += user.firstName[0];
     }
-    
+
     if (user.lastName) {
       initials += user.lastName[0];
     }
-    
+
     if (!initials && user.email) {
       initials = user.email[0].toUpperCase();
     }
-    
+
     return initials;
   };
 
@@ -193,26 +195,24 @@ const UserCard: React.FC<UserCardProps> = ({
   };
 
   return (
-    <Card 
-      elevation={1} 
-      sx={{ 
-        border: '1px solid #e0e0e0', 
+    <Card
+      elevation={1}
+      sx={{
+        border: '1px solid #e0e0e0',
         borderRadius: 2,
         transition: 'transform 0.2s, box-shadow 0.2s',
         '&:hover': {
           transform: 'translateY(-2px)',
           boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
         },
-        cursor: 'pointer'
       }}
-      onClick={() => onViewProfile(user)}
     >
       <CardContent sx={{ p: 3 }}>
         {/* Header with avatar, name, and menu */}
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Avatar 
-            sx={{ 
-              bgcolor: getRoleColor(user.role).bg, 
+        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, position: 'relative' }}>
+          <Avatar
+            sx={{
+              bgcolor: getRoleColor(user.role).bg,
               color: getRoleColor(user.role).color,
               width: 50,
               height: 50,
@@ -221,7 +221,7 @@ const UserCard: React.FC<UserCardProps> = ({
           >
             {getNameInitials()}
           </Avatar>
-          
+
           <Box sx={{ flexGrow: 1 }}>
             <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 0.5 }}>
               {getFullName()}
@@ -230,16 +230,21 @@ const UserCard: React.FC<UserCardProps> = ({
               {user.email}
             </Typography>
           </Box>
-          
-          <IconButton 
+
+          <IconButton
             onClick={(e) => {
               e.stopPropagation();
               handleClick(e);
             }}
+            sx={{
+              position: 'absolute',
+              right: -20,
+              top: -20
+            }}
           >
             <MoreVertIcon />
           </IconButton>
-          
+
           <Menu
             id="user-menu"
             anchorEl={anchorEl}
@@ -249,7 +254,7 @@ const UserCard: React.FC<UserCardProps> = ({
               'aria-labelledby': 'user-actions-button',
             }}
           >
-            <MenuItem 
+            <MenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onViewProfile(user);
@@ -259,7 +264,7 @@ const UserCard: React.FC<UserCardProps> = ({
               <PersonIcon fontSize="small" sx={{ mr: 1 }} />
               View Profile
             </MenuItem>
-            <MenuItem 
+            <MenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onViewActivity(user);
@@ -269,7 +274,7 @@ const UserCard: React.FC<UserCardProps> = ({
               <HistoryIcon fontSize="small" sx={{ mr: 1 }} />
               View Activity
             </MenuItem>
-            <MenuItem 
+            <MenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onChangeRole(user);
@@ -280,7 +285,7 @@ const UserCard: React.FC<UserCardProps> = ({
               Change Role
             </MenuItem>
             {!user.weeklyForecastSubscribed && (
-              <MenuItem 
+              <MenuItem
                 onClick={(e) => {
                   e.stopPropagation();
                   onAddToSubscribers(user);
@@ -292,7 +297,7 @@ const UserCard: React.FC<UserCardProps> = ({
               </MenuItem>
             )}
             <Divider />
-            <MenuItem 
+            <MenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onRestrictUser(user);
@@ -303,7 +308,7 @@ const UserCard: React.FC<UserCardProps> = ({
               <BlockIcon fontSize="small" sx={{ mr: 1 }} />
               {user.status === 'deleted' ? 'Restore User' : user.status === 'restricted' ? 'Enable User' : 'Restrict User'}
             </MenuItem>
-            <MenuItem 
+            <MenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 onDeleteUser(user);
@@ -316,35 +321,8 @@ const UserCard: React.FC<UserCardProps> = ({
             </MenuItem>
           </Menu>
         </Box>
-        
-        {/* Status and subscription badges */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 3, flexWrap: 'wrap' }}>
-          <Chip
-            label={user.status || 'Active'}
-            size="small"
-            sx={{
-              bgcolor: getStatusColor(user.status).bg,
-              color: getStatusColor(user.status).color,
-              fontWeight: 'medium',
-              textTransform: 'capitalize'
-            }}
-          />
-          <Chip
-            label={user.isPremium ? 'Pro' : 'Free'}
-            size="small"
-            color={user.isPremium ? 'primary' : 'default'}
-            variant="outlined"
-          />
-          {user.weeklyForecastSubscribed && (
-            <Chip
-              label="Forecast Subscriber"
-              size="small"
-              color="secondary"
-              variant="outlined"
-            />
-          )}
-        </Box>
-        
+
+
         {/* User details in a structured layout */}
         <Stack spacing={2}>
           {/* Location and Business Info */}
@@ -355,7 +333,7 @@ const UserCard: React.FC<UserCardProps> = ({
               {getLocation()}
             </Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <BusinessIcon color="primary" fontSize="small" />
             <Typography variant="body2" color="text.secondary">Business Type:</Typography>
@@ -363,7 +341,7 @@ const UserCard: React.FC<UserCardProps> = ({
               {getBusinessType()}
             </Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <BusinessIcon color="primary" fontSize="small" />
             <Typography variant="body2" color="text.secondary">Business Name:</Typography>
@@ -371,7 +349,7 @@ const UserCard: React.FC<UserCardProps> = ({
               {getBusinessName()}
             </Typography>
           </Box>
-          
+
           {/* Dates */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CalendarIcon color="primary" fontSize="small" />
@@ -380,7 +358,7 @@ const UserCard: React.FC<UserCardProps> = ({
               {formatDate(user.createdAt)}
             </Typography>
           </Box>
-          
+
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <AccessTimeIcon color="primary" fontSize="small" />
             <Typography variant="body2" color="text.secondary">Last Login:</Typography>
@@ -389,7 +367,34 @@ const UserCard: React.FC<UserCardProps> = ({
             </Typography>
           </Box>
         </Stack>
-        
+        {/* Status and subscription badges */}
+        <Box sx={{ display: 'flex', gap: 1, my: 3, flexWrap: 'wrap' }}>
+          <Chip
+            label={user.status || 'Active'}
+            size="small"
+            sx={{
+              bgcolor: getStatusColor(user.status).bg,
+              color: getStatusColor(user.status).color,
+              fontWeight: 'medium',
+              textTransform: 'capitalize',
+            }}
+          />
+          <Chip
+            label={user.isPremium ? 'Pro' : 'Free'}
+            size="small"
+            color={user.isPremium ? 'primary' : 'default'}
+            variant="outlined"
+          />
+          {user.weeklyForecastSubscribed && (
+            <Chip
+              label="Subscriber"
+              size="small"
+              color="secondary"
+              variant="outlined"
+            />
+          )}
+        </Box>
+
         {/* Recent Activity Section */}
         <Divider sx={{ my: 2 }} />
         <Box>
@@ -415,7 +420,7 @@ const UserCard: React.FC<UserCardProps> = ({
             </Box>
           )}
         </Box>
-        
+
         {/* Action buttons */}
         <Box sx={{ mt: 3, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1 }}>
           <Button
