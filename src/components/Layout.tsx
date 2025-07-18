@@ -134,7 +134,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
         <i className="ri-shield-user-fill text-xl"></i>
       ), path: '/security'
     },
-    { text: 'Archive', icon: '', path: '/archive' },
+
     
     { text: 'Logout', icon: '', path: '/' }
   ] : [
@@ -185,9 +185,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
     if (pathname.startsWith('/alerts-summary/')) {
       return menuItems.find(item => item.path === '/alerts-summary');
     }
-    if (pathname.startsWith('/archive/')) {
-      return menuItems.find(item => item.path === '/archive');
-    }
+
     if (pathname.startsWith('/feed/')) {
       return menuItems.find(item => item.path === '/feed');
     }
@@ -220,6 +218,13 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
           onLogout={handleLogoutClick}
         />
       )}
+              {pathname === '/' && (
+          <Box sx={{ 
+            width: '100%', 
+          }}>
+            <DisruptionBanner />
+          </Box>
+        )}
       <Box sx={{
         display: 'flex',
         bgcolor: isHomePage ? '#f5f5f5' : '#ffffff',
@@ -235,17 +240,7 @@ const Layout = ({ children, isFooter = true, onFilterOpen, isHeader = true }: La
           duration: theme.transitions.duration.enteringScreen,
         }),
       }}> 
-        {pathname === '/' && (
-          <Box sx={{ 
-            width: '92%', 
-            position: 'sticky', 
-            mx: 'auto',
-            top: 0, 
-            zIndex: 1000,
-          }}>
-            <DisruptionBanner />
-          </Box>
-        )}
+
         {/* Navbar Component */}
         <Navbar 
           isFeedPage={isFeedPage}

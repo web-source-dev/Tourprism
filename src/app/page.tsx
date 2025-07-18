@@ -206,8 +206,6 @@ export default function Home() {
       <Container sx={{ padding: { xs: 0, md: 0 } }}>
 
 
-        {/* Add Subscribe Banner just above the footer */}
-
 
         <Box sx={{ textAlign: 'center', display: 'flex', pt: 8, flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: { xs: '70vh', md: '80vh' } }}>
 

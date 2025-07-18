@@ -98,14 +98,8 @@ export async function middleware(request: NextRequest) {
           // If the end date has passed, the alert is archived
           const isArchived = endDate < currentDate;
           
-          // If viewing an archived alert from the feed, redirect to archive view
-          if (isArchived && request.headers.get('referer')?.includes('/feed')) {
-            return NextResponse.redirect(new URL(`/archive?highlight=${alertId}`, request.url));
-          }
-          
-          // If viewing a current alert from the archive, redirect to feed view
-          if (!isArchived && request.headers.get('referer')?.includes('/archive')) {
-            return NextResponse.redirect(new URL(`/feed?highlight=${alertId}`, request.url));
+          if (isArchived) {
+            return NextResponse.redirect(new URL('/admin/archive', request.url));
           }
         }
       }

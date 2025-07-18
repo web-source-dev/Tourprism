@@ -39,23 +39,25 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
 
   const menuItems = [
     { text: 'Dashboard', icon: 'ri-dashboard-line', path: '/admin' },
-    { text: 'Alerts Management', icon: 'ri-notification-4-line', path: '/admin/alerts' },
-    { text: 'User Management', icon: 'ri-user-settings-line', path: '/admin/users' },
+    { text: 'Alerts', icon: 'ri-notification-4-line', path: '/admin/alerts' },
+    { text: 'Users', icon: 'ri-user-settings-line', path: '/admin/users' },
     { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
+    { text: 'Archive', icon: 'ri-archive-line', path: '/admin/archive' },
     { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
   ];
 
   const AllAdminPages = [
     { text: 'Dashboard', icon: 'ri-dashboard-line', path: '/admin' },
-    { text: 'Alerts Management', icon: 'ri-notification-4-line', path: '/admin/alerts' },
+    { text: 'Alerts', icon: 'ri-notification-4-line', path: '/admin/alerts' },
     { text: 'Create Alert', icon: 'ri-add-line', path: '/admin/alerts/create' },
     { text: 'Pending Alerts', icon: 'ri-time-line', path: '/admin/alerts/pending' },
     { text: 'Published Alerts', icon: 'ri-eye-line', path: '/admin/alerts/published' },
     { text: 'Forecast History', icon: 'ri-history-line', path: '/admin/alerts/summary' },
-    { text: 'User Management', icon: 'ri-user-settings-line', path: '/admin/users' },
+    { text: 'Users', icon: 'ri-user-settings-line', path: '/admin/users' },
     { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
+    { text: 'Archive', icon: 'ri-archive-line', path: '/admin/archive' },
   ];
 
   // Define main parent pages where back button should NOT show

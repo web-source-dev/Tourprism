@@ -475,58 +475,10 @@ export const fetchAlerts = async (params: FetchAlertsParams = {}): Promise<{ ale
 };
 
 // Function to fetch archived alerts (alerts whose expectedEnd date has passed)
-export const fetchArchivedAlerts = async (params: FetchAlertsParams = {}): Promise<{ alerts: Alert[], totalCount: number }> => {
+export const fetchArchivedAlerts = async (): Promise<{ alerts: Alert[], totalCount: number }> => {
   try {
-    const queryParams = new URLSearchParams();
-    
-    // Location filters
-    if (params.city) {
-      queryParams.append('city', params.city);
-    }
-    
-    if (params.latitude !== undefined && params.longitude !== undefined) {
-      // Validate and ensure coordinates are valid numbers
-      const latitude = Number(params.latitude);
-      const longitude = Number(params.longitude);
-      
-      if (!isNaN(latitude) && !isNaN(longitude)) {
-        queryParams.append('latitude', latitude.toFixed(6));
-        queryParams.append('longitude', longitude.toFixed(6));
-        
-        // Only append distance if coordinates are present and distance is valid
-        if (params.distance && Number(params.distance) > 0) {
-          queryParams.append('distance', String(Number(params.distance)));
-        }
-        
-        // Add origin-only flag if specified
-        if (params.originOnly) {
-          queryParams.append('originOnly', 'true');
-        }
-      }
-    }
-
-    if (params.alertCategory && Array.isArray(params.alertCategory) && params.alertCategory.length > 0) {
-      params.alertCategory.forEach(category => {
-        queryParams.append('alertCategory[]', category);
-      });
-    }
-
-    // Pagination
-    queryParams.append('limit', String(params.limit || 20));
-    queryParams.append('page', String(params.page || 1));
-
-    // Sorting
-    if (params.sortBy) {
-      queryParams.append('sortBy', params.sortBy);
-    }
-    
-    // Debug log the query string
-    const queryString = queryParams.toString();
-    console.log('API Call to archived alerts queryString:', queryString);
-    
-    const endpoint = queryString ? `/api/archived-alerts?${queryString}` : '/api/archived-alerts';
-    
-    const response: CustomAxiosResponse<{ alerts: Alert[], totalCount: number }> = await api.get(endpoint);
+    // For admin users, fetch all archived alerts without any parameters
+    const response: CustomAxiosResponse<{ alerts: Alert[], totalCount: number }> = await api.get('/api/archived-alerts');
     return response.data;
   } catch (error) {
     console.error('Error fetching archived alerts:', error);

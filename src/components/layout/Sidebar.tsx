@@ -108,11 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isCollapsed, onToggleCollapse, onLogo
       ),
       path: 'profile'
     },
-    {
-      text: 'Archive',
-      icon: <i className="ri-archive-fill text-xl"></i>,
-      path: '/archive'
-    },
+
     {
       text: 'Logout',
       icon: (

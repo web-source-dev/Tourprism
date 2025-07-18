@@ -1520,7 +1520,7 @@ export default function Feed() {
                   borderTop: 'none',
                   pr: 2,
                   pt: 2,
-                  display: { xs: 'none', sm: 'block' } // Hide on mobile, show on tablet and up
+                  display: 'none' // Hide on mobile, show on tablet and up
                 }}>
                   <IconButton
                     onClick={() => handleDismissCard('access')}
@@ -2005,7 +2005,7 @@ export default function Feed() {
             {/* Mobile GetAccessCard - Display at the end of feed only on mobile */}
             {!isAuthenticated && showGetAccessCard && (
               <Box sx={{
-                display: { xs: 'block', sm: 'none' }, // Only show on mobile (xs)
+                display: { xs: 'block', sm: 'block' }, // Only show on mobile (xs)
                 position: 'relative',
                 mt: 2,
                 mb: 4,
