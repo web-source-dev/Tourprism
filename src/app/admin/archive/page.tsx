@@ -42,7 +42,7 @@ function ArchiveContent() {
     setLoading(true);
     try {
       // Fetch all archived alerts without any parameters
-      const result = await fetchArchivedAlerts({});
+      const result = await fetchArchivedAlerts();
       
       setArchivedAlerts(result.alerts);
       setError(null);
