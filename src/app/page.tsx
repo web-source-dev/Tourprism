@@ -245,9 +245,9 @@ export default function Home() {
               color: 'text.secondary',
               mb: isMobile ? '40px' : 8,
               fontSize: { xs: '14px', md: '16px' },
-              px: isMobile ? 0 : 2,
               lineHeight: { xs: '20px', md: '32px' },
               fontWeight: '400',
+              px: isMobile ? 0 : 2,
               maxWidth: isMobile ? '360px' : '720px',
               mx: 'auto'
             }}>
