@@ -33,6 +33,10 @@ export default function AlertsManagement() {
     {
       title: 'View Forecast History',
       path: '/admin/alerts/summary',
+    },
+    {
+      title: 'Automated Alerts',
+      path: '/admin/automated-alerts',
     }
   ];
 
