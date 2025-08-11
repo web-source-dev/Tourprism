@@ -88,7 +88,7 @@ export const getAutomatedAlerts = async (params?: {
   search?: string;
 }): Promise<AlertsResponse> => {
   const response = await api.get('/api/automated-alerts', { params });
-  return response.data.data;
+  return response.data as AlertsResponse;
 };
 
 // Get automated alert statistics
@@ -97,7 +97,7 @@ export const getAutomatedAlertStats = async (params?: {
   endDate?: string;
 }): Promise<AlertStats> => {
   const response = await api.get('/api/automated-alerts/stats', { params });
-  return response.data.data;
+  return response.data as AlertStats;
 };
 
 // Bulk approve alerts
@@ -107,7 +107,11 @@ export const bulkApproveAlerts = async (data: BulkActionRequest): Promise<{
   approvedCount: number;
 }> => {
   const response = await api.post('/api/automated-alerts/bulk-approve', data);
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    approvedCount: number;
+  };
 };
 
 // Bulk reject alerts
@@ -117,7 +121,11 @@ export const bulkRejectAlerts = async (data: BulkActionRequest): Promise<{
   rejectedCount: number;
 }> => {
   const response = await api.post('/api/automated-alerts/bulk-reject', data);
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    rejectedCount: number;
+  };
 };
 
 // Approve single alert
@@ -127,7 +135,11 @@ export const approveAlert = async (alertId: string, reason?: string): Promise<{
   alert: AutomatedAlert;
 }> => {
   const response = await api.post(`/api/automated-alerts/${alertId}/approve`, { reason });
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    alert: AutomatedAlert;
+  };
 };
 
 // Reject single alert
@@ -137,7 +149,11 @@ export const rejectAlert = async (alertId: string, reason: string): Promise<{
   alert: AutomatedAlert;
 }> => {
   const response = await api.post(`/api/automated-alerts/${alertId}/reject`, { reason });
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    alert: AutomatedAlert;
+  };
 };
 
 // Trigger alert generation
@@ -148,5 +164,9 @@ export const triggerAlertGeneration = async (city?: string): Promise<{
 }> => {
   const params = city ? { city } : {};
   const response = await api.post('/api/automated-alerts/trigger-generation', null, { params });
-  return response.data;
+  return response.data as {
+    success: boolean;
+    message: string;
+    results: GenerationResponse;
+  };
 }; 
