@@ -32,9 +32,7 @@ import {
 import {
   CheckCircle as CheckCircleIcon,
   Cancel as CancelIcon,
-  Refresh as RefreshIcon,
   PlayArrow as PlayArrowIcon,
-  Warning as WarningIcon
 } from '@mui/icons-material';
 import AdminLayout from '@/components/AdminLayout';
 import { 
@@ -347,14 +345,14 @@ export default function AutomatedAlertsManagement() {
                       <Chip 
                         label={alert.impact} 
                         size="small" 
-                        color={getImpactColor(alert.impact) as any}
+                        color={getImpactColor(alert.impact)}
                       />
                     </TableCell>
                     <TableCell>
                       <Chip 
                         label={alert.status} 
                         size="small" 
-                        color={getStatusColor(alert.status) as any}
+                        color={getStatusColor(alert.status)}
                       />
                     </TableCell>
                     <TableCell>
