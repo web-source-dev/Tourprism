@@ -97,7 +97,7 @@ export const getAutomatedAlertStats = async (params?: {
   endDate?: string;
 }): Promise<AlertStats> => {
   const response = await api.get('/api/automated-alerts/stats', { params });
-  return (response.data as any).data as AlertStats;
+  return (response.data as unknown as { data: AlertStats }).data;
 };
 
 // Bulk approve alerts
