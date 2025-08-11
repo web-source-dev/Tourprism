@@ -88,7 +88,7 @@ export const getAutomatedAlerts = async (params?: {
   search?: string;
 }): Promise<AlertsResponse> => {
   const response = await api.get('/api/automated-alerts', { params });
-  return response.data as AlertsResponse;
+  return (response.data as unknown as { data: AlertsResponse }).data;
 };
 
 // Get automated alert statistics
@@ -97,7 +97,7 @@ export const getAutomatedAlertStats = async (params?: {
   endDate?: string;
 }): Promise<AlertStats> => {
   const response = await api.get('/api/automated-alerts/stats', { params });
-  return response.data as AlertStats;
+  return (response.data as any).data as AlertStats;
 };
 
 // Bulk approve alerts
