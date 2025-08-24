@@ -128,6 +128,20 @@ export interface Alert {
   actionHubCreatedAt?: string;
   actionHubUpdatedAt?: string;
   actionHubId?: string;
+  
+  // Auto-update system properties
+  isUpdateOf?: string;
+  updateHistory?: string[];
+  lastAutoUpdateCheck?: string;
+  autoUpdateEnabled?: boolean;
+  autoUpdateSuppressed?: boolean;
+  autoUpdateSuppressedBy?: User | string;
+  autoUpdateSuppressedAt?: string;
+  autoUpdateSuppressedReason?: string;
+  updateCount?: number;
+  lastUpdateAt?: string;
+  lastUpdateBy?: User | string;
+  updateSource?: 'manual' | 'auto' | 'admin';
 }
 
 export interface Media {

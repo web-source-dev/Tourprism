@@ -198,6 +198,15 @@ export default function AutomatedAlertsManagement() {
     }
   };
 
+  const getImpactLabel = (impact: string) => {
+    switch (impact) {
+      case 'Minor': return 'Low';
+      case 'Moderate': return 'Moderate';
+      case 'Severe': return 'High';
+      default: return impact;
+    }
+  };
+
   return (
     <AdminLayout>
       <Box sx={{ py: 3, px: 0 }}>
@@ -343,7 +352,7 @@ export default function AutomatedAlertsManagement() {
                     <TableCell>{alert.originCity}</TableCell>
                     <TableCell>
                       <Chip 
-                        label={alert.impact} 
+                        label={getImpactLabel(alert.impact)} 
                         size="small" 
                         color={getImpactColor(alert.impact)}
                       />

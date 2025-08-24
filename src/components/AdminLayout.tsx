@@ -40,11 +40,13 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const menuItems = [
     { text: 'Dashboard', icon: 'ri-dashboard-line', path: '/admin' },
     { text: 'Alerts', icon: 'ri-notification-4-line', path: '/admin/alerts' },
+    { text: 'Auto-Updates', icon: 'ri-refresh-line', path: '/admin/auto-updates' },
     { text: 'Users', icon: 'ri-user-settings-line', path: '/admin/users' },
     { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
     { text: 'Archive', icon: 'ri-archive-line', path: '/admin/archive' },
     { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
+    { text: 'Alert Metrics', icon: 'ri-bar-chart-line', path: '/admin/alert-metrics' },
   ];
 
   const AllAdminPages = [
@@ -54,6 +56,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { text: 'Pending Alerts', icon: 'ri-time-line', path: '/admin/alerts/pending' },
     { text: 'Published Alerts', icon: 'ri-eye-line', path: '/admin/alerts/published' },
     { text: 'Forecast History', icon: 'ri-history-line', path: '/admin/alerts/summary' },
+    { text: 'Auto-Updates', icon: 'ri-refresh-line', path: '/admin/auto-updates' },
     { text: 'Users', icon: 'ri-user-settings-line', path: '/admin/users' },
     { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
@@ -64,9 +67,11 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const mainParentPages = [
     '/admin',
     '/admin/alerts',
+    '/admin/auto-updates',
     '/admin/users',
     '/admin/subscribers',
-    '/admin/logs'
+    '/admin/logs',
+    '/admin/alert-metrics'
   ];
 
   // Check if current page is a sub-page (should show back button)

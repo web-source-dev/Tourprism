@@ -1166,4 +1166,423 @@ export const getForecastSummaryById = async (summaryId: string): Promise<{ summa
   } catch (error) {
     throw getErrorMessage(error as CustomAxiosError);
   }
+};
+
+// Auto-update system API calls
+
+export interface AutoUpdateStats {
+  totalEligibleAlerts: number;
+  alertsWithUpdates: number;
+  suppressedAlerts: number;
+  lastUpdateCheck: string | null;
+  recentUpdates: number;
+  autoUpdateEnabled: number;
+}
+
+export interface AutoUpdateEligibleAlert extends Omit<Alert, 'updateHistory'> {
+  updateHistory: Array<{
+    _id: string;
+    title: string;
+    status: string;
+    createdAt: string;
+    updateSource: string;
+  }>;
+  lastAutoUpdateCheck: string;
+  autoUpdateSuppressed: boolean;
+  autoUpdateSuppressedBy?: User;
+  autoUpdateSuppressedAt?: string;
+  autoUpdateSuppressedReason?: string;
+  updateCount: number;
+  lastUpdateAt?: string;
+  lastUpdateBy?: User;
+}
+
+export interface AutoUpdateFilters extends Record<string, unknown> {
+  status?: 'all' | 'suppressed' | 'enabled';
+  hasUpdates?: 'all' | 'true' | 'false';
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+// Get auto-update statistics
+export const getAutoUpdateStats = async (): Promise<AutoUpdateStats> => {
+  try {
+    const response = await api.get<AutoUpdateStats>('/api/auto-updates/stats');
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get alerts eligible for auto-updates
+export const getAutoUpdateEligibleAlerts = async (filters: AutoUpdateFilters = {}): Promise<{ 
+  alerts: AutoUpdateEligibleAlert[], 
+  totalCount: number,
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+  }
+}> => {
+  try {
+    const response = await api.get<{ 
+      alerts: AutoUpdateEligibleAlert[], 
+      totalCount: number,
+      pagination: {
+        page: number;
+        limit: number;
+        totalPages: number;
+      }
+    }>('/api/auto-updates/eligible-alerts', { params: filters });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Check specific alert for updates
+export const checkAlertForUpdates = async (alertId: string): Promise<{
+  success: boolean;
+  updateCreated: boolean;
+  updateAlert?: Alert;
+  reason: string;
+}> => {
+  try {
+    const response = await api.post<{
+      success: boolean;
+      updateCreated: boolean;
+      updateAlert?: Alert;
+      reason: string;
+    }>(`/api/auto-updates/check/${alertId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Suppress auto-updates for an alert
+export const suppressAutoUpdates = async (alertId: string, reason: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.post<{ success: boolean }>(`/api/auto-updates/suppress/${alertId}`, { reason });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Enable auto-updates for an alert
+export const enableAutoUpdates = async (alertId: string): Promise<{ success: boolean }> => {
+  try {
+    const response = await api.post<{ success: boolean }>(`/api/auto-updates/enable/${alertId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get update history for an alert
+export const getAlertUpdateHistory = async (alertId: string): Promise<{
+  originalAlert: Alert;
+  updates: Alert[];
+  parentAlert: Alert | null;
+  updateCount: number;
+}> => {
+  try {
+    const response = await api.get<{
+      originalAlert: Alert;
+      updates: Alert[];
+      parentAlert: Alert | null;
+      updateCount: number;
+    }>(`/api/auto-updates/history/${alertId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Trigger auto-update process manually
+export const triggerAutoUpdateProcess = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.post<{ success: boolean; message: string }>('/api/auto-updates/trigger');
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get auto-update logs
+export const getAutoUpdateLogs = async (filters: {
+  action?: string;
+  startDate?: string;
+  endDate?: string;
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+} = {}): Promise<{
+  logs: any[];
+  totalCount: number;
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+}> => {
+  try {
+    const response = await api.get<{
+      logs: any[];
+      totalCount: number;
+      pagination: {
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
+    }>('/api/auto-updates/logs', { params: filters });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Alert Metrics API functions
+export interface AlertMetrics {
+  _id: string;
+  title: string;
+  total_views: number;
+  total_follows: number;
+  follow_rate: number;
+  performance_score: number;
+  performance_status: 'Overperforming' | 'Normal' | '❄ Underperforming';
+  pushed_to_forecast: boolean;
+  created_at: string;
+}
+
+export interface AlertMetricsSummary {
+  total_alerts: number;
+  total_views: number;
+  total_follows: number;
+  avg_follow_rate: number;
+  avg_performance_score: number;
+  performance_distribution: {
+    overperforming: number;
+    normal: number;
+    underperforming: number;
+  };
+}
+
+export interface AlertMetricsResponse {
+  alerts: AlertMetrics[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+  summary: AlertMetricsSummary;
+}
+
+export interface AlertDetailMetrics {
+  alert_id: string;
+  title: string;
+  metrics: {
+    total_views: number;
+    total_follows: number;
+    follow_rate: number;
+    performance_score: number;
+    performance_status: 'Overperforming' | 'Normal' | '❄ Underperforming';
+    percentile_rank: number;
+    pushed_to_forecast: boolean;
+  };
+  score_breakdown: {
+    follows_component: number;
+    views_component: number;
+    time_component: number;
+    forecast_component: number;
+  };
+  created_at: string;
+}
+
+// Get alert performance metrics with pagination and filtering
+export const getAlertPerformanceMetrics = async (params: {
+  page?: number;
+  limit?: number;
+  sortBy?: 'performance_score' | 'total_views' | 'total_follows' | 'follow_rate' | 'created_at';
+  sortOrder?: 'asc' | 'desc';
+  status?: 'published' | 'archived';
+} = {}): Promise<AlertMetricsResponse> => {
+  try {
+    const response = await api.get<AlertMetricsResponse>('/api/alert-metrics/performance', { params });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get detailed metrics for a specific alert
+export const getAlertMetrics = async (alertId: string): Promise<AlertDetailMetrics> => {
+  try {
+    const response = await api.get<AlertDetailMetrics>(`/api/alert-metrics/${alertId}`);
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Compare performance between two alerts
+export const compareAlertMetrics = async (alertId1: string, alertId2: string): Promise<{
+  alert1: {
+    _id: string;
+    title: string;
+    metrics: {
+      total_views: number;
+      total_follows: number;
+      follow_rate: number;
+      performance_score: number;
+      pushed_to_forecast: boolean;
+    };
+    created_at: string;
+  };
+  alert2: {
+    _id: string;
+    title: string;
+    metrics: {
+      total_views: number;
+      total_follows: number;
+      follow_rate: number;
+      performance_score: number;
+      pushed_to_forecast: boolean;
+    };
+    created_at: string;
+  };
+  comparison: {
+    differences: {
+      views_diff: number;
+      follows_diff: number;
+      follow_rate_diff: number;
+      performance_score_diff: number;
+    };
+    better_performer: 'alert1' | 'alert2';
+    performance_gap: number;
+  };
+}> => {
+  try {
+    const response = await api.get(`/api/alert-metrics/comparison/${alertId1}/${alertId2}`);
+    return response.data as any;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get top performing alerts
+export const getTopPerformers = async (params: {
+  limit?: number;
+  metric?: 'performance_score' | 'total_views' | 'total_follows' | 'follow_rate';
+  status?: 'published' | 'archived';
+} = {}): Promise<{
+  top_performers: AlertMetrics[];
+  metric: string;
+  total_alerts_analyzed: number;
+}> => {
+  try {
+    const response = await api.get('/api/alert-metrics/top-performers', { params });
+    return response.data as any;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Time Tracking API functions
+export interface TimeTrackingSession {
+  _id: string;
+  userId: string;
+  pageName: string;
+  timeSpent: number;
+  openedAt: string;
+  closedAt?: string;
+}
+
+export interface TimeTrackingHistory {
+  timeTrackings: TimeTrackingSession[];
+  totalCount: number;
+  totalTimeSpent: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+// Start time tracking session
+export const startTimeTracking = async (pageName: string = 'feed'): Promise<{ timeTrackingId: string }> => {
+  try {
+    const response = await api.post<{ timeTrackingId: string }>('/api/time-tracking/start', { pageName });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// End time tracking session
+export const endTimeTracking = async (timeTrackingId: string): Promise<{ timeSpent: number }> => {
+  try {
+    const response = await api.post<{ timeSpent: number }>('/api/time-tracking/end', { timeTrackingId });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get time tracking history for feed page
+export const getFeedTimeTrackingHistory = async (page: number = 1, limit: number = 10): Promise<TimeTrackingHistory> => {
+  try {
+    const response = await api.get<TimeTrackingHistory>('/api/time-tracking/feed-history', {
+      params: { page, limit }
+    });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+// Get active time tracking session
+export const getActiveTimeTrackingSession = async (pageName: string = 'feed'): Promise<{ activeSession: TimeTrackingSession | null }> => {
+  try {
+    const response = await api.get<{ activeSession: TimeTrackingSession | null }>('/api/time-tracking/active-session', {
+      params: { pageName }
+    });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
+};
+
+
+// Get alerts with updates (admin endpoint)
+export const getAlertsWithUpdates = async (filters: {
+  hasUpdates?: 'all' | 'true' | 'false';
+  autoUpdateStatus?: 'all' | 'suppressed' | 'enabled';
+  page?: number;
+  limit?: number;
+} = {}): Promise<{ 
+  alerts: AutoUpdateEligibleAlert[], 
+  totalCount: number,
+  pagination: {
+    page: number;
+    limit: number;
+    totalPages: number;
+  }
+}> => {
+  try {
+    const response = await api.get<{ 
+      alerts: AutoUpdateEligibleAlert[], 
+      totalCount: number,
+      pagination: {
+        page: number;
+        limit: number;
+        totalPages: number;
+      }
+    }>('/api/admin/alerts-with-updates', { params: filters });
+    return response.data;
+  } catch (error) {
+    throw getErrorMessage(error as CustomAxiosError);
+  }
 }; 
