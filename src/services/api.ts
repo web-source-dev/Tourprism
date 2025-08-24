@@ -1514,7 +1514,7 @@ export interface TimeTrackingHistory {
   totalCount: number;
   totalTimeSpent: number;
   currentPage: number;
-  totalPages: number;
+  totalPages: number; 
 }
 
 // Start time tracking session
