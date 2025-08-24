@@ -1322,7 +1322,7 @@ export const getAutoUpdateLogs = async (filters: {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
 } = {}): Promise<{
-  logs: any[];
+  logs: unknown[];
   totalCount: number;
   pagination: {
     page: number;
@@ -1332,7 +1332,7 @@ export const getAutoUpdateLogs = async (filters: {
 }> => {
   try {
     const response = await api.get<{
-      logs: any[];
+      logs: unknown[];
       totalCount: number;
       pagination: {
         page: number;
@@ -1430,8 +1430,8 @@ export const getAlertMetrics = async (alertId: string): Promise<AlertDetailMetri
   }
 };
 
-// Compare performance between two alerts
-export const compareAlertMetrics = async (alertId1: string, alertId2: string): Promise<{
+// Define interface for alert comparison response
+interface AlertComparisonResponse {
   alert1: {
     _id: string;
     title: string;
@@ -1466,28 +1466,34 @@ export const compareAlertMetrics = async (alertId1: string, alertId2: string): P
     better_performer: 'alert1' | 'alert2';
     performance_gap: number;
   };
-}> => {
+}
+
+// Compare performance between two alerts
+export const compareAlertMetrics = async (alertId1: string, alertId2: string): Promise<AlertComparisonResponse> => {
   try {
-    const response = await api.get(`/api/alert-metrics/comparison/${alertId1}/${alertId2}`);
-    return response.data as any;
+    const response = await api.get<AlertComparisonResponse>(`/api/alert-metrics/comparison/${alertId1}/${alertId2}`);
+    return response.data;
   } catch (error) {
     throw getErrorMessage(error as CustomAxiosError);
   }
 };
+
+// Define interface for top performers response
+interface TopPerformersResponse {
+  top_performers: AlertMetrics[];
+  metric: string;
+  total_alerts_analyzed: number;
+}
 
 // Get top performing alerts
 export const getTopPerformers = async (params: {
   limit?: number;
   metric?: 'performance_score' | 'total_views' | 'total_follows' | 'follow_rate';
   status?: 'published' | 'archived';
-} = {}): Promise<{
-  top_performers: AlertMetrics[];
-  metric: string;
-  total_alerts_analyzed: number;
-}> => {
+} = {}): Promise<TopPerformersResponse> => {
   try {
-    const response = await api.get('/api/alert-metrics/top-performers', { params });
-    return response.data as any;
+    const response = await api.get<TopPerformersResponse>('/api/alert-metrics/top-performers', { params });
+    return response.data;
   } catch (error) {
     throw getErrorMessage(error as CustomAxiosError);
   }
