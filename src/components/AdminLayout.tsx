@@ -45,8 +45,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { text: 'Subscribers', icon: 'ri-mail-line', path: '/admin/subscribers' },
     { text: 'System Logs', icon: 'ri-history-line', path: '/admin/logs' },
     { text: 'Archive', icon: 'ri-archive-line', path: '/admin/archive' },
-    { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
     { text: 'Alert Metrics', icon: 'ri-bar-chart-line', path: '/admin/alert-metrics' },
+    { text: 'Back to Site', icon: 'ri-arrow-left-line', path: '/feed' },
   ];
 
   const AllAdminPages = [
