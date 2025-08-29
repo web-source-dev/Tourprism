@@ -20,6 +20,8 @@ const publicRoutes = [
   '/feature',
   '/resources',
   '/not-found',
+  '/auth/google/callback',
+  '/session-expired',
 ];
 
 interface ProtectedRouteProps {
