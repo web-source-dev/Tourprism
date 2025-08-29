@@ -8,7 +8,8 @@ import {api} from '../services/api';
 
 // Public routes that don't require authentication
 // Keep this in sync with the list in ProtectedRoute.tsx
-const publicRoutes = ['/', '/login', '/signup', '/forgot-password','/insights','/subscribe', '/feed','/feature','/resources', '/about', '/pricing', '/ambassadors', '/not-found'];
+const publicRoutes = ['/', '/login', '/signup', '/forgot-password','/insights','/subscribe', '/feed','/feature','/resources', '/about', '/pricing',
+   '/ambassadors', '/not-found', '/session-expired', '/auth/google/callback'];
 // Auth process routes should never redirect, even during auth loading
 const authProcessRoutes = ['/auth/google/callback'];
 

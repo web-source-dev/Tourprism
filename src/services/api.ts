@@ -134,7 +134,7 @@ api.interceptors.response.use(
   (error: CustomAxiosError) => {
     // Check if error is due to authentication and we're not on a public page
     if (error.response?.status === 401 && typeof window !== 'undefined') {
-      const publicRoutes = ['/', '/login', '/signup', '/forgot-password', '/feed'];
+      const publicRoutes = ['/', '/login', '/signup', '/forgot-password', '/feed', '/session-expired', '/auth/google/callback'];
       const currentPath = window.location.pathname;
       const isPublicRoute = publicRoutes.some(route => currentPath === route);
       
