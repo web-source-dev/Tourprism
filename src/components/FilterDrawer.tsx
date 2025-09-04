@@ -62,9 +62,9 @@ const SORT_OPTIONS = [
 ];
 
 const IMPACT_LEVELS = [
-  { value: 'Minor', label: 'Low' },
+  { value: 'Low', label: 'Low' },
   { value: 'Moderate', label: 'Moderate' },
-  { value: 'Severe', label: 'High' },
+  { value: 'High', label: 'High' },
 ];
 
 const CITY_OPTIONS = [
@@ -168,13 +168,13 @@ const FilterDrawer = ({
     }
     console.log("impactLevel",impactLevel);
     // Toggle the selected impact level in the array
-    const updatedImpact = filters.impactLevel?.includes(impactLevel as "Minor" | "Moderate" | "Severe")
+    const updatedImpact = filters.impactLevel?.includes(impactLevel as "Low" | "Moderate" | "High")
       ? filters.impactLevel.filter(level => level !== impactLevel)
       : [...(filters.impactLevel || []), impactLevel];
       
     onFilterChange({
       ...filters,
-      impactLevel: updatedImpact as ("Minor" | "Moderate" | "Severe")[]
+      impactLevel: updatedImpact as ("Low" | "Moderate" | "High")[]
     });
   };
 
@@ -796,7 +796,7 @@ const FilterDrawer = ({
                     component="div"
                   >
                     <ListItemText primary={level.label} sx={globalStyles} />
-                    {filters.impactLevel?.includes(level.value as "Minor" | "Moderate" | "Severe") && <SelectedIcon />}
+                    {filters.impactLevel?.includes(level.value as "Low" | "Moderate" | "High") && <SelectedIcon />}
                   </ListItem>
                 ))}
               </List>

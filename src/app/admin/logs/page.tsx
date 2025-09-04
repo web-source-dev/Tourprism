@@ -76,36 +76,120 @@ interface LogsResponse {
 // Helper functions for action names and colors
 const getFriendlyActionName = (action: string): string => {
   const actionMap: { [key: string]: string } = {
+    // Auth related
+    'signup': 'New User Registration',
     'login': 'User Login',
     'logout': 'User Logout',
-    'signup': 'New User Registration',
+    'password_reset': 'Password Reset Requested',
+    'email_verified': 'Email Verified',
+    
+    // Alert related
     'alert_created': 'Alert Created',
     'alert_updated': 'Alert Updated',
+    'alert_deleted': 'Alert Deleted',
     'alert_followed': 'Alert Followed',
     'alert_unfollowed': 'Alert Unfollowed',
+    'alert_liked': 'Alert Liked',
+    'alert_shared': 'Alert Shared',
     'alert_flagged': 'Alert Flagged',
+    'alert_unflagged': 'Alert Unflagged',
+    
+    // Action hub related
+    'action_hub_created': 'Action Hub Created',
+    'action_hub_updated': 'Action Hub Updated',
+    'action_hub_status_changed': 'Action Hub Status Changed',
+    'action_hub_note_added': 'Action Hub Note Added',
+    'action_hub_guest_added': 'Action Hub Guest Added',
+    'action_hub_notification_sent': 'Action Hub Notification Sent',
+    
+    // Subscriber related
+    'subscriber_added': 'Subscriber Added',
+    'subscriber_updated': 'Subscriber Updated',
+    'subscriber_deleted': 'Subscriber Deleted',
+    'subscriber_preferences_changed': 'Subscriber Preferences Changed',
+    'subscriber_unsubscribed': 'Subscriber Unsubscribed',
+    
+    // Admin actions
     'user_role_changed': 'User Role Changed',
     'user_restricted': 'User Access Restricted',
     'user_deleted': 'User Account Deleted',
+    'bulk_alerts_uploaded': 'Bulk Alerts Uploaded',
+    'admin_users_viewed': 'Admin Users Viewed',
+    
+    // Automated alert generation
+    'automated_alert_generation_completed': 'Automated Alert Generation Completed',
+    'manual_trigger_alert_generation': 'Manual Trigger Alert Generation',
+    'bulk_approve_automated_alerts': 'Bulk Approve Automated Alerts',
+    'bulk_reject_automated_alerts': 'Bulk Reject Automated Alerts',
+    'approve_automated_alert': 'Approve Automated Alert',
+    'reject_automated_alert': 'Reject Automated Alert',
+    
+    // Collaborator related
+    'collaborator_invited': 'Collaborator Invited',
+    'collaborator_activated': 'Collaborator Activated',
+    'collaborator_restricted': 'Collaborator Restricted',
+    'collaborator_deleted': 'Collaborator Deleted',
+    
+    // Email and system operations
+    'email_sent': 'Email Sent',
+    'weekly_email_sent': 'Weekly Email Sent',
+    'weekly_email_process_completed': 'Weekly Email Process Completed',
+    'auto_update_process_completed': 'Auto Update Process Completed',
+    'alert_auto_update_created': 'Alert Auto Update Created',
+    'alert_auto_update_suppressed': 'Alert Auto Update Suppressed',
+    'alert_auto_update_enabled': 'Alert Auto Update Enabled',
+    'alert_archived': 'Alert Archived',
+    'alert_archiving_completed': 'Alert Archiving Completed',
+    
+    // Other
     'profile_updated': 'Profile Updated',
-    'action_hub_status_changed': 'Action Hub Status Changed',
-    'password_reset': 'Password Reset Requested',
-    'password_changed': 'Password Changed',
-    'alert_liked': 'Alert Liked',
-    'alert_shared': 'Alert Shared',
+    'summary_viewed': 'Summary Viewed',
+    'summary_generated': 'Summary Generated',
+    'profile_viewed': 'Profile Viewed',
+    'notifications_viewed': 'Notifications Viewed'
   };
   return actionMap[action] || action.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 };
 const getActionColor = (action: string): { bg: string; color: string } => {
-  if (action.includes('login') || action.includes('logout') || action.includes('signup')) {
+  // Auth related - Blue
+  if (action.includes('login') || action.includes('logout') || action.includes('signup') || 
+      action.includes('password_reset') || action.includes('email_verified')) {
     return { bg: '#e3f2fd', color: '#1565c0' };
-  } else if (action.includes('alert')) {
+  } 
+  // Alert related - Orange
+  else if (action.includes('alert')) {
     return { bg: '#fff8e1', color: '#f57c00' };
-  } else if (action.includes('user')) {
+  } 
+  // User/Admin actions - Red
+  else if (action.includes('user') || action.includes('admin')) {
     return { bg: '#ffebee', color: '#c62828' };
-  } else if (action.includes('action_hub')) {
+  } 
+  // Action hub related - Green
+  else if (action.includes('action_hub')) {
     return { bg: '#e8f5e9', color: '#2e7d32' };
-  } else {
+  } 
+  // Subscriber related - Purple
+  else if (action.includes('subscriber')) {
+    return { bg: '#f3e5f5', color: '#7b1fa2' };
+  } 
+  // Automated alert generation - Teal
+  else if (action.includes('automated_alert') || action.includes('manual_trigger')) {
+    return { bg: '#e0f2f1', color: '#00695c' };
+  } 
+  // Collaborator related - Indigo
+  else if (action.includes('collaborator')) {
+    return { bg: '#e8eaf6', color: '#3949ab' };
+  } 
+  // Email and system operations - Brown
+  else if (action.includes('email') || action.includes('auto_update') || action.includes('archiving')) {
+    return { bg: '#efebe9', color: '#5d4037' };
+  } 
+  // Summary and profile - Gray
+  else if (action.includes('summary') || action.includes('profile') || action.includes('notifications')) {
+    return { bg: '#fafafa', color: '#424242' };
+  } 
+  // Default - Light gray
+  else {
     return { bg: '#f5f5f5', color: '#616161' };
   }
 };
@@ -359,21 +443,92 @@ export default function LogsManagement() {
                 value={actionFilter}
                 label="Activity Type"
                 onChange={(e) => setActionFilter(e.target.value)}
+                MenuProps={{
+                  PaperProps: {
+                    style: {
+                      maxHeight: 200, // Show only ~5 items at a time
+                    },
+                  },
+                }}
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 3,
+                  },
+                }}
               >
                 <MenuItem value="">All Activities</MenuItem>
-                <MenuItem value="login">Login</MenuItem>
-                <MenuItem value="signup">Registration</MenuItem>
-                <MenuItem value="logout">Logout</MenuItem>
+                
+                {/* Auth related */}
+                <MenuItem value="signup">New User Registration</MenuItem>
+                <MenuItem value="login">User Login</MenuItem>
+                <MenuItem value="logout">User Logout</MenuItem>
+                <MenuItem value="password_reset">Password Reset</MenuItem>
+                <MenuItem value="email_verified">Email Verified</MenuItem>
+                
+                {/* Alert related */}
                 <MenuItem value="alert_created">Alert Created</MenuItem>
                 <MenuItem value="alert_updated">Alert Updated</MenuItem>
+                <MenuItem value="alert_deleted">Alert Deleted</MenuItem>
                 <MenuItem value="alert_followed">Alert Followed</MenuItem>
                 <MenuItem value="alert_unfollowed">Alert Unfollowed</MenuItem>
+                <MenuItem value="alert_liked">Alert Liked</MenuItem>
+                <MenuItem value="alert_shared">Alert Shared</MenuItem>
                 <MenuItem value="alert_flagged">Alert Flagged</MenuItem>
-                <MenuItem value="user_role_changed">Role Changed</MenuItem>
+                <MenuItem value="alert_unflagged">Alert Unflagged</MenuItem>
+                
+                {/* Action hub related */}
+                <MenuItem value="action_hub_created">Action Hub Created</MenuItem>
+                <MenuItem value="action_hub_updated">Action Hub Updated</MenuItem>
+                <MenuItem value="action_hub_status_changed">Action Hub Status Changed</MenuItem>
+                <MenuItem value="action_hub_note_added">Action Hub Note Added</MenuItem>
+                <MenuItem value="action_hub_guest_added">Action Hub Guest Added</MenuItem>
+                <MenuItem value="action_hub_notification_sent">Action Hub Notification Sent</MenuItem>
+                
+                {/* Subscriber related */}
+                <MenuItem value="subscriber_added">Subscriber Added</MenuItem>
+                <MenuItem value="subscriber_updated">Subscriber Updated</MenuItem>
+                <MenuItem value="subscriber_deleted">Subscriber Deleted</MenuItem>
+                <MenuItem value="subscriber_preferences_changed">Subscriber Preferences Changed</MenuItem>
+                <MenuItem value="subscriber_unsubscribed">Subscriber Unsubscribed</MenuItem>
+                
+                {/* Admin actions */}
+                <MenuItem value="user_role_changed">User Role Changed</MenuItem>
                 <MenuItem value="user_restricted">User Restricted</MenuItem>
                 <MenuItem value="user_deleted">User Deleted</MenuItem>
+                <MenuItem value="bulk_alerts_uploaded">Bulk Alerts Uploaded</MenuItem>
+                <MenuItem value="admin_users_viewed">Admin Users Viewed</MenuItem>
+                
+                {/* Automated alert generation */}
+                <MenuItem value="automated_alert_generation_completed">Automated Alert Generation</MenuItem>
+                <MenuItem value="manual_trigger_alert_generation">Manual Trigger Alert Generation</MenuItem>
+                <MenuItem value="bulk_approve_automated_alerts">Bulk Approve Automated Alerts</MenuItem>
+                <MenuItem value="bulk_reject_automated_alerts">Bulk Reject Automated Alerts</MenuItem>
+                <MenuItem value="approve_automated_alert">Approve Automated Alert</MenuItem>
+                <MenuItem value="reject_automated_alert">Reject Automated Alert</MenuItem>
+                
+                {/* Collaborator related */}
+                <MenuItem value="collaborator_invited">Collaborator Invited</MenuItem>
+                <MenuItem value="collaborator_activated">Collaborator Activated</MenuItem>
+                <MenuItem value="collaborator_restricted">Collaborator Restricted</MenuItem>
+                <MenuItem value="collaborator_deleted">Collaborator Deleted</MenuItem>
+                
+                {/* Email and system operations */}
+                <MenuItem value="email_sent">Email Sent</MenuItem>
+                <MenuItem value="weekly_email_sent">Weekly Email Sent</MenuItem>
+                <MenuItem value="weekly_email_process_completed">Weekly Email Process Completed</MenuItem>
+                <MenuItem value="auto_update_process_completed">Auto Update Process Completed</MenuItem>
+                <MenuItem value="alert_auto_update_created">Alert Auto Update Created</MenuItem>
+                <MenuItem value="alert_auto_update_suppressed">Alert Auto Update Suppressed</MenuItem>
+                <MenuItem value="alert_auto_update_enabled">Alert Auto Update Enabled</MenuItem>
+                <MenuItem value="alert_archived">Alert Archived</MenuItem>
+                <MenuItem value="alert_archiving_completed">Alert Archiving Completed</MenuItem>
+                
+                {/* Other */}
                 <MenuItem value="profile_updated">Profile Updated</MenuItem>
-                <MenuItem value="action_hub_status_changed">Action Hub Status Changed</MenuItem>
+                <MenuItem value="summary_viewed">Summary Viewed</MenuItem>
+                <MenuItem value="summary_generated">Summary Generated</MenuItem>
+                <MenuItem value="profile_viewed">Profile Viewed</MenuItem>
+                <MenuItem value="notifications_viewed">Notifications Viewed</MenuItem>
               </Select>
             </FormControl>
 
@@ -384,7 +539,12 @@ export default function LogsManagement() {
               size="small"
               value={emailFilter}
               onChange={(e) => setEmailFilter(e.target.value)}
-              sx={{ width: { xs: '100%', md: '30%' } }}
+              sx={{ 
+                width: { xs: '100%', md: '30%' },
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 3,
+                },
+              }}
               InputProps={{
                 endAdornment: (
                   <SearchIcon color="action" fontSize="small" />
@@ -406,7 +566,12 @@ export default function LogsManagement() {
                   slotProps={{ 
                     textField: { 
                       size: 'small',
-                      sx: { width: '100%' }
+                      sx: { 
+                        width: '100%',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                        },
+                      }
                     } 
                   }}
                 />
@@ -420,7 +585,12 @@ export default function LogsManagement() {
                   slotProps={{ 
                     textField: { 
                       size: 'small',
-                      sx: { width: '100%' }
+                      sx: { 
+                        width: '100%',
+                        '& .MuiOutlinedInput-root': {
+                          borderRadius: 3,
+                        },
+                      }
                     } 
                   }}
                 />

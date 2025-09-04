@@ -857,9 +857,9 @@ export default function EditAlertPage() {
                     label="Impact Severity"
                     onChange={handleSelectChange}
                   >
-                    <MenuItem value="Minor">Low</MenuItem>
+                    <MenuItem value="Low">Low</MenuItem>
                     <MenuItem value="Moderate">Moderate</MenuItem>
-                    <MenuItem value="Severe">High</MenuItem>
+                    <MenuItem value="High">High</MenuItem>
                   </Select>
                 </StyledFormControl>
 

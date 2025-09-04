@@ -66,9 +66,9 @@ const ALERT_CATEGORIES = [
 
 const IMPACT_LEVELS = [
   { value: 'All', label: 'All' },
-  { value: 'Minor', label: 'Low' },
+  { value: 'Low', label: 'Low' },
   { value: 'Moderate', label: 'Moderate' },
-  { value: 'Severe', label: 'High' },
+  { value: 'High', label: 'High' },
 ];
 
 // Custom checkbox component with green background

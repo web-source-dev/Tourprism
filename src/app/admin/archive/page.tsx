@@ -225,8 +225,8 @@ function ArchiveContent() {
                           borderRadius: 1,
                           fontWeight: 500,
                         }}>
-                          {alert.impact === 'Minor' ? 'Low' : 
-                           alert.impact === 'Severe' ? 'High' : 
+                          {alert.impact === 'Low' ? 'Low' : 
+                           alert.impact === 'High' ? 'High' : 
                            alert.impact || 'Moderate'} Impact
                         </Typography>
                       </Box>

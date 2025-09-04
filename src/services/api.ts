@@ -1045,7 +1045,7 @@ export interface Subscriber {
 
 export interface SubscriberFilters extends Record<string, unknown> {
   search?: string;
-  sector?: string;
+  sector?: string | string[]; // Updated to support both single string and array
   location?: string;
   isActive?: boolean;
   startDate?: string;
@@ -1065,7 +1065,7 @@ export const getAllSubscribers = async (params: SubscriberFilters = {}): Promise
   }
 };
 
-export const addUserToSubscribers = async (userId: string, sector?: string, location?: unknown[]): Promise<{ success: boolean; subscriber: Subscriber }> => {
+export const addUserToSubscribers = async (userId: string, sector?: string | string[], location?: unknown[]): Promise<{ success: boolean; subscriber: Subscriber }> => {
   try {
     const response = await api.post<{ success: boolean; subscriber: Subscriber }>('/api/admin/subscribers/add-user', { userId, sector, location });
     return response.data;

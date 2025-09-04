@@ -133,9 +133,9 @@ const ActionHubList: React.FC = () => {
     // Filter by impact level
     if (filters.impactLevel) {
       const impactMap: { [key: string]: string } = {
-        'low': 'Minor',
+        'low': 'Low',
         'moderate': 'Moderate',
-        'high': 'Severe'
+        'high': 'High'
       };
 
       filtered = filtered.filter(alert =>
@@ -406,8 +406,8 @@ const ActionHubList: React.FC = () => {
 
                       <Box sx={{ mb: 3 }}>
                         <Typography variant="body2" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
-                          {alert.impact === 'Minor' ? 'Low' : 
-                           alert.impact === 'Severe' ? 'High' : 
+                          {alert.impact === 'Low' ? 'Low' : 
+                           alert.impact === 'High' ? 'High' : 
                            alert.impact || 'Moderate'} Impact
                         </Typography>
                       </Box>

@@ -417,14 +417,14 @@ export default function AutoUpdatesPage() {
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">Impact</span>
                                 <span className={`text-sm px-2 py-1 rounded-full text-xs font-medium ${
-                                  alert.impact === 'Severe' ? 'bg-red-100 text-red-800' :
+                                  alert.impact === 'High' ? 'bg-red-100 text-red-800' :
                                   alert.impact === 'Moderate' ? 'bg-yellow-100 text-yellow-800' :
-                                  alert.impact === 'Minor' ? 'bg-green-100 text-green-800' :
+                                  alert.impact === 'Low' ? 'bg-green-100 text-green-800' :
                                   'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {alert.impact === 'Minor' ? 'Low' :
+                                  {alert.impact === 'Low' ? 'Low' :
                                    alert.impact === 'Moderate' ? 'Moderate' :
-                                   alert.impact === 'Severe' ? 'High' :
+                                   alert.impact === 'High' ? 'High' :
                                    alert.impact || 'Not specified'}
                                 </span>
                               </div>

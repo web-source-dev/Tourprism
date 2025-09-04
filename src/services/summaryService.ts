@@ -472,9 +472,9 @@ export const generateClientPdf = async (alerts: AlertItem[], options: {
         // Add impact color bar
         const getImpactColor = (impact: string) => {
           switch(impact) {
-            case 'Severe': return [211, 47, 47]; // Red
+            case 'High': return [211, 47, 47]; // Red
             case 'Moderate': return [245, 124, 0]; // Orange
-            case 'Minor': return [76, 175, 80]; // Green
+            case 'Low': return [76, 175, 80]; // Green
             default: return [117, 117, 117]; // Gray
           }
         };

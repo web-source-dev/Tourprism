@@ -135,12 +135,12 @@ const calculateImpactScore = (alert: AlertType): number => {
   const impact = alert.impact || '';
   
   // Using string check to avoid type errors
-  if (impact.includes('Severe') || impact.includes('High')) {
+  if (impact.includes('High') || impact.includes('High')) {
     severityScore = 3;
   } else if (impact.includes('Moderate') || impact.includes('Medium')) {
     severityScore = 2;
   } else {
-    severityScore = 1; // Minor, Low, or undefined
+    severityScore = 1; // Low, Low, or undefined
   }
   score += severityScore * 2;
   
@@ -198,7 +198,7 @@ const sortAlertsByFilter = (alerts: AlertType[], sortBy: string) => {
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
   } else if (sortBy === 'highest_impact') {
-    const impactOrder = { 'Severe': 3, 'High': 3, 'Moderate': 2, 'Medium': 2, 'Minor': 1, 'Low': 1 };
+    const impactOrder = { 'High': 3, 'Moderate': 2, 'Low': 1 };
     return [...alerts].sort((a, b) => {
       const impactA = impactOrder[a.impact as keyof typeof impactOrder] || 0;
       const impactB = impactOrder[b.impact as keyof typeof impactOrder] || 0;
@@ -1682,11 +1682,11 @@ export default function Feed() {
                             fontWeight: 600,
                             fontFamily: 'Poppins'
                           }}>
-                            {alert.impact === 'Severe' || !alert.impact
+                            {alert.impact === 'High' || !alert.impact
                               ? 'High Impact'
                               : alert.impact === 'Moderate'
                                 ? 'Moderate Impact'
-                                : alert.impact === 'Minor'
+                                : alert.impact === 'Low'
                                   ? 'Low Impact'
                                   : `${alert.impact} Impact`}
                           </Typography>

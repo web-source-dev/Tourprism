@@ -552,8 +552,8 @@ const ActionHubDetail: React.FC<ActionHubDetailProps> = ({ alertId }) => {
 
           {/* Impact Level */}
           <Typography variant="body1" fontWeight="600" sx={{ fontSize: '14px', fontFamily: 'Poppins', fontWeight: 500 }}>
-            {alertData.impact === 'Minor' ? 'Low' : 
-             alertData.impact === 'Severe' ? 'High' : 
+            {alertData.impact === 'Low' ? 'Low' : 
+             alertData.impact === 'High' ? 'High' : 
              alertData.impact || 'Moderate'} Impact
           </Typography>
 

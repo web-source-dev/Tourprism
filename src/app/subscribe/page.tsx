@@ -1,12 +1,13 @@
 'use client';
 
 import Layout from '@/components/Layout';
-import { Container, Typography, Box, TextField, Button, MenuItem, CircularProgress, FormControl, Select, ListItemIcon } from '@mui/material';
+import { Container, Typography, Box, TextField, Button, MenuItem, CircularProgress, FormControl, Select, ListItemIcon, Chip } from '@mui/material';
 import { useState, useRef, useEffect } from 'react';
 import { createSubscriber, checkSubscriberStatus } from '@/services/subscriber';
 import { useToast } from '@/ui/toast';
 import Link from 'next/link';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
 import Script from 'next/script';
 
 interface LocationType {
@@ -16,8 +17,6 @@ interface LocationType {
   longitude: number;
   placeId: string;
 }
-
-
 
 const sectorOptions: string[] = [
   "Airline",
@@ -94,8 +93,8 @@ const menuProps = {
 export default function SubscriptionPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [location, setLocation] = useState<LocationType | null>(null);
-  const [sector, setSector] = useState('');
+  const [selectedLocations, setSelectedLocations] = useState<LocationType[]>([]);
+  const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [showLocationInput, setShowLocationInput] = useState(false);
@@ -182,7 +181,7 @@ export default function SubscriptionPage() {
         return;
       }
       
-      updateLocationData(place );
+      updateLocationData(place);
     });
   };
 
@@ -209,8 +208,12 @@ export default function SubscriptionPage() {
       placeId: place.place_id || '',
     };
     
-    setLocation(newLocation);
-    setCustomLocation(place.formatted_address || place.name || '');
+    // Add to selected locations if not already present
+    if (!selectedLocations.some(loc => loc.city === newLocation.city)) {
+      setSelectedLocations(prev => [...prev, newLocation]);
+    }
+    setCustomLocation('');
+    setShowLocationInput(false);
   };
 
   useEffect(() => {
@@ -283,8 +286,8 @@ export default function SubscriptionPage() {
       hasErrors = true;
     }
     
-    if (!location && !showLocationInput) {
-      setLocationError('Please specify your location');
+    if (selectedLocations.length === 0 && !showLocationInput) {
+      setLocationError('Please select at least one location');
       hasErrors = true;
     }
     
@@ -293,13 +296,8 @@ export default function SubscriptionPage() {
       hasErrors = true;
     }
     
-    if (!sector) {
-      setSectorError('Please specify your sector');
-      hasErrors = true;
-    }
-    
-    if (showSectorInput && !customSector.trim()) {
-      setSectorError('Please specify your sector');
+    if (selectedSectors.length === 0) {
+      setSectorError('Please select at least one sector');
       hasErrors = true;
     }
     
@@ -311,16 +309,25 @@ export default function SubscriptionPage() {
     
     try {
       console.log('Submitting subscription for:', email);
+      
+      // Prepare locations array
+      const locations = selectedLocations.map(loc => ({
+        name: loc.city,
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        placeId: loc.placeId,
+      }));
+      
+      // Prepare sectors array
+      const sectors = selectedSectors.map(sector => 
+        sector === 'Other' ? customSector : sector
+      ).filter(Boolean);
+      
       await createSubscriber({
         name,
         email,
-        location: location ? [{
-          name: location.city,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          placeId: location.placeId,
-        }] : [],
-        sector: sector === 'Other' ? customSector : sector,
+        location: locations,
+        sector: sectors,
       });
       
       console.log('Subscription successful for:', email);
@@ -344,14 +351,11 @@ export default function SubscriptionPage() {
     setLocationError(''); // Clear error when user makes a selection
     if (locationCity === 'Other') {
       setShowLocationInput(true);
-      setLocation(null);
       setCustomLocation('');
     } else {
-      setShowLocationInput(false);
-      setCustomLocation('');
       const selectedLocation = locationOptions.find(loc => loc.city === locationCity);
-      if (selectedLocation) {
-        setLocation(selectedLocation);
+      if (selectedLocation && !selectedLocations.some(loc => loc.city === selectedLocation.city)) {
+        setSelectedLocations(prev => [...prev, selectedLocation]);
       }
     }
   };
@@ -360,13 +364,18 @@ export default function SubscriptionPage() {
     setSectorError(''); // Clear error when user makes a selection
     if (selectedSector === 'Other') {
       setShowSectorInput(true);
-      setSector('Other');
       setCustomSector('');
-    } else {
-      setShowSectorInput(false);
-      setCustomSector('');
-      setSector(selectedSector);
+    } else if (!selectedSectors.includes(selectedSector)) {
+      setSelectedSectors(prev => [...prev, selectedSector]);
     }
+  };
+
+  const removeLocation = (cityToRemove: string) => {
+    setSelectedLocations(prev => prev.filter(loc => loc.city !== cityToRemove));
+  };
+
+  const removeSector = (sectorToRemove: string) => {
+    setSelectedSectors(prev => prev.filter(sector => sector !== sectorToRemove));
   };
 
   const handleCustomLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -377,6 +386,14 @@ export default function SubscriptionPage() {
   const handleCustomSectorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setCustomSector(e.target.value);
     setSectorError(''); // Clear error when user types
+  };
+
+  const addCustomSector = () => {
+    if (customSector.trim() && !selectedSectors.includes(customSector.trim())) {
+      setSelectedSectors(prev => [...prev, customSector.trim()]);
+      setCustomSector('');
+      setShowSectorInput(false);
+    }
   };
 
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -497,21 +514,18 @@ export default function SubscriptionPage() {
                 ) : null
               }}
             />
-            
+
             {/* Location dropdown */}
             <FormControl fullWidth margin="normal" sx={{ mb: 0 }} error={!!locationError}>
               <Select
                 displayEmpty
-                value={location?.city || ''}
+                value=""
                 onChange={(e) => handleLocationSelect(e.target.value)}
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <Typography sx={{ color: locationError ? '#d32f2f' : '#222' }}>
-                      {locationError || "Select location"}
-                    </Typography>;
-                  }
-                  return selected;
-                }}
+                renderValue={() => (
+                  <Typography sx={{ color: locationError ? '#d32f2f' : '#222' }}>
+                    {locationError || "Add locations"}
+                  </Typography>
+                )}
                 sx={{
                   ...inputStyles,
                   ...(locationError && {
@@ -533,7 +547,7 @@ export default function SubscriptionPage() {
                   }}
                   >
                     {option.city}
-                    {location?.city === option.city && (
+                    {selectedLocations.some(loc => loc.city === option.city) && (
                       <ListItemIcon>
                         <CheckCircleIcon sx={{ color: 'green', bgcolor: 'transparent', borderRadius: '50%' }} />
                       </ListItemIcon>
@@ -578,19 +592,37 @@ export default function SubscriptionPage() {
               />
             )}
             
+            {/* Selected Locations Display */}
+            {selectedLocations.length > 0 && (
+              <Box sx={{ mt:0, mb: 0 }}>
+                <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                  Selected Locations:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {selectedLocations.map((location) => (
+                    <Chip
+                      key={location.city}
+                      label={location.city}
+                      onDelete={() => removeLocation(location.city)}
+                      deleteIcon={<CloseIcon sx={{ color: '#000' }} />}
+                      sx={{ bgcolor: '#056CF252', color: '#000' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
+
+            
             <FormControl fullWidth margin="normal" sx={{ mb: 0 }} error={!!sectorError}>
               <Select
                 displayEmpty
-                value={sector}
+                value=""
                 onChange={(e) => handleSectorSelect(e.target.value as string)}
-                renderValue={(selected) => {
-                  if (!selected) {
-                    return <Typography sx={{ color: sectorError ? '#d32f2f' : '#222' }}>
-                      {sectorError || "Select sector"}
-                    </Typography>;
-                  }
-                  return selected;
-                }}
+                renderValue={() => (
+                  <Typography sx={{ color: sectorError ? '#d32f2f' : '#222' }}>
+                    {sectorError || "Add sectors"}
+                  </Typography>
+                )}
                 sx={{
                   ...inputStyles,
                   ...(sectorError && {
@@ -612,8 +644,7 @@ export default function SubscriptionPage() {
                   }}
                   >
                     {option}
-
-                    {sector === option && (
+                    {selectedSectors.includes(option) && (
                       <ListItemIcon>
                         <CheckCircleIcon sx={{ color: 'green', bgcolor: 'transparent', borderRadius: '50%' }} />
                       </ListItemIcon>
@@ -625,35 +656,69 @@ export default function SubscriptionPage() {
 
             {/* Custom sector input */}
             {showSectorInput && (
-              <TextField
-                margin="normal"
-                required
-                fullWidth
-                placeholder={sectorError || "Enter your sector"}
-                value={customSector}
-                onChange={handleCustomSectorChange}
-                error={!!sectorError}
-                sx={{ 
-                  mb: 0,
-                  '& .MuiInputBase-input::placeholder': {
-                    color: sectorError ? '#d32f2f' : '#222',
-                    opacity: 1
-                  }
-                }}
-                InputProps={{
-                  sx: {
-                    ...inputStyles,
-                    ...(sectorError && {
-                      borderColor: '#d32f2f',
-                      '&:hover': {
-                        borderColor: '#d32f2f'
-                      }
-                    })
-                  }
-                }}
-              />
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TextField
+                  margin="normal"
+                  required
+                  fullWidth
+                  placeholder="Enter your sector"
+                  value={customSector}
+                  onChange={handleCustomSectorChange}
+                  error={!!sectorError}
+                  sx={{
+                    '& .MuiInputBase-input::placeholder': {
+                      color: sectorError ? '#d32f2f' : '#222',
+                      opacity: 1
+                    }
+                  }}
+                  InputProps={{
+                    sx: {
+                      ...inputStyles,
+                      ...(sectorError && {
+                        borderColor: '#d32f2f',
+                        '&:hover': {
+                          borderColor: '#d32f2f'
+                        }
+                      })
+                    }
+                  }}
+                />
+                <Button
+                  variant="outlined"
+                  size="small"
+                  onClick={addCustomSector}
+                  disabled={!customSector.trim()}
+                  sx={{ 
+                    borderRadius: 2,
+                    textTransform: 'none',
+                    height: '40px',
+                    fontSize: '14px'
+                  }}
+                >
+                  Add
+                </Button>
+              </Box>
             )}
             
+            {/* Selected Sectors Display */}
+            {selectedSectors.length > 0 && (
+              <Box sx={{ mt:0, mb: 0 }}>
+                <Typography variant="body2" sx={{ mb: 1, color: '#666' }}>
+                  Selected Sectors:
+                </Typography>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {selectedSectors.map((sector) => (
+                    <Chip
+                      key={sector}
+                      label={sector}
+                      onDelete={() => removeSector(sector)}
+                      deleteIcon={<CloseIcon sx={{ color: '#000' }} />}
+                      sx={{ bgcolor: '#056CF252', color: '#000' }}
+                    />
+                  ))}
+                </Box>
+              </Box>
+            )}
 
             <Button
               type="submit"

@@ -96,11 +96,11 @@ export default function AlertViewDialog({ open, onClose, alertId }: AlertViewDia
   // Get impact color
   const getImpactColor = (impact?: string) => {
     switch (impact) {
-      case 'Severe':
+      case 'High':
         return { bg: '#ffebee', color: '#c62828' };
       case 'Moderate':
         return { bg: '#fff8e1', color: '#f57f17' };
-      case 'Minor':
+      case 'Low':
         return { bg: '#e8f5e9', color: '#2e7d32' };
       default:
         return { bg: '#f5f5f5', color: '#616161' };
@@ -222,8 +222,8 @@ export default function AlertViewDialog({ open, onClose, alertId }: AlertViewDia
                     <Typography variant="body2" color="text.secondary">
                       Impact: 
                       <Chip
-                        label={alert.impact === 'Minor' ? 'Low' : 
-                              alert.impact === 'Severe' ? 'High' : 
+                        label={alert.impact === 'Low' ? 'Low' : 
+                              alert.impact === 'High' ? 'High' : 
                               alert.impact}
                         size="small"
                         sx={{

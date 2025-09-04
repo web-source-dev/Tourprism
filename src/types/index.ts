@@ -63,7 +63,7 @@ export interface Subscriber {
     longitude: number;
     placeId: string;
   }[];
-  sector?: string;
+  sector?: string[]; // Changed from string to string[] to support multiple sectors
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
@@ -80,7 +80,7 @@ export interface Alert {
   title?: string;
   description: string;
   risk?: string;
-  impact?: "Minor" | "Moderate" | "Severe";
+  impact?: "Low" | "Moderate" | "High";
   priority?: string;
   targetAudience?: string[] | string;
   recommendedAction?: string;
@@ -168,7 +168,7 @@ export interface FilterOptions {
   alertCategory: string[];
   timeRange: number;
   distance: number;
-  impactLevel: ('Minor' | 'Moderate' | 'Severe')[];
+  impactLevel: ('Low' | 'Moderate' | 'High')[];
   customDateFrom?: Date | null;
   customDateTo?: Date | null;
 }

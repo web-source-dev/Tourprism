@@ -132,7 +132,7 @@ export default function CreateAlertPage() {
     alertCategory: '',
     alertType: '',
     risk: '',
-    impact: 'Minor',
+    impact: 'Low',
     priority: 'medium',
     targetAudience: [],
     recommendedAction: '',
@@ -779,9 +779,9 @@ export default function CreateAlertPage() {
                     label="Impact Severity"
                     onChange={handleSelectChange}
                   >
-                    <MenuItem value="Minor">Low</MenuItem>
+                    <MenuItem value="Low">Low</MenuItem>
                     <MenuItem value="Moderate">Moderate</MenuItem>
-                    <MenuItem value="Severe">High</MenuItem>
+                    <MenuItem value="High">High</MenuItem>
                   </Select>
                 </StyledFormControl>
 

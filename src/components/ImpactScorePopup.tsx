@@ -84,12 +84,12 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
     const impact = alert.impact || '';
     
     // Using string check to avoid type errors
-    if (impact.includes('Severe') || impact.includes('High')) {
+    if (impact.includes('High') || impact.includes('High')) {
       severityScore = 3;
     } else if (impact.includes('Moderate') || impact.includes('Medium')) {
       severityScore = 2;
     } else {
-      severityScore = 1; // Minor, Low, or undefined
+      severityScore = 1; // Low, Low, or undefined
     }
     
     // 4. Recency Score - Based on when alert was posted
@@ -270,11 +270,11 @@ const ImpactScorePopup: React.FC<ImpactScorePopupProps> = ({ open, onClose, aler
                       </Typography>
                     </Box>
                   }
-                  secondary={alert.impact === 'Severe' || !alert.impact
+                  secondary={alert.impact === 'High' || !alert.impact
                     ? 'High Impact'
                     : alert.impact === 'Moderate'
                       ? 'Moderate Impact'
-                      : alert.impact === 'Minor'
+                      : alert.impact === 'Low'
                         ? 'Low Impact'
                         : `${alert.impact} Impact`}
                 />

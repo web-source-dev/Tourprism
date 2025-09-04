@@ -463,8 +463,8 @@ export default function ForecastDetail() {
 
     const alerts = forecast.includedAlerts as unknown as AlertItem[];
 
-    // Sort alerts by impact severity (Severe > Moderate > Minor) and then by date
-    const impactOrder: Record<string, number> = { "Severe": 0, "Moderate": 1, "Minor": 2, "": 3 };
+    // Sort alerts by impact severity (High > Moderate > Low) and then by date
+    const impactOrder: Record<string, number> = { "High": 0, "Moderate": 1, "Low": 2, "": 3 };
 
     return alerts.sort((a, b) => {
       // First by impact severity
@@ -590,7 +590,7 @@ export default function ForecastDetail() {
               {/* List of alerts grouped by impact */}
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {/* Group alerts by impact */}
-                {['Severe', 'Moderate', 'Minor'].map(impactLevel => {
+                {['High', 'Moderate', 'Low'].map(impactLevel => {
                   const alertsWithImpact = sortedAlerts.filter(alert => alert.impact === impactLevel);
                   if (alertsWithImpact.length === 0) return null;
 
@@ -657,8 +657,8 @@ export default function ForecastDetail() {
                             </Box>
 
                             <Typography variant="body1" fontWeight="500" mt={2} color="text.primary" sx={{ fontSize: '14px', fontFamily: 'Poppins, sans-serif' }}>
-                              {alert.impact === 'Minor' ? 'Low' : 
-                               alert.impact === 'Severe' ? 'High' : 
+                              {alert.impact === 'Low' ? 'Low' : 
+                               alert.impact === 'High' ? 'High' : 
                                alert.impact || 'Moderate'} Impact
                             </Typography>
                           </Box>
@@ -669,7 +669,7 @@ export default function ForecastDetail() {
                 })}
 
                 {/* Display alerts with unknown/unspecified impact */}
-                {sortedAlerts.filter(alert => !['Severe', 'Moderate', 'Minor'].includes(alert.impact || '')).length > 0 && (
+                {sortedAlerts.filter(alert => !['High', 'Moderate', 'Low'].includes(alert.impact || '')).length > 0 && (
                   <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                       <Box sx={{
@@ -683,7 +683,7 @@ export default function ForecastDetail() {
                       </Typography>
                     </Box>
 
-                    {sortedAlerts.filter(alert => !['Severe', 'Moderate', 'Minor'].includes(alert.impact || '')).map((alert, index) => (
+                    {sortedAlerts.filter(alert => !['High', 'Moderate', 'Low'].includes(alert.impact || '')).map((alert, index) => (
                       <Paper
                         key={alert._id || index}
                         elevation={0}

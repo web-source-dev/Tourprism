@@ -4,7 +4,7 @@ export interface SubscriberPayload {
   name: string;
   email: string;
   location: Array<{ name: string; latitude: number; longitude: number; placeId: string }>;
-  sector: string;
+  sector: string[]; // Changed from string to string[] to support multiple sectors
 }
 
 export interface SubscriberResponse {
@@ -14,7 +14,7 @@ export interface SubscriberResponse {
     name: string;
     email: string;
     location: Array<{ name: string; latitude: number; longitude: number; placeId: string }>;
-    sector: string;
+    sector: string[]; // Changed from string to string[] to support multiple sectors
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

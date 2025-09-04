@@ -159,7 +159,7 @@ export default function PersonalInfoTab({ user, onUpdate }: PersonalInfoTabProps
           name: `${firstName} ${lastName}`,
           email: email,
           location: selectedLocations,
-          sector: businessType
+          sector: businessType ? [businessType] : []
         });
         setSubscriberExists(true);
         // Update local user state to reflect subscription

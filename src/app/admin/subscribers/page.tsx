@@ -597,26 +597,58 @@ export default function SubscribersManagement() {
                       </Box>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                    <LocationOnIcon fontSize="small" color="action" />
-                      <Typography variant="body2" sx={{ 
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {subscriber.location ? (Array.isArray(subscriber.location) ? subscriber.location.map(loc => loc.name).join(', ') : subscriber.location) : 'Location not specified'}
-                      </Typography>
+                      <LocationOnIcon fontSize="small" color="action" />
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {subscriber.location && Array.isArray(subscriber.location) && subscriber.location.length > 0 ? (
+                          subscriber.location.map((loc, index) => (
+                            <Chip
+                              key={index}
+                              label={loc.name}
+                              size="small"
+                              sx={{ 
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                height: '20px',
+                                bgcolor: '#e3f2fd',
+                                color: '#1976d2'
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <Typography variant="body2" sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            color: 'text.secondary'
+                          }}>
+                            Location not specified
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
                     <Box sx={{ display: 'flex', gap: 1, mb: 1, flexWrap: 'wrap' }}>
-                    <BusinessIcon fontSize="small" color="action" />
-                      <Typography variant="body2" sx={{ 
-                        fontSize: { xs: '0.75rem', sm: '0.875rem' },
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {subscriber.sector ? (Array.isArray(subscriber.sector) ? subscriber.sector.map(loc => loc.name).join(', ') : subscriber.sector) : 'Sector not specified'}
-                      </Typography>
+                      <BusinessIcon fontSize="small" color="action" />
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {subscriber.sector && Array.isArray(subscriber.sector) && subscriber.sector.length > 0 ? (
+                          subscriber.sector.map((sector, index) => (
+                            <Chip
+                              key={index}
+                              label={sector}
+                              size="small"
+                              sx={{ 
+                                fontSize: { xs: '0.7rem', sm: '0.75rem' },
+                                height: '20px',
+                                bgcolor: '#e8f5e8',
+                                color: '#2e7d32'
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <Typography variant="body2" sx={{ 
+                            fontSize: { xs: '0.75rem', sm: '0.875rem' },
+                            color: 'text.secondary'
+                          }}>
+                            Sector not specified
+                          </Typography>
+                        )}
+                      </Box>
                     </Box>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                       <CalendarIcon fontSize="small" color="action" />
